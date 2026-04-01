@@ -119,7 +119,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         throw new Error(data.message || data.error || 'Failed to fetch profile');
       }
 
-      set({ user: data.user || data, isAuthenticated: true, isLoading: false });
+      let fetchedUser = data.user || data;
+      // Map Supabase user_metadata to the root user object for easier access
+      if (fetchedUser.user_metadata) {
+        fetchedUser = { ...fetchedUser, ...fetchedUser.user_metadata };
+      }
+
+      set({ user: fetchedUser, isAuthenticated: true, isLoading: false });
     } catch (err: any) {
         // If getting profile fails (e.g. invalid token), log them out
       set({ error: err.message, isLoading: false, isAuthenticated: false, token: null, user: null });
