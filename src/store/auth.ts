@@ -4,7 +4,10 @@ import { create } from 'zustand';
 export interface User {
   id: string;
   email: string;
-  // add other fields if necessary
+  first_name?: string;
+  last_name?: string;
+  phone?: string;
+  role?: 'user' | 'instructor' | 'admin';
 }
 
 interface AuthState {
