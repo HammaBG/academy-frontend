@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useAuthStore } from "../store/auth";
+import { useAuthStore } from "@/store/auth";
 
 export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuthStore();
@@ -183,13 +183,13 @@ export default function Navbar() {
             ) : (
               <div className="flex items-center gap-3">
                 <Link
-                  href="/"
+                  href="/login"
                   className="text-sm font-bold text-white px-6 py-1.5 rounded-[4px] border border-white hover:bg-white/10 transition-all"
                 >
                   دخول
                 </Link>
                 <Link
-                  href="/"
+                  href="/signup"
                   className="text-sm font-bold text-[#8b3d6f] bg-[#fbad26] hover:bg-[#ffbe45] px-6 py-1.5 rounded-[4px] transition-all shadow-sm"
                 >
                   تسجيل
@@ -232,14 +232,14 @@ export default function Navbar() {
           <div className="pt-4 border-t border-white/10 sm:hidden">
             <div className="grid grid-cols-2 gap-3">
               <Link
-                href="/"
+                href="/login"
                 className="text-center text-sm font-bold text-white border border-white hover:bg-white/10 px-4 py-2.5 rounded-[4px] transition-colors"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 دخول
               </Link>
               <Link
-                href="/"
+                href="/signup"
                 className="text-center text-sm font-bold text-[#8b3d6f] bg-[#fbad26] hover:bg-[#ffbe45] px-4 py-2.5 rounded-[4px] transition-colors"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
