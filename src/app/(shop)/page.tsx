@@ -1,4 +1,18 @@
+"use client";
+
+import { useEffect } from "react";
+import { useArticleStore } from "@/store/article";
+import { Newspaper, ArrowRight, Clock, ChevronRight } from "lucide-react";
+import Link from "next/link";
+
 export default function HomePage() {
+  const { articles, isLoading, getPublicArticles } = useArticleStore();
+
+  useEffect(() => {
+    getPublicArticles();
+  }, [getPublicArticles]);
+
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#1a0e16] to-[#2c1a25] text-white">
       {/* Hero Section */}
@@ -60,6 +74,93 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      
+      {/* Latest Articles Section */}
+      <section className="max-w-7xl mx-auto px-4 py-20 border-t border-white/5">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
+          <div className="text-right md:text-left">
+            <h2 className="text-3xl md:text-4xl font-extrabold mb-4">
+              آخر الأخبار و <span className="text-[#ff6ba6]">المقالات</span>
+            </h2>
+            <p className="text-zinc-400 max-w-xl font-medium">
+              اكتشف أحدث المقالات التعليمية، النصائح، والتريندات في عالم التقنية والتعلم
+            </p>
+          </div>
+          <Link 
+            href="/articles" 
+            className="group flex items-center gap-2 text-[#fbad26] font-bold hover:text-[#ffc04d] transition-colors"
+          >
+            <span>عرض جميع المقالات</span>
+            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+          </Link>
+        </div>
+
+        {isLoading && articles.length === 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-white/5 rounded-2xl h-[400px] animate-pulse border border-white/10" />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {(articles || []).slice(0, 3).map((article) => (
+              <Link 
+                key={article.id} 
+                href={`/articles/${article.id}`}
+                className="group flex flex-col bg-white/5 backdrop-blur-sm rounded-2xl overflow-hidden border border-white/10 hover:border-[#8b3d6f]/50 transition-all hover:-translate-y-1 hover:shadow-2xl hover:shadow-[#8b3d6f]/10"
+              >
+                <div className="relative h-56 w-full overflow-hidden">
+                  {article.image_url ? (
+                    <img 
+                      src={article.image_url} 
+                      alt={article.title} 
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-[#2c1a25] to-[#1a0e16] flex items-center justify-center">
+                      <Newspaper className="w-12 h-12 text-white/20" />
+                    </div>
+                  )}
+                  <div className="absolute top-4 right-4 h-8 px-3 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-[10px] font-extrabold text-white uppercase tracking-widest">
+                    Blog Post
+                  </div>
+                </div>
+                
+                <div className="p-6 flex flex-col flex-1">
+                  <div className="flex items-center gap-4 mb-4 text-[11px] font-bold text-zinc-500">
+                    <div className="flex items-center gap-1.5 uppercase tracking-wider">
+                      <Clock className="w-3.5 h-3.5" />
+                      {article.created_at ? new Date(article.created_at).toLocaleDateString() : 'New'}
+                    </div>
+                  </div>
+                  
+                  <h3 className="text-xl font-extrabold mb-3 text-white group-hover:text-[#fbad26] transition-colors line-clamp-2 leading-tight">
+                    {article.title}
+                  </h3>
+                  
+                  <p className="text-zinc-400 text-sm line-clamp-3 mb-6 font-medium leading-relaxed">
+                    {article.excerpt || "No summary provided for this article."}
+                  </p>
+                  
+                  <div className="mt-auto flex items-center gap-2 text-[13px] font-extrabold text-[#ff6ba6] group-hover:gap-3 transition-all">
+                    <span>اقرأ المزيد</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+        
+        {articles.length === 0 && !isLoading && (
+          <div className="py-20 text-center bg-white/5 rounded-3xl border border-dashed border-white/10">
+            <Newspaper className="w-16 h-16 text-white/5 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-zinc-400">لا توجد مقالات حالياً</h3>
+            <p className="text-zinc-500 text-sm">عد قريباً لمتابعة أحدث أخبار الأكاديمية</p>
+          </div>
+        )}
+      </section>
     </div>
+
   );
 }

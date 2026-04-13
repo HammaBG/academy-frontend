@@ -1,11 +1,22 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, BookOpen, CreditCard, Activity } from "lucide-react";
+import { Users, BookOpen, CreditCard, Activity, Newspaper } from "lucide-react";
 import { useAuthStore } from "@/store/auth";
+import { useArticleStore } from "@/store/article";
+import { useEffect } from "react";
+import Link from "next/link";
+
 
 export default function AdminDashboardPage() {
-  const { user } = useAuthStore();
+  const { user, token } = useAuthStore();
+  const { articles, getAllArticles } = useArticleStore();
+
+  useEffect(() => {
+    if (token) {
+      getAllArticles(token);
+    }
+  }, [token, getAllArticles]);
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
@@ -55,6 +66,22 @@ export default function AdminDashboardPage() {
             </p>
           </CardContent>
         </Card>
+
+        <Link href="/admin/articles" className="block transition-transform hover:scale-[1.01] active:scale-[0.99]">
+          <Card className="shadow-sm border-gray-200 hover:border-[#8b3d6f] hover:shadow-md transition-all cursor-pointer group">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-extrabold text-gray-700 uppercase tracking-tighter group-hover:text-[#8b3d6f] transition-colors">Total Articles</CardTitle>
+              <Newspaper className="h-5 w-5 text-[#8b3d6f]" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-extrabold text-[#2c1a4d]">{articles.length}</div>
+              <p className="text-xs font-bold text-gray-500 mt-2 lowercase">
+                Published and drafts
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
+
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 mt-8">

@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -29,6 +30,7 @@ import {
   Edit,
   Loader2
 } from "lucide-react";
+
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuthStore } from "@/store/auth";
 
@@ -129,22 +131,25 @@ export default function UsersPage() {
                       </Button>
                     } />
                     <DropdownMenuContent align="end" className="w-56 font-bold shadow-xl border-gray-100 p-2">
-                      <DropdownMenuLabel className="text-gray-400 uppercase text-[10px] py-2 px-3 tracking-widest">User Actions</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem className="gap-3 py-2.5 px-3 hover:bg-gray-50 transition-colors cursor-pointer rounded-md">
-                        <Edit className="w-4 h-4 text-blue-600" />
-                        <span>Edit Details</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="gap-3 py-2.5 px-3 hover:bg-gray-50 transition-colors cursor-pointer rounded-md">
-                        <Shield className="w-4 h-4 text-purple-600" />
-                        <span>Promote to Instructor</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem className="gap-3 py-2.5 px-3 hover:bg-red-50 text-red-600 focus:text-red-700 transition-colors cursor-pointer rounded-md mt-1">
-                        <Trash2 className="w-4 h-4" />
-                        <span>Delete User</span>
-                      </DropdownMenuItem>
+                      <DropdownMenuGroup>
+                        <DropdownMenuLabel className="text-gray-400 uppercase text-[10px] py-2 px-3 tracking-widest">User Actions</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="gap-3 py-2.5 px-3 hover:bg-gray-50 transition-colors cursor-pointer rounded-md">
+                          <Edit className="w-4 h-4 text-blue-600" />
+                          <span>Edit Details</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="gap-3 py-2.5 px-3 hover:bg-gray-50 transition-colors cursor-pointer rounded-md">
+                          <Shield className="w-4 h-4 text-purple-600" />
+                          <span>Promote to Instructor</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="gap-3 py-2.5 px-3 hover:bg-red-50 text-red-600 focus:text-red-700 transition-colors cursor-pointer rounded-md mt-1">
+                          <Trash2 className="w-4 h-4" />
+                          <span>Delete User</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuGroup>
                     </DropdownMenuContent>
+
                   </DropdownMenu>
                 </TableCell>
               </TableRow>

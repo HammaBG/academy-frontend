@@ -12,7 +12,7 @@ import {
   SidebarHeader,
   SidebarFooter,
 } from "@/components/ui/sidebar"
-import { Home, LayoutDashboard, Users, BookOpen, Settings, LogOut } from "lucide-react"
+import { Home, LayoutDashboard, Users, BookOpen, Settings, LogOut, Newspaper } from "lucide-react"
 import Link from "next/link"
 import { useAuthStore } from "@/store/auth"
 
@@ -23,6 +23,7 @@ export function AdminSidebar() {
     { title: "Dashboard", url: "/admin/dashboard", icon: LayoutDashboard },
     { title: "Users", url: "/admin/users", icon: Users },
     { title: "Courses", url: "/admin/courses", icon: BookOpen },
+    { title: "Articles", url: "/admin/articles", icon: Newspaper },
     { title: "Settings", url: "/admin/settings", icon: Settings },
   ]
 
