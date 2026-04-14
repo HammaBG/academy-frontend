@@ -1,4 +1,5 @@
 import Navbar from "../../components/Navbar";
+import { Footer } from "../../components/Footer";
 
 export default function ShopLayout({
   children,
@@ -8,7 +9,10 @@ export default function ShopLayout({
   return (
     <>
       <Navbar />
-      {children}
+      <main className="min-h-screen">
+        {children}
+      </main>
+      <Footer />
     </>
   );
 }

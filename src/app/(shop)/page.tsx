@@ -1,16 +1,21 @@
 "use client";
 
 import { useEffect } from "react";
-import { useArticleStore } from "@/store/article";
-import { Newspaper, ArrowRight, Clock, ChevronRight } from "lucide-react";
+import { Newspaper, ArrowRight, Clock, ChevronRight, BookOpen, Star, Users } from "lucide-react";
 import Link from "next/link";
+import { useCourseStore } from "@/store/course";
+import { useArticleStore } from "@/store/article";
+import { cn } from "@/lib/utils";
+import { CourseCard } from "./CourseCard";
 
 export default function HomePage() {
-  const { articles, isLoading, getPublicArticles } = useArticleStore();
+  const { articles, isLoading: isArticlesLoading, getPublicArticles } = useArticleStore();
+  const { courses, isLoading: isCoursesLoading, getPublicCourses } = useCourseStore();
 
   useEffect(() => {
     getPublicArticles();
-  }, [getPublicArticles]);
+    getPublicCourses();
+  }, [getPublicArticles, getPublicCourses]);
 
 
   return (
@@ -74,6 +79,41 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Latest Courses Section */}
+      <section className="max-w-7xl mx-auto px-4 py-20 border-t border-white/5">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
+          <div className="text-right md:text-left">
+            <h2 className="text-3xl md:text-4xl font-extrabold mb-4">
+               استكشف <span className="text-[#fbad26]">الكورسات</span> المميزة
+            </h2>
+            <p className="text-zinc-400 max-w-xl font-medium">
+               ابدأ رحلتك التعليمية اليوم مع أفضل الدورات المصممة لتطوير مهاراتك والارتقاء بمسارك المهني
+            </p>
+          </div>
+          <Link 
+            href="/courses" 
+            className="group flex items-center gap-2 text-[#fbad26] font-bold hover:text-[#ffc04d] transition-colors"
+          >
+            <span>عرض جميع الكورسات</span>
+            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+          </Link>
+        </div>
+
+        {isCoursesLoading && courses.length === 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-white/5 rounded-[2.5rem] h-[450px] animate-pulse border border-white/10" />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {(courses || []).slice(0, 3).map((course) => (
+              <CourseCard key={course.id} course={course} />
+            ))}
+          </div>
+        )}
+      </section>
       
       {/* Latest Articles Section */}
       <section className="max-w-7xl mx-auto px-4 py-20 border-t border-white/5">
@@ -95,7 +135,7 @@ export default function HomePage() {
           </Link>
         </div>
 
-        {isLoading && articles.length === 0 ? (
+        {isArticlesLoading && articles.length === 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[1, 2, 3].map((i) => (
               <div key={i} className="bg-white/5 rounded-2xl h-[400px] animate-pulse border border-white/10" />
@@ -152,7 +192,7 @@ export default function HomePage() {
           </div>
         )}
         
-        {articles.length === 0 && !isLoading && (
+        {articles.length === 0 && !isArticlesLoading && (
           <div className="py-20 text-center bg-white/5 rounded-3xl border border-dashed border-white/10">
             <Newspaper className="w-16 h-16 text-white/5 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-zinc-400">لا توجد مقالات حالياً</h3>
