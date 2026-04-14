@@ -7,6 +7,7 @@ import { useCourseStore } from "@/store/course";
 import { useArticleStore } from "@/store/article";
 import { cn } from "@/lib/utils";
 import { CourseCard } from "./CourseCard";
+import { InstructorsSection } from "./InstructorsSection";
 
 export default function HomePage() {
   const { articles, isLoading: isArticlesLoading, getPublicArticles } = useArticleStore();
@@ -114,6 +115,9 @@ export default function HomePage() {
           </div>
         )}
       </section>
+
+      {/* Instructors Section */}
+      <InstructorsSection />
       
       {/* Latest Articles Section */}
       <section className="max-w-7xl mx-auto px-4 py-20 border-t border-white/5">

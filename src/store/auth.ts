@@ -9,11 +9,14 @@ export interface User {
   last_name?: string;
   phone?: string;
   role?: 'user' | 'instructor' | 'admin';
+  avatar_url?: string;
+  title?: string;
 }
 
 interface AuthData {
   user: User | null;
   users: User[];
+  instructors: User[];
   token: string | null;
   isAuthenticated: boolean;
   isAuthLoading: boolean;
@@ -27,6 +30,8 @@ interface AuthActions {
   logout: () => void;
   getProfile: () => Promise<void>;
   getAllUsers: () => Promise<void>;
+  getInstructors: () => Promise<void>;
+  updateUser: (id: string, data: Partial<User>) => Promise<void>;
   clearError: () => void;
 }
 
@@ -40,6 +45,7 @@ export const useAuthStore = create<AuthStore>()(
       // State
       user: null,
       users: [],
+      instructors: [],
       token: null,
       isAuthenticated: false,
       isAuthLoading: false,
@@ -167,6 +173,52 @@ export const useAuthStore = create<AuthStore>()(
           set({ users: data.users || [], isDataLoading: false });
         } catch (err: any) {
           set({ error: err.message, isDataLoading: false });
+        }
+      },
+
+      getInstructors: async () => {
+        set({ isDataLoading: true, error: null });
+        try {
+          const res = await fetch(`${API_URL}/instructors`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+          });
+
+          const data = await res.json();
+          if (!res.ok) {
+            throw new Error(data.message || data.error || 'Failed to fetch instructors');
+          }
+
+          set({ instructors: data.instructors || [], isDataLoading: false });
+        } catch (err: any) {
+          set({ error: err.message, isDataLoading: false });
+        }
+      },
+
+      updateUser: async (id, userData) => {
+        const { token } = get();
+        if (!token) return;
+
+        set({ isDataLoading: true, error: null });
+        try {
+          const res = await fetch(`${API_URL}/users/${id}`, {
+            method: 'PUT',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(userData),
+          });
+
+          const data = await res.json();
+          if (!res.ok) {
+            throw new Error(data.message || data.error || 'Failed to update user');
+          }
+
+          await get().getAllUsers();
+        } catch (err: any) {
+          set({ error: err.message, isDataLoading: false });
+          throw err;
         }
       },
     }),
