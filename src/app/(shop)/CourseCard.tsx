@@ -1,16 +1,48 @@
 "use client";
 
 import { Course } from "@/store/course";
-import { Heart, ShoppingCart, Star } from "lucide-react";
+import { Heart, ShoppingCart, Star, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { useWishlistStore } from "@/store/wishlist";
+import { useAuthStore } from "@/store/auth";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 interface CourseCardProps {
   course: Course;
 }
 
 export function CourseCard({ course }: CourseCardProps) {
-  const discount = course.estimated_price 
+  const { toggleFavorite, isInWishlist, isLoading } = useWishlistStore();
+  const { token, isAuthenticated } = useAuthStore();
+  const router = useRouter();
+
+  const isFavorited = isInWishlist(course.id);
+
+  const handleToggleFavorite = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!isAuthenticated) {
+      toast.error("يرجى تسجيل الدخول أولاً");
+      router.push("/login");
+      return;
+    }
+
+    if (!token) {
+      toast.error("حدث خطأ في المصادقة");
+      return;
+    }
+    const result = await toggleFavorite(course.id, token);
+    if (result) {
+      toast.success("تمت الإضافة إلى المفضلة");
+    } else {
+      toast.success("تمت الإزالة من المفضلة");
+    }
+  };
+
+  const discount = course.estimated_price
     ? Math.round(((course.estimated_price - course.price) / course.estimated_price) * 100)
     : 0;
 
@@ -20,10 +52,10 @@ export function CourseCard({ course }: CourseCardProps) {
       <div className="relative aspect-[4/5] overflow-hidden">
         {/* Course Thumbnail */}
         {course.thumbnail?.url ? (
-          <img 
-            src={course.thumbnail.url} 
-            alt={course.name} 
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+          <img
+            src={course.thumbnail.url}
+            alt={course.name}
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
           />
         ) : (
           <div className="w-full h-full bg-zinc-900" />
@@ -41,13 +73,9 @@ export function CourseCard({ course }: CourseCardProps) {
               </p>
             </div>
             <div className="relative w-14 h-14 rounded-full border-2 border-white/50 overflow-hidden shadow-xl shrink-0">
-               {course.creator?.avatar_url ? (
-                 <img src={course.creator.avatar_url} alt="" className="w-full h-full object-cover" />
-               ) : (
-                 <div className="w-full h-full bg-zinc-800 flex items-center justify-center text-white/20">
-                   <Star className="w-6 h-6 fill-current" />
-                 </div>
-               )}
+              {course.creator?.avatar_url &&
+                <img src={course.creator.avatar_url} alt="" className="w-full h-full object-cover" />
+              }
             </div>
           </div>
         </div>
@@ -63,37 +91,41 @@ export function CourseCard({ course }: CourseCardProps) {
             </p>
           </div>
         </div>
-
-        {/* Level Tag (Optional) */}
-        <div className="absolute top-4 left-4">
-           <span className="px-3 py-1 bg-[#8b3d6f] text-white text-[10px] font-black rounded-full uppercase tracking-widest shadow-lg">
-              {course.level}
-           </span>
-        </div>
       </div>
 
       {/* Action Footer */}
       <div className="p-4 flex items-center justify-between bg-white border-t border-zinc-100">
         <div className="flex items-center gap-4">
-           <Link 
-             href={`/courses/${course.id}`}
-             className="px-5 py-2 bg-[#17bed2] hover:bg-[#14a8ba] text-white text-sm font-black rounded-lg transition-colors shadow-sm"
-           >
-             اعرف أكثر
-           </Link>
-           <button className="text-zinc-600 hover:text-red-500 transition-colors">
-              <Heart className="w-6 h-6" />
-           </button>
-           <button className="text-zinc-600 hover:text-zinc-900 transition-colors">
-              <ShoppingCart className="w-6 h-6" />
-           </button>
+          <Link
+            href={`/courses/${course.id}`}
+            className="px-5 py-2 bg-[#17bed2] hover:bg-[#14a8ba] text-white text-sm font-black rounded-lg transition-colors shadow-sm"
+          >
+            اعرف أكثر
+          </Link>
+          <button
+            onClick={handleToggleFavorite}
+            disabled={isLoading}
+            className={cn(
+              "transition-all duration-300 transform active:scale-90",
+              isFavorited ? "text-red-500 fill-current" : "text-zinc-600 hover:text-red-500"
+            )}
+          >
+            {isLoading ? (
+              <Loader2 className="w-6 h-6 animate-spin" />
+            ) : (
+              <Heart className={cn("w-6 h-6", isFavorited && "fill-current")} />
+            )}
+          </button>
+          <button className="text-zinc-600 hover:text-zinc-900 transition-colors">
+            <ShoppingCart className="w-6 h-6" />
+          </button>
         </div>
 
         <div className="flex items-baseline gap-1">
-           <span className="text-zinc-500 text-sm font-bold">USD</span>
-           <span className="text-3xl font-black text-[#17bed2] tracking-tighter">
-             {course.price}
-           </span>
+          <span className="text-zinc-500 text-sm font-bold">DT</span>
+          <span className="text-3xl font-black text-[#17bed2] tracking-tighter">
+            {course.price}
+          </span>
         </div>
       </div>
     </div>

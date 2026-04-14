@@ -78,10 +78,6 @@ export function Footer() {
             <Link href="#" className="hover:text-white transition-colors">الشروط والاحكام</Link>
             <Link href="#" className="hover:text-white transition-colors">سياسة الخصوصية</Link>
           </div>
-
-          <div className="text-zinc-500">
-            Powered by <span className="text-white">Jelllow</span>
-          </div>
         </div>
       </div>
     </footer>
