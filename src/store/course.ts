@@ -90,6 +90,7 @@ interface CourseData {
 interface CourseActions {
     createCourse: (data: Partial<Course>, token: string) => Promise<void>;
     getAllCourses: (token: string) => Promise<void>;
+    getInstructorCourses: (token: string) => Promise<void>;
     getPublicCourses: () => Promise<void>;
     getCourseById: (id: string, token: string) => Promise<void>;
     getPublicCourseById: (id: string) => Promise<void>;
@@ -162,6 +163,28 @@ export const useCourseStore = create<CourseStore>()(
                 }
             },
 
+            getInstructorCourses: async (token) => {
+                set({ isLoading: true, error: null });
+                try {
+                    const res = await fetch(`${API_URL}/get-instructor-courses`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json',
+                        },
+                    });
+
+                    const data = await res.json();
+                    if (!res.ok) {
+                        throw new Error(data.error || 'Failed to fetch instructor courses');
+                    }
+
+                    set({ courses: data.courses || [], isLoading: false });
+                } catch (err: any) {
+                    set({ error: err.message, isLoading: false });
+                }
+            },
+
             getPublicCourses: async () => {
                 set({ isLoading: true, error: null });
                 try {
@@ -186,7 +209,7 @@ export const useCourseStore = create<CourseStore>()(
             getCourseById: async (id, token) => {
                 set({ isLoading: true, error: null });
                 try {
-                    const res = await fetch(`${API_URL}/get-course-id/${id}`, {
+                    const res = await fetch(`${API_URL}/get-course/${id}`, {
                         method: 'GET',
                         headers: {
                             'Authorization': `Bearer ${token}`,

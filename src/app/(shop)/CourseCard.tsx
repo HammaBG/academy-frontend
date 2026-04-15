@@ -1,10 +1,11 @@
 "use client";
 
-import { Course } from "@/store/course";
+import type { Course } from "@/store/course";
 import { Heart, ShoppingCart, Star, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useWishlistStore } from "@/store/wishlist";
+import { useCartStore } from "@/store/cart";
 import { useAuthStore } from "@/store/auth";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -15,8 +16,29 @@ interface CourseCardProps {
 
 export function CourseCard({ course }: CourseCardProps) {
   const { toggleFavorite, isInWishlist, isLoading } = useWishlistStore();
+  const { addToCart, removeFromCart, isInCart } = useCartStore();
   const { token, isAuthenticated } = useAuthStore();
   const router = useRouter();
+
+  const courseInCart = isInCart(course.id);
+
+  const handleToggleCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (courseInCart) {
+      removeFromCart(course.id);
+      toast.success("تمت الإزالة من السلة");
+      return;
+    }
+
+    const added = addToCart(course);
+    if (added) {
+      toast.success("تمت الإضافة إلى السلة");
+    } else {
+      toast.info("الكورس موجود في السلة بالفعل");
+    }
+  };
 
   const isFavorited = isInWishlist(course.id);
 
@@ -116,8 +138,15 @@ export function CourseCard({ course }: CourseCardProps) {
               <Heart className={cn("w-6 h-6", isFavorited && "fill-current")} />
             )}
           </button>
-          <button className="text-zinc-600 hover:text-zinc-900 transition-colors">
-            <ShoppingCart className="w-6 h-6" />
+          <button
+            onClick={handleToggleCart}
+            className={cn(
+              "transition-all duration-300 transform active:scale-90",
+              courseInCart ? "text-[#fbad26]" : "text-zinc-600 hover:text-[#fbad26]"
+            )}
+            aria-label={courseInCart ? "إزالة من السلة" : "إضافة إلى السلة"}
+          >
+            <ShoppingCart className={cn("w-6 h-6", courseInCart && "fill-current")} />
           </button>
         </div>
 

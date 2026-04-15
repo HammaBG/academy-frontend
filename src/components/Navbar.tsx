@@ -1,13 +1,30 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useAuthStore } from "@/store/auth";
+import { useCartStore } from "@/store/cart";
 
 export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuthStore();
+  const { items, removeFromCart, itemCount } = useCartStore();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [isCartDropdownOpen, setIsCartDropdownOpen] = useState(false);
+  const cartDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        cartDropdownRef.current &&
+        !cartDropdownRef.current.contains(e.target as Node)
+      ) {
+        setIsCartDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Exact links from the image
   const links = [
@@ -87,7 +104,7 @@ export default function Navbar() {
 
                 {/* User Dropdown Trigger */}
                 <button
-                  onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                  onClick={() => { setIsProfileDropdownOpen(!isProfileDropdownOpen); setIsCartDropdownOpen(false); }}
                   className="flex items-center gap-2 cursor-pointer bg-[#423c52] hover:bg-[#4b455c] px-3 py-1.5 rounded-md border border-transparent transition-all"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -101,12 +118,84 @@ export default function Navbar() {
                 {/* Vertical Separator */}
                 <div className="hidden md:block h-6 w-px bg-white/40"></div>
 
-                {/* Cart Icon */}
-                <Link href="/cart" className="text-white hover:text-gray-200 hidden sm:block">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                </Link>
+                {/* Cart Dropdown */}
+                <div ref={cartDropdownRef} className="relative hidden sm:block">
+                  <button
+                    onClick={() => {
+                      setIsCartDropdownOpen(!isCartDropdownOpen);
+                      setIsProfileDropdownOpen(false);
+                    }}
+                    className="relative text-white hover:text-gray-200 p-1"
+                    aria-label="سلة التسوق"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    {itemCount() > 0 && (
+                      <span className="absolute -top-1.5 -right-1.5 w-5 h-5 flex items-center justify-center bg-[#fbad26] text-[#211] text-[10px] font-black rounded-full shadow-md">
+                        {itemCount()}
+                      </span>
+                    )}
+                  </button>
+
+                  {/* Cart Dropdown Panel */}
+                  {isCartDropdownOpen && (
+                    <div className="absolute top-[3rem] left-0 w-80 bg-white border border-gray-100 shadow-2xl rounded-b-lg z-50 font-bold transform origin-top">
+                      {items.length === 0 ? (
+                        <div className="px-6 py-8 text-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-gray-200 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                          </svg>
+                          <p className="text-gray-400 text-sm">سلة التسوق فارغة</p>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="max-h-72 overflow-y-auto divide-y divide-gray-50">
+                            {items.slice(0, 4).map((item) => (
+                              <div key={item.course.id} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
+                                <button
+                                  onClick={() => removeFromCart(item.course.id)}
+                                  className="text-gray-300 hover:text-red-400 transition-colors shrink-0"
+                                  aria-label={`إزالة ${item.course.name}`}
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                  </svg>
+                                </button>
+                                <div className="flex-1 min-w-0 text-right">
+                                  <p className="text-[#423c52] text-sm truncate">{item.course.name}</p>
+                                  <p className="text-[#8b3d6f] text-xs mt-0.5">USD {item.course.price}</p>
+                                </div>
+                                <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0">
+                                  {item.course.thumbnail?.url ? (
+                                    <img src={item.course.thumbnail.url} alt={item.course.name} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <div className="w-full h-full bg-gray-100" />
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          {items.length > 4 && (
+                            <p className="text-center text-gray-400 text-xs py-1">+{items.length - 4} عناصر أخرى</p>
+                          )}
+                        </>
+                      )}
+
+                      {/* See all cart link */}
+                      <Link
+                        href="/cart"
+                        onClick={() => setIsCartDropdownOpen(false)}
+                        className="flex items-center justify-center gap-2 px-4 py-3 bg-[#8b3d6f] text-white text-sm font-extrabold hover:bg-[#7c3663] transition-colors rounded-b-lg"
+                      >
+                        <span>مشاهدة سلة التسوق</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                        </svg>
+                      </Link>
+                    </div>
+                  )}
+                </div>
 
                 {/* Dropdown Menu */}
                 {isProfileDropdownOpen && (
