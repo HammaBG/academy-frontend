@@ -31,6 +31,7 @@ interface AuthActions {
   getProfile: () => Promise<void>;
   getAllUsers: () => Promise<void>;
   getInstructors: () => Promise<void>;
+  updateProfile: (data: { title?: string; avatar_url?: string }, token: string) => Promise<void>;
   updateUser: (id: string, data: Partial<User>) => Promise<void>;
   clearError: () => void;
 }
@@ -192,6 +193,34 @@ export const useAuthStore = create<AuthStore>()(
           set({ instructors: data.instructors || [], isDataLoading: false });
         } catch (err: any) {
           set({ error: err.message, isDataLoading: false });
+        }
+      },
+
+      updateProfile: async (profileData, token) => {
+        set({ isDataLoading: true, error: null });
+        try {
+          const res = await fetch(`${API_URL}/update-profile`, {
+            method: 'PUT',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(profileData),
+          });
+
+          const data = await res.json();
+          if (!res.ok) {
+            throw new Error(data.error || 'Failed to update profile');
+          }
+
+          // Update local user state
+          set((state) => ({
+            user: state.user ? { ...state.user, ...profileData, avatar_url: data.user?.user_metadata?.avatar_url || profileData.avatar_url } : null,
+            isDataLoading: false,
+          }));
+        } catch (err: any) {
+          set({ error: err.message, isDataLoading: false });
+          throw err;
         }
       },
 

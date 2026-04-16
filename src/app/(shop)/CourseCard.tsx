@@ -68,6 +68,7 @@ export function CourseCard({ course }: CourseCardProps) {
     ? Math.round(((course.estimated_price - course.price) / course.estimated_price) * 100)
     : 0;
 
+
   return (
     <div className="group flex flex-col bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-zinc-100">
       {/* Visual Area */}
@@ -90,8 +91,8 @@ export function CourseCard({ course }: CourseCardProps) {
               <h4 className="font-bold text-base leading-tight">
                 {course.creator?.first_name} {course.creator?.last_name}
               </h4>
-              <p className="text-[10px] text-white/80 font-medium">
-                معلمة لغة عربية ومصممة مناهج
+              <p className="text-[10px] text-white/80 font-medium truncate max-w-[150px]">
+                {course.creator?.title || "Academy Instructor"}
               </p>
             </div>
             <div className="relative w-14 h-14 rounded-full border-2 border-white/50 overflow-hidden shadow-xl shrink-0">

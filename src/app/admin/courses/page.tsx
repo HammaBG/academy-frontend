@@ -52,7 +52,7 @@ export default function CoursesPage() {
   const router = useRouter();
   const { token, instructors, getInstructors } = useAuthStore();
   const { courses, isLoading, error, getAllCourses, deleteCourse, updateCourse } = useCourseStore();
-  
+
   const [searchTerm, setSearchTerm] = useState("");
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [assignTarget, setAssignTarget] = useState<Course | null>(null);
@@ -67,7 +67,7 @@ export default function CoursesPage() {
     }
   }, [token, getAllCourses, getInstructors]);
 
-  const filteredCourses = (courses ?? []).filter(course => 
+  const filteredCourses = (courses ?? []).filter(course =>
     course.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -93,8 +93,8 @@ export default function CoursesPage() {
 
   const openAssignDialog = useCallback((course: Course) => {
     setAssignTarget(course);
-    const currentCreatorId = typeof course.creator === 'string' 
-      ? course.creator 
+    const currentCreatorId = typeof course.creator === 'string'
+      ? course.creator
       : course.creator?.id ?? null;
     setSelectedInstructorId(currentCreatorId);
     setInstructorSearch("");
@@ -118,8 +118,19 @@ export default function CoursesPage() {
 
   const getCreatorName = (course: Course): string => {
     if (!course.creator) return "Unassigned";
-    if (typeof course.creator === 'string') return "Unknown";
-    return `${course.creator.first_name ?? ""} ${course.creator.last_name ?? ""}`.trim() || "Unknown";
+
+    // If it's the full hydrated object
+    if (typeof course.creator !== 'string') {
+      return `${course.creator.first_name ?? ""} ${course.creator.last_name ?? ""}`.trim() || "Unknown";
+    }
+
+    // If it's just an ID string, try to find it in the instructors list
+    const instructor = instructors.find(inst => inst.id === course.creator);
+    if (instructor) {
+      return `${instructor.first_name ?? ""} ${instructor.last_name ?? ""}`.trim();
+    }
+
+    return "Admin";
   };
 
   return (
@@ -129,7 +140,7 @@ export default function CoursesPage() {
           <h1 className="text-3xl font-extrabold text-[#2c1a4d]">Course Management</h1>
           <p className="text-gray-500 font-medium mt-1">Create, structure and manage your academy courses.</p>
         </div>
-        <Button 
+        <Button
           onClick={handleCreate}
           className="bg-[#8b3d6f] hover:bg-[#7c3663] text-white font-bold gap-2"
         >
@@ -149,8 +160,8 @@ export default function CoursesPage() {
         <div className="p-4 border-b border-gray-100 flex items-center gap-4">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <Input 
-              placeholder="Search by course name..." 
+            <Input
+              placeholder="Search by course name..."
               className="pl-10 bg-gray-50 border-gray-200 focus:bg-white transition-all shadow-none"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -204,7 +215,7 @@ export default function CoursesPage() {
                   <div className="flex flex-col">
                     <span className="font-bold text-[#2c1a4d]">${course.price}</span>
                     {course.estimated_price && (
-                       <span className="text-[10px] text-gray-400 line-through">${course.estimated_price}</span>
+                      <span className="text-[10px] text-gray-400 line-through">${course.estimated_price}</span>
                     )}
                   </div>
                 </TableCell>
@@ -214,11 +225,10 @@ export default function CoursesPage() {
                   </span>
                 </TableCell>
                 <TableCell>
-                  <span className={`px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest ${
-                    course.status 
-                      ? 'bg-green-50 text-green-600 border border-green-100' 
-                      : 'bg-orange-50 text-orange-600 border border-orange-100'
-                  }`}>
+                  <span className={`px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest ${course.status
+                    ? 'bg-green-50 text-green-600 border border-green-100'
+                    : 'bg-orange-50 text-orange-600 border border-orange-100'
+                    }`}>
                     {course.status ? 'Published' : 'Draft'}
                   </span>
                 </TableCell>
@@ -233,7 +243,7 @@ export default function CoursesPage() {
                       <DropdownMenuGroup>
                         <DropdownMenuLabel className="text-gray-400 uppercase text-[10px] py-2 px-3 tracking-widest">Course Actions</DropdownMenuLabel>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem 
+                        <DropdownMenuItem
                           onClick={() => handleEdit(course.id)}
                           className="gap-3 py-2.5 px-3 hover:bg-gray-50 transition-colors cursor-pointer rounded-md"
                         >
@@ -241,14 +251,14 @@ export default function CoursesPage() {
                           <span>Edit Course</span>
                         </DropdownMenuItem>
 
-                        <DropdownMenuItem 
+                        <DropdownMenuItem
                           onClick={() => openAssignDialog(course)}
                           className="gap-3 py-2.5 px-3 hover:bg-gray-50 transition-colors cursor-pointer rounded-md"
                         >
                           <UserPlus className="w-4 h-4 text-teal-600" />
                           <span>Assign Instructor</span>
                         </DropdownMenuItem>
-                        
+
                         <Link href={`/courses/${course.id}`} target="_blank">
                           <DropdownMenuItem className="gap-3 py-2.5 px-3 hover:bg-gray-50 transition-colors cursor-pointer rounded-md">
                             <ExternalLink className="w-4 h-4 text-purple-600" />
@@ -257,7 +267,7 @@ export default function CoursesPage() {
                         </Link>
 
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem 
+                        <DropdownMenuItem
                           onClick={() => handleDelete(course.id)}
                           className="gap-3 py-2.5 px-3 hover:bg-red-50 text-red-600 focus:text-red-700 transition-colors cursor-pointer rounded-md mt-1"
                         >
@@ -272,7 +282,7 @@ export default function CoursesPage() {
             ))}
           </TableBody>
         </Table>
-        
+
         {!isLoading && filteredCourses.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <BookOpen className="w-12 h-12 text-gray-100 mb-4" />
@@ -323,11 +333,10 @@ export default function CoursesPage() {
                     key={inst.id}
                     type="button"
                     onClick={() => setSelectedInstructorId(inst.id)}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all cursor-pointer ${
-                      isSelected
-                        ? "bg-[#8b3d6f]/10 border border-[#8b3d6f]/30"
-                        : "hover:bg-gray-50 border border-transparent"
-                    }`}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all cursor-pointer ${isSelected
+                      ? "bg-[#8b3d6f]/10 border border-[#8b3d6f]/30"
+                      : "hover:bg-gray-50 border border-transparent"
+                      }`}
                   >
                     {inst.avatar_url ? (
                       <img src={inst.avatar_url} alt="" className="w-9 h-9 rounded-full object-cover border border-gray-200" />

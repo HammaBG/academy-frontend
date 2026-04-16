@@ -177,9 +177,9 @@ export function CourseDetailsContent({ course }: CourseDetailsContentProps) {
             </div>
             <div className="space-y-3">
                <h3 className="text-xl font-black text-white">{course.creator?.first_name} {course.creator?.last_name || "Academy Expert"}</h3>
-               <p className="text-sm font-bold text-[#ff6ba6] uppercase tracking-widest">Senior Course Content Specialist</p>
+               <p className="text-sm font-bold text-[#ff6ba6] uppercase tracking-widest">{course.creator?.title || "Senior Course Content Specialist"}</p>
                <p className="text-zinc-400 text-sm leading-relaxed max-w-xl">
-                  Expert educator with over 10 years of experience in the field. Dedicated to providing high-quality educational content and helping students achieve their career goals.
+                  {course.creator?.bio || "Expert educator with over 10 years of experience in the field. Dedicated to providing high-quality educational content and helping students achieve their career goals."}
                </p>
                <div className="pt-4 flex flex-wrap justify-center md:justify-start gap-4">
                   <div className="flex items-center gap-1.5 text-[11px] font-black text-white/40 uppercase tracking-tighter">
