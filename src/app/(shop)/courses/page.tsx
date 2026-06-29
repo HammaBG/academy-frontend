@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { useCourseStore } from "@/store/course";
 import { BookOpen, Star, Loader2, Users } from "lucide-react";
 import Link from "next/link";
@@ -8,7 +8,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { CourseCard } from "@/app/(shop)/CourseCard";
 
-export default function CoursesListPage() {
+function CoursesListContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const selectedCategory = searchParams.get("category");
@@ -25,7 +25,6 @@ export default function CoursesListPage() {
 
   return (
     <div className="min-h-screen bg-[#1a0e16] text-white" dir="rtl">
-      {/* Background blobs */}
       <div className="fixed top-0 left-0 w-full h-full pointer-events-none overflow-hidden z-0">
         <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-[#fbad26]/10 blur-[120px] rounded-full" />
         <div className="absolute bottom-[-10%] left-[-10%] w-[30%] h-[30%] bg-[#8b3d6f]/10 blur-[120px] rounded-full" />
@@ -77,5 +76,30 @@ export default function CoursesListPage() {
         )}
       </div>
     </div>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen bg-[#1a0e16] text-white" dir="rtl">
+      <div className="fixed top-0 left-0 w-full h-full pointer-events-none overflow-hidden z-0">
+        <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-[#fbad26]/10 blur-[120px] rounded-full" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[30%] h-[30%] bg-[#8b3d6f]/10 blur-[120px] rounded-full" />
+      </div>
+      <div className="relative z-10 max-w-7xl mx-auto px-4 py-20">
+        <div className="flex flex-col items-center justify-center py-40">
+          <Loader2 className="w-12 h-12 text-[#fbad26] animate-spin mb-4" />
+          <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs">جاري فتح الكتالوج...</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function CoursesListPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <CoursesListContent />
+    </Suspense>
   );
 }

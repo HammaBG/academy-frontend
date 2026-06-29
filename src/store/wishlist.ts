@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { createSafeStorage } from '@/lib/storage';
 import { Course } from './course';
 
 interface WishlistStore {
@@ -78,6 +79,7 @@ export const useWishlistStore = create<WishlistStore>()(
     }),
     {
       name: 'benaa-wishlist-storage',
+      storage: createSafeStorage(),
       partialize: (state) => ({
         wishlist: state.wishlist,
       }),

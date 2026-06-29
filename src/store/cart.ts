@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { createSafeStorage } from '@/lib/storage';
 import type { Course } from './course';
 
 interface CartItem {
@@ -62,6 +63,7 @@ export const useCartStore = create<CartStore>()(
     }),
     {
       name: 'benaa-cart-storage',
+      storage: createSafeStorage(),
       partialize: (state) => ({
         items: state.items,
       }),

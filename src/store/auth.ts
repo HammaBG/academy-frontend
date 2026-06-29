@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { createSafeStorage } from '@/lib/storage';
 
 // Update these types based on your actual backend response
 export interface User {
@@ -253,6 +254,7 @@ export const useAuthStore = create<AuthStore>()(
     }),
     {
       name: 'benaa-auth-storage',
+      storage: createSafeStorage(),
       partialize: (state) => ({
         token: state.token,
         user: state.user,
