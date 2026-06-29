@@ -44,15 +44,15 @@ export default function Navbar() {
           {/* Right side: Links and Logo */}
           <div className="flex items-stretch gap-8">
             {/* Logo Tab */}
-            <div className="flex-shrink-0 flex items-start">
+            
+            {/* <div className="flex-shrink-0 flex items-start">
               <Link href="/" className="bg-white rounded-b-2xl shadow-md px-4 pb-3 pt-2 flex flex-col items-center justify-center transform transition-transform hover:scale-105">
-                {/* Logo Image Placeholder matching the blocky Benaa logo */}
                 <img src={logo.src} alt="Logo" className="w-12 h-12" />
                 <span className="font-extrabold text-[13px] text-[#2c1a4d] tracking-widest leading-none mt-1">
                   OSSOS ACADEMY
                 </span>
               </Link>
-            </div>
+            </div> */}
 
             {/* Desktop Navigation Links */}
             <div className="hidden lg:flex items-stretch gap-6">
