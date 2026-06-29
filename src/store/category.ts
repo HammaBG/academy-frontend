@@ -28,7 +28,7 @@ interface CategoryActions {
 
 export type CategoryStore = CategoryData & CategoryActions;
 
-const API_URL = 'http://localhost:5000/api/categories';
+const API_URL = 'https://academy-backend-8gl3.onrender.com/api/categories';
 
 export const useCategoryStore = create<CategoryStore>()(
     persist(

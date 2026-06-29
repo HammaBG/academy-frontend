@@ -36,7 +36,7 @@ interface ArticleActions {
 
 export type ArticleStore = ArticleData & ArticleActions;
 
-const API_URL = 'http://localhost:5000/api/articles';
+const API_URL = 'https://academy-backend-8gl3.onrender.com/api/articles';
 
 export const useArticleStore = create<ArticleStore>()(
     persist(
