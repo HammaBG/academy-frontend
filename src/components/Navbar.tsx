@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useAuthStore } from "@/store/auth";
 import { useCartStore } from "@/store/cart";
+import logo from "../../public/ossosacademy.jpg";
 
 export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuthStore();
@@ -33,8 +34,6 @@ export default function Navbar() {
     { name: "الكورسات", href: "/courses" },
     { name: "الباقات", href: "/packages" },
     { name: "عن الأكاديمية", href: "/about" },
-    { name: "بناء تيوب", href: "/benaaTube" },
-    { name: "سفراء بناء", href: "/affiliate" },
   ];
 
   return (
@@ -48,15 +47,9 @@ export default function Navbar() {
             <div className="flex-shrink-0 flex items-start">
               <Link href="/" className="bg-white rounded-b-2xl shadow-md px-4 pb-3 pt-2 flex flex-col items-center justify-center transform transition-transform hover:scale-105">
                 {/* Logo Image Placeholder matching the blocky Benaa logo */}
-                <div className="grid grid-cols-3 gap-0.5 w-12 h-10 mb-1">
-                  <div className="w-full h-full bg-[#fbad26] rounded-sm col-start-1 row-start-2"></div>
-                  <div className="w-full h-full bg-[#e84b8d] rounded-sm col-start-2 row-start-1"></div>
-                  <div className="w-full h-full bg-[#8b3d6f] rounded-sm col-start-2 row-start-2"></div>
-                  <div className="w-full h-full bg-[#3ab795] rounded-sm col-start-3 row-start-2"></div>
-                  <div className="w-full h-full bg-[#20a4f3] rounded-sm col-start-3 row-start-3"></div>
-                </div>
+                <img src={logo.src} alt="Logo" className="w-12 h-12" />
                 <span className="font-extrabold text-[13px] text-[#2c1a4d] tracking-widest leading-none mt-1">
-                  BENAA
+                  OSSOS ACADEMY
                 </span>
               </Link>
             </div>

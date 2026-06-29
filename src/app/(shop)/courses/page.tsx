@@ -4,18 +4,27 @@ import { useEffect } from "react";
 import { useCourseStore } from "@/store/course";
 import { BookOpen, Star, Loader2, Users } from "lucide-react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { CourseCard } from "@/app/(shop)/CourseCard";
 
 export default function CoursesListPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const selectedCategory = searchParams.get("category");
+
   const { courses, isLoading, getPublicCourses } = useCourseStore();
 
   useEffect(() => {
     getPublicCourses();
   }, [getPublicCourses]);
 
+  const filteredCourses = selectedCategory
+    ? courses.filter(course => course.categories === selectedCategory)
+    : courses;
+
   return (
-    <div className="min-h-screen bg-[#1a0e16] text-white">
+    <div className="min-h-screen bg-[#1a0e16] text-white" dir="rtl">
       {/* Background blobs */}
       <div className="fixed top-0 left-0 w-full h-full pointer-events-none overflow-hidden z-0">
         <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-[#fbad26]/10 blur-[120px] rounded-full" />
@@ -25,21 +34,35 @@ export default function CoursesListPage() {
       <div className="relative z-10 max-w-7xl mx-auto px-4 py-20">
         <div className="text-center mb-16 space-y-4">
           <h1 className="text-5xl font-black">
-            Explore our <span className="text-[#fbad26]">Courses</span>
+            استكشف <span className="text-[#fbad26]">دوراتنا</span>
           </h1>
-          <p className="text-zinc-400 max-w-2xl mx-auto font-medium">
-            Join thousands of students and start your journey today with our professionally crafted curriculums.
-          </p>
+          {selectedCategory ? (
+            <div className="flex flex-col items-center gap-4">
+              <p className="text-zinc-400 font-medium">
+                عرض النتائج للتصنيف: <span className="text-[#fbad26] font-black uppercase tracking-wider">{selectedCategory}</span>
+              </p>
+              <button
+                onClick={() => router.push("/courses")}
+                className="px-4 py-1.5 bg-white/10 hover:bg-white/20 rounded-full text-xs font-bold transition-all border border-white/5"
+              >
+                إزالة التصفية
+              </button>
+            </div>
+          ) : (
+            <p className="text-zinc-400 max-w-2xl mx-auto font-medium">
+              انضم إلى آلاف الطلاب وابدأ رحلتك اليوم مع مناهجنا المصممة بشكل احترافي.
+            </p>
+          )}
         </div>
 
         {isLoading && courses.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-40">
             <Loader2 className="w-12 h-12 text-[#fbad26] animate-spin mb-4" />
-            <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs">Opening the catalog...</p>
+            <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs">جاري فتح الكتالوج...</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {courses.map((course) => (
+            {filteredCourses.map((course) => (
               <CourseCard key={course.id} course={course} />
             ))}
           </div>
@@ -48,8 +71,8 @@ export default function CoursesListPage() {
         {courses.length === 0 && !isLoading && (
           <div className="py-20 text-center bg-white/5 rounded-3xl border border-dashed border-white/10">
             <BookOpen className="w-16 h-16 text-white/5 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-zinc-400">No courses available yet</h3>
-            <p className="text-zinc-500 text-sm">Check back later for new educational content.</p>
+            <h3 className="text-xl font-bold text-zinc-400">لا توجد دورات متاحة حالياً</h3>
+            <p className="text-zinc-500 text-sm">تحقق مرة أخرى لاحقاً للحصول على محتوى تعليمي جديد.</p>
           </div>
         )}
       </div>

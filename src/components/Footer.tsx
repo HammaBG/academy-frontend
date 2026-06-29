@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { Send, ArrowRight } from "lucide-react";
-import { FaFacebook, FaTwitter, FaYoutube } from "react-icons/fa";
+import { FaFacebook, FaTwitter, FaYoutube, FaInstagram } from "react-icons/fa";
+import logo from "../../public/ossosacademy.jpg";
 
 export function Footer() {
   return (
@@ -11,14 +12,12 @@ export function Footer() {
         {/* Brand & Social */}
         <div className="space-y-8 text-center lg:text-right">
           <div className="bg-white p-4 rounded-2xl w-32 h-32 mx-auto lg:mr-0 flex items-center justify-center">
-            <span className="text-4xl font-black text-[#8b3d6f]">BENAA</span>
+            <img src={logo.src} alt="Logo" className="w-full h-full" />
           </div>
-          <div className="flex justify-center lg:justify-end gap-4">
+          <div className="flex justify-center lg:justify-end gap-2">
             {[
-              { icon: FaFacebook, href: "#" },
-              { icon: FaTwitter, href: "#" },
-              { icon: FaYoutube, href: "#" },
-              { icon: Send, href: "#" }, // Telegram
+              { icon: FaFacebook, href: "https://www.facebook.com/OSSOS.Academy" },
+              { icon: FaInstagram, href: "https://www.instagram.com/ossosacademy" },
             ].map((social, i) => (
               <a key={i} href={social.href} className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors">
                 <social.icon className="w-5 h-5" />
@@ -71,7 +70,7 @@ export function Footer() {
       <div className="bg-[#2c1a25] py-6">
         <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row-reverse justify-between items-center gap-4 text-sm font-bold">
           <div className="text-zinc-400">
-            جميع الحقوق محفوظة ، أكاديمية بناء 2026
+            جميع الحقوق محفوظة ، أكاديمية أسس 2026
           </div>
 
           <div className="flex gap-6 text-[#ff6ba6]">

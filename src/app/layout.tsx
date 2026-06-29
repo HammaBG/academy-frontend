@@ -8,8 +8,8 @@ const montserratArabic = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Aufus Academy | Admin Dashboard",
-  description: "Advanced administrative dashboard for Aufus Academy",
+  title: "أكاديمية أسس",
+  description: "أكاديمية أسس",
 };
 
 import { AuthProvider } from "@/components/providers/AuthProvider";

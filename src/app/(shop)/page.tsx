@@ -8,15 +8,18 @@ import { useArticleStore } from "@/store/article";
 import { cn } from "@/lib/utils";
 import { CourseCard } from "./CourseCard";
 import { InstructorsSection } from "./InstructorsSection";
+import { useCategoryStore } from "@/store/category";
 
 export default function HomePage() {
   const { articles, isLoading: isArticlesLoading, getPublicArticles } = useArticleStore();
   const { courses, isLoading: isCoursesLoading, getPublicCourses } = useCourseStore();
+  const { categories, getPublicCategories } = useCategoryStore();
 
   useEffect(() => {
     getPublicArticles();
     getPublicCourses();
-  }, [getPublicArticles, getPublicCourses]);
+    getPublicCategories();
+  }, [getPublicArticles, getPublicCourses, getPublicCategories]);
 
 
   return (
@@ -25,7 +28,7 @@ export default function HomePage() {
       <section className="max-w-7xl mx-auto px-4 py-20 text-center">
         <h1 className="text-5xl md:text-6xl font-extrabold leading-tight mb-6">
           مرحباً بك في أكاديمية
-          <span className="bg-gradient-to-r from-[#fbad26] to-[#ff6ba6] bg-clip-text text-transparent"> بناء</span>
+          <span className="bg-gradient-to-r from-[#fbad26] to-[#ff6ba6] bg-clip-text text-transparent"> أسس</span>
         </h1>
         <p className="text-lg md:text-xl text-zinc-300 max-w-2xl mx-auto mb-10 leading-relaxed">
           منصة تعليمية متكاملة تقدم لك أفضل الكورسات، الباقات التعليمية، والبرامج المتخصصة في مختلف المجالات
@@ -81,19 +84,73 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Categories Section */}
+      <section className="max-w-7xl mx-auto px-4 pb-20 text-right">
+        <div className="text-right mb-16">
+          <h2 className="text-4xl text-white font-black mb-4 inline-block relative">
+            الأقسام
+            <div className="absolute -bottom-2 right-0 w-2/3 h-1 bg-[#fbad26] rounded-full" />
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {categories.slice(0, 5).map((category, idx) => (
+            <Link
+              key={category.id}
+              href={`/courses?category=${encodeURIComponent(category.name)}`}
+              className={cn(
+                "relative group h-64 rounded-2xl overflow-hidden border border-white/10 hover:border-[#fbad26]/50 transition-all shadow-xl",
+                idx === 0 ? "lg:col-span-1" :
+                  idx === 1 ? "lg:col-span-1" :
+                    idx === 4 ? "lg:col-span-2 md:col-span-2" : ""
+              )}
+            >
+              {/* Background Image with Overlay */}
+              <div className="absolute inset-0 z-0">
+                {category.image_url ? (
+                  <img src={category.image_url} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-[#8b3d6f] to-[#2c1a25]" />
+                )}
+                <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors" />
+              </div>
+
+              {/* Content */}
+              <div className="relative z-10 h-full p-8 flex flex-col justify-start">
+                <h3 className="text-2xl font-black text-white drop-shadow-lg group-hover:text-[#fbad26] transition-colors leading-tight">
+                  {category.name}
+                </h3>
+              </div>
+
+              {/* Hover Effect Light */}
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#fbad26] to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            </Link>
+          ))}
+        </div>
+
+        <div className="mt-12 flex justify-center">
+          <Link
+            href="/courses"
+            className="px-10 py-3 bg-[#8b3d6f] hover:bg-[#a64a85] text-white font-black rounded-xl transition-all shadow-lg hover:-translate-y-1"
+          >
+            كل الأقسام
+          </Link>
+        </div>
+      </section>
+
       {/* Latest Courses Section */}
       <section className="max-w-7xl mx-auto px-4 py-20 border-t border-white/5">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
           <div className="text-right md:text-left">
             <h2 className="text-3xl md:text-4xl font-extrabold mb-4">
-               استكشف <span className="text-[#fbad26]">الكورسات</span> المميزة
+              استكشف <span className="text-[#fbad26]">الكورسات</span> المميزة
             </h2>
             <p className="text-zinc-400 max-w-xl font-medium">
-               ابدأ رحلتك التعليمية اليوم مع أفضل الدورات المصممة لتطوير مهاراتك والارتقاء بمسارك المهني
+              ابدأ رحلتك التعليمية اليوم مع أفضل الدورات المصممة لتطوير مهاراتك والارتقاء بمسارك المهني
             </p>
           </div>
-          <Link 
-            href="/courses" 
+          <Link
+            href="/courses"
             className="group flex items-center gap-2 text-[#fbad26] font-bold hover:text-[#ffc04d] transition-colors"
           >
             <span>عرض جميع الكورسات</span>
@@ -118,7 +175,7 @@ export default function HomePage() {
 
       {/* Instructors Section */}
       <InstructorsSection />
-      
+
       {/* Latest Articles Section */}
       <section className="max-w-7xl mx-auto px-4 py-20 border-t border-white/5">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
@@ -130,8 +187,8 @@ export default function HomePage() {
               اكتشف أحدث المقالات التعليمية، النصائح، والتريندات في عالم التقنية والتعلم
             </p>
           </div>
-          <Link 
-            href="/articles" 
+          <Link
+            href="/articles"
             className="group flex items-center gap-2 text-[#fbad26] font-bold hover:text-[#ffc04d] transition-colors"
           >
             <span>عرض جميع المقالات</span>
@@ -148,17 +205,17 @@ export default function HomePage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {(articles || []).slice(0, 3).map((article) => (
-              <Link 
-                key={article.id} 
+              <Link
+                key={article.id}
                 href={`/articles/${article.id}`}
                 className="group flex flex-col bg-white/5 backdrop-blur-sm rounded-2xl overflow-hidden border border-white/10 hover:border-[#8b3d6f]/50 transition-all hover:-translate-y-1 hover:shadow-2xl hover:shadow-[#8b3d6f]/10"
               >
                 <div className="relative h-56 w-full overflow-hidden">
                   {article.image_url ? (
-                    <img 
-                      src={article.image_url} 
-                      alt={article.title} 
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                    <img
+                      src={article.image_url}
+                      alt={article.title}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-[#2c1a25] to-[#1a0e16] flex items-center justify-center">
@@ -169,7 +226,7 @@ export default function HomePage() {
                     Blog Post
                   </div>
                 </div>
-                
+
                 <div className="p-6 flex flex-col flex-1">
                   <div className="flex items-center gap-4 mb-4 text-[11px] font-bold text-zinc-500">
                     <div className="flex items-center gap-1.5 uppercase tracking-wider">
@@ -177,15 +234,15 @@ export default function HomePage() {
                       {article.created_at ? new Date(article.created_at).toLocaleDateString() : 'New'}
                     </div>
                   </div>
-                  
+
                   <h3 className="text-xl font-extrabold mb-3 text-white group-hover:text-[#fbad26] transition-colors line-clamp-2 leading-tight">
                     {article.title}
                   </h3>
-                  
+
                   <p className="text-zinc-400 text-sm line-clamp-3 mb-6 font-medium leading-relaxed">
                     {article.excerpt || "No summary provided for this article."}
                   </p>
-                  
+
                   <div className="mt-auto flex items-center gap-2 text-[13px] font-extrabold text-[#ff6ba6] group-hover:gap-3 transition-all">
                     <span>اقرأ المزيد</span>
                     <ChevronRight className="w-4 h-4" />
@@ -195,7 +252,7 @@ export default function HomePage() {
             ))}
           </div>
         )}
-        
+
         {articles.length === 0 && !isArticlesLoading && (
           <div className="py-20 text-center bg-white/5 rounded-3xl border border-dashed border-white/10">
             <Newspaper className="w-16 h-16 text-white/5 mx-auto mb-4" />

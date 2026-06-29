@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useCategoryStore } from "@/store/category";
+import { useAuthStore } from "@/store/auth";
 import { Course, ICourseData, ILink } from "@/store/course";
 import { 
   Plus, 
@@ -30,6 +32,8 @@ interface CourseFormProps {
 }
 
 export function CourseForm({ course, onSubmit, onCancel, isLoading }: CourseFormProps) {
+  const { token } = useAuthStore();
+  const { categories, getAllCategories } = useCategoryStore();
   const [activeTab, setActiveTab] = useState<"general" | "syllabus" | "details" | "test">("general");
   const [formData, setFormData] = useState<Partial<Course>>({
     name: "",
@@ -50,6 +54,12 @@ export function CourseForm({ course, onSubmit, onCancel, isLoading }: CourseForm
   });
 
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (token) {
+      getAllCategories(token);
+    }
+  }, [token, getAllCategories]);
 
   useEffect(() => {
     if (course) {
@@ -172,7 +182,7 @@ export function CourseForm({ course, onSubmit, onCancel, isLoading }: CourseForm
                  </div>
                  <div className="space-y-2">
                    <Label className="text-[#2c1a4d] font-bold">Short Description</Label>
-                   <Textarea name="short_description" value={formData.short_description} onChange={handleChange} placeholder="A catchy summary for calculations..." className="min-h-[100px]" />
+                   <Textarea name="short_description" value={formData.short_description} onChange={handleChange} placeholder="A catchy summary for calculations..." className="min-h-[100px]" required />
                  </div>
                  <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -209,15 +219,28 @@ export function CourseForm({ course, onSubmit, onCancel, isLoading }: CourseForm
                       </div>
                    </div>
                    <div className="space-y-2">
-                     <Label className="text-[#2c1a4d] font-bold">Categories (comma separated)</Label>
-                     <Input name="categories" value={formData.categories} onChange={handleChange} placeholder="Development, Art, Business" />
+                     <Label className="text-[#2c1a4d] font-bold">Category</Label>
+                     <select 
+                       name="categories" 
+                       value={formData.categories} 
+                       onChange={handleChange}
+                       className="w-full h-10 px-3 rounded-md border border-gray-200 bg-white text-sm focus:outline-none focus:ring-1 focus:ring-[#8b3d6f]"
+                       required
+                     >
+                       <option value="">Select a category</option>
+                       {categories.map((cat) => (
+                         <option key={cat.id} value={cat.name}>
+                           {cat.name}
+                         </option>
+                       ))}
+                     </select>
                    </div>
                </div>
              </div>
              
              <div className="space-y-2">
                 <Label className="text-[#2c1a4d] font-bold">Full Course Description</Label>
-                <Textarea name="description" value={formData.description} onChange={handleChange} className="min-h-[200px]" placeholder="Explain what your course is about in detail..." />
+                <Textarea name="description" value={formData.description} onChange={handleChange} className="min-h-[200px]" placeholder="Explain what your course is about in detail..." required />
              </div>
           </div>
         )}
@@ -340,7 +363,7 @@ export function CourseForm({ course, onSubmit, onCancel, isLoading }: CourseForm
                     </div>
                     <div className="space-y-2">
                       <Label className="text-[#2c1a4d] font-bold">Tags</Label>
-                      <Input name="tags" value={formData.tags} onChange={handleChange} placeholder="react, web, development" />
+                      <Input name="tags" value={formData.tags} onChange={handleChange} placeholder="react, web, development" required />
                     </div>
                  </div>
                  <div className="space-y-6">

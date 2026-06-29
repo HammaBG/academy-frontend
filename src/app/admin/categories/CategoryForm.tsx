@@ -9,25 +9,28 @@ import { Loader2, Save } from "lucide-react";
 
 interface CategoryFormProps {
   category?: Category | null;
-  onSubmit: (data: { name: string }) => Promise<void>;
+  onSubmit: (data: { name: string; image_url?: string }) => Promise<void>;
   onCancel: () => void;
   isLoading: boolean;
 }
 
 export function CategoryForm({ category, onSubmit, onCancel, isLoading }: CategoryFormProps) {
   const [name, setName] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
 
   useEffect(() => {
     if (category) {
       setName(category.name || "");
+      setImageUrl(category.image_url || "");
     } else {
       setName("");
+      setImageUrl("");
     }
   }, [category]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSubmit({ name });
+    await onSubmit({ name, image_url: imageUrl });
   };
 
   return (
@@ -43,6 +46,17 @@ export function CategoryForm({ category, onSubmit, onCancel, isLoading }: Catego
             required
             className="bg-white border-gray-200 focus:border-[#8b3d6f] focus:ring-1 focus:ring-[#8b3d6f]"
           />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="image_url">Category Image URL</Label>
+          <Input
+            id="image_url"
+            placeholder="https://example.com/image.jpg"
+            value={imageUrl}
+            onChange={(e) => setImageUrl(e.target.value)}
+            className="bg-white border-gray-200 focus:border-[#8b3d6f] focus:ring-1 focus:ring-[#8b3d6f]"
+          />
+          <p className="text-[10px] text-gray-400 font-medium italic">This image will be used as the background on the home page.</p>
         </div>
       </div>
 

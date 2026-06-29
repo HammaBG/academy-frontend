@@ -4,6 +4,7 @@ import { persist } from 'zustand/middleware';
 export interface Category {
     id: string;
     name: string;
+    image_url?: string;
     created_at?: string;
 }
 
@@ -15,10 +16,11 @@ interface CategoryData {
 }
 
 interface CategoryActions {
-    createCategory: (data: { name: string }, token: string) => Promise<void>;
+    createCategory: (data: { name: string; image_url?: string }, token: string) => Promise<void>;
     getAllCategories: (token: string) => Promise<void>;
+    getPublicCategories: () => Promise<void>;
     getCategoryById: (id: string, token: string) => Promise<void>;
-    updateCategory: (id: string, data: { name: string }, token: string) => Promise<void>;
+    updateCategory: (id: string, data: { name: string; image_url?: string }, token: string) => Promise<void>;
     deleteCategory: (id: string, token: string) => Promise<void>;
     clearError: () => void;
     clearCurrentCategory: () => void;
@@ -72,6 +74,27 @@ export const useCategoryStore = create<CategoryStore>()(
                         method: 'GET',
                         headers: {
                             'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json',
+                        },
+                    });
+
+                    const data = await res.json();
+                    if (!res.ok) {
+                        throw new Error(data.error || 'Failed to fetch categories');
+                    }
+
+                    set({ categories: data.data || [], isLoading: false });
+                } catch (err: any) {
+                    set({ error: err.message, isLoading: false });
+                }
+            },
+
+            getPublicCategories: async () => {
+                set({ isLoading: true, error: null });
+                try {
+                    const res = await fetch(`${API_URL}/`, {
+                        method: 'GET',
+                        headers: {
                             'Content-Type': 'application/json',
                         },
                     });
