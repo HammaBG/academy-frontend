@@ -27,7 +27,7 @@ const CoursePlayer: React.FC<{ videoUrl: string; title: string }> = ({ videoUrl 
   });
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/courses/getVdoCipherOTP", {
+    fetch("https://academy-backend-8gl3.onrender.com/api/courses/getVdoCipherOTP", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
