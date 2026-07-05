@@ -130,7 +130,7 @@ export default function HomePage() {
 
         <div className="mt-12 flex justify-center">
           <Link
-            href="/courses"
+            href="/categories"
             className="px-10 py-3 bg-[#8b3d6f] hover:bg-[#a64a85] text-white font-black rounded-xl transition-all shadow-lg hover:-translate-y-1"
           >
             كل الأقسام
