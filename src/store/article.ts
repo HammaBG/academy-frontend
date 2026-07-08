@@ -76,7 +76,7 @@ export const useArticleStore = create<ArticleStore>()(
                     set({ error: err.message, isLoading: false });
                 }
             },
-            
+
             getPublicArticles: async () => {
                 set({ isLoading: true, error: null });
                 try {

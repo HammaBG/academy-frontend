@@ -23,9 +23,11 @@ export default function EditCoursePage() {
 
   const handleSubmit = async (data: Partial<Course>) => {
     if (!token || !id) return;
-    
+
+    const { creator, id: courseId, created_at, updated_at, reviews, purchased, ratings, ...updateData } = data as any;
+
     try {
-      await updateCourse(id as string, data, token);
+      await updateCourse(id as string, updateData, token);
       router.push("/admin/courses");
     } catch (err) {
       console.error("Update course error:", err);

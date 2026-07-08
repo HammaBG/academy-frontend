@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useAuthStore } from "@/store/auth";
+import Link from "next/link";
 
 const bgColors = [
   "bg-[#38b2ac]", // Teal
@@ -51,14 +52,18 @@ export function InstructorsSection() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-12">
           {instructors.slice(0, 8).map((instructor, index) => (
-            <div key={instructor.id} className="flex flex-col items-center">
-              <div 
-                className={`w-full aspect-square rounded-[1.5rem] overflow-hidden ${bgColors[index % bgColors.length]}`}
+            <Link
+              key={instructor.id}
+              href={`/public-instructor/${instructor.id}`}
+              className="flex flex-col items-center group"
+            >
+              <div
+                className={`w-full aspect-square rounded-[1.5rem] overflow-hidden ${bgColors[index % bgColors.length]} transition-transform duration-300 group-hover:scale-105`}
               >
                 {instructor.avatar_url ? (
-                  <img 
-                    src={instructor.avatar_url} 
-                    alt={instructor.first_name || "Instructor"} 
+                  <img
+                    src={instructor.avatar_url}
+                    alt={instructor.first_name || "Instructor"}
                     className="w-full h-full object-cover object-top"
                   />
                 ) : (
@@ -69,9 +74,9 @@ export function InstructorsSection() {
                   </div>
                 )}
               </div>
-              
+
               <div className="mt-6 text-center">
-                <h3 className="text-xl font-extrabold text-[#3d5a73] mb-1">
+                <h3 className="text-xl font-extrabold text-[#3d5a73] mb-1 group-hover:text-[#8b3d6f] transition-colors">
                   {instructor.first_name} {instructor.last_name}
                 </h3>
                 {instructor.title && (
@@ -80,7 +85,7 @@ export function InstructorsSection() {
                   </p>
                 )}
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>

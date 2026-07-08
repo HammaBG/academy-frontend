@@ -4,14 +4,23 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useAuthStore } from "@/store/auth";
 import { useCartStore } from "@/store/cart";
+import { useCourseStore } from "@/store/course";
 import logo from "../../public/ossosacademy.jpg";
+import { Search, X, BookOpen, User } from "lucide-react";
 
 export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuthStore();
   const { items, removeFromCart, itemCount } = useCartStore();
+  const { courses, getPublicCourses } = useCourseStore();
+  const { instructors, getInstructors } = useAuthStore();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [isCartDropdownOpen, setIsCartDropdownOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<{ courses: any[]; instructors: any[] }>({ courses: [], instructors: [] });
+  const [isSearching, setIsSearching] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
   const cartDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -22,10 +31,29 @@ export default function Navbar() {
       ) {
         setIsCartDropdownOpen(false);
       }
+      if (
+        searchRef.current &&
+        !searchRef.current.contains(e.target as Node)
+      ) {
+        setIsSearchOpen(false);
+        setSearchQuery("");
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (isSearchOpen && courses.length === 0) {
+      getPublicCourses();
+    }
+    if (isSearchOpen && instructors.length === 0) {
+      getInstructors();
+    }
+  }, [isSearchOpen, courses.length, instructors.length, getPublicCourses, getInstructors]);
+
+  const displayCourses = searchQuery.trim().length >= 2 ? searchResults.courses : (courses.slice(0, 5));
+  const displayInstructors = searchQuery.trim().length >= 2 ? searchResults.instructors : (instructors.slice(0, 5));
 
   // Exact links from the image
   const links = [
@@ -36,6 +64,48 @@ export default function Navbar() {
     { name: "عن الأكاديمية", href: "/about" },
   ];
 
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+    if (query.trim().length < 2) {
+      setSearchResults({ courses: [], instructors: [] });
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const [coursesRes, instructorsRes] = await Promise.all([
+        fetch('https://academy-backend-8gl3.onrender.com/api/courses/get-courses'),
+        fetch('https://academy-backend-8gl3.onrender.com/api/auth/instructors'),
+      ]);
+
+      const coursesData = coursesRes.ok ? await coursesRes.json() : { courses: [] };
+      const instructorsData = instructorsRes.ok ? await instructorsRes.json() : { instructors: [] };
+
+      const allCourses = coursesData.courses || [];
+      const allInstructors = instructorsData.instructors || [];
+
+      const q = query.toLowerCase();
+      const matchedCourses = allCourses.filter((c: any) =>
+        c.name.toLowerCase().includes(q) ||
+        c.short_description?.toLowerCase().includes(q)
+      );
+
+      const matchedInstructors = allInstructors.filter((inst: any) =>
+        `${inst.first_name} ${inst.last_name}`.toLowerCase().includes(q) ||
+        inst.email?.toLowerCase().includes(q)
+      );
+
+      setSearchResults({
+        courses: matchedCourses.slice(0, 5),
+        instructors: matchedInstructors.slice(0, 5),
+      });
+    } catch (err) {
+      console.error("Search error:", err);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
   return (
     <nav className="w-full bg-[#8b3d6f] relative z-50">
       <div className="max-w-[1400px] mx-auto px-4 md:px-8">
@@ -44,7 +114,7 @@ export default function Navbar() {
           {/* Right side: Links and Logo */}
           <div className="flex items-stretch gap-8">
             {/* Logo Tab */}
-            
+
             {/* <div className="flex-shrink-0 flex items-start">
               <Link href="/" className="bg-white rounded-b-2xl shadow-md px-4 pb-3 pt-2 flex flex-col items-center justify-center transform transition-transform hover:scale-105">
                 <img src={logo.src} alt="Logo" className="w-12 h-12" />
@@ -71,12 +141,116 @@ export default function Navbar() {
           {/* Left side: Auth / Search / Profile buttons */}
           <div className="flex items-center gap-4">
 
-            {/* Search Icon */}
-            <button className="text-white hover:text-gray-200 p-2 hidden sm:block">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </button>
+            {/* Search */}
+            <div ref={searchRef} className="relative hidden sm:block">
+              <button
+                onClick={() => setIsSearchOpen(true)}
+                className="text-white hover:text-gray-200 p-2"
+                aria-label="بحث"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </button>
+
+              {/* Fullscreen Search Overlay */}
+              {isSearchOpen && (
+                <div className="fixed inset-0 bg-black/98 z-[999] overflow-y-auto" dir="rtl">
+                  <div className="max-w-7xl mx-auto px-4 pt-8 pb-12">
+                    {/* Search Form */}
+                    <div className="relative mb-8">
+                      <div className="relative">
+                        <input
+                          autoFocus
+                          type="text"
+                          value={searchQuery}
+                          onChange={(e) => handleSearch(e.target.value)}
+                          placeholder="ابحث عن كورسات أو معلمين..."
+                          className="w-full bg-transparent border-0 border-b border-white/40 text-white text-3xl md:text-4xl font-bold placeholder-white/60 outline-none py-6 pr-2"
+                        />
+                        <button
+                          onClick={() => { setIsSearchOpen(false); setSearchQuery(""); }}
+                          className="absolute left-0 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors"
+                        >
+                          <X className="h-6 w-6 text-white" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Search Results - Always visible two-column grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      {isSearching ? (
+                        <div className="md:col-span-2 text-center text-white/60 py-12 text-lg">جاري البحث...</div>
+                      ) : (
+                        <>
+                          <div>
+                            <h3 className="text-white text-xl font-bold mb-4 pb-3 border-b border-white/40">الكورسات</h3>
+                            <div className="space-y-1">
+                              {displayCourses.length > 0 ? (
+                                displayCourses.map((course: any) => (
+                                  <Link
+                                    key={course.id}
+                                    href={`/courses/${course.id}`}
+                                    onClick={() => { setIsSearchOpen(false); setSearchQuery(""); }}
+                                    className="flex items-center gap-4 p-3 hover:bg-white/10 rounded-lg transition-colors"
+                                  >
+                                    <div className="w-[90px] h-[60px] rounded-lg overflow-hidden bg-zinc-900 shrink-0">
+                                      {course.thumbnail?.url ? (
+                                        <img src={course.thumbnail.url} alt="" className="w-full h-full object-cover" />
+                                      ) : (
+                                        <BookOpen className="w-6 h-6 text-white/20 m-auto mt-4" />
+                                      )}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-white text-base font-bold truncate">{course.name}</p>
+                                      <p className="text-white/60 text-sm truncate">{course.short_description}</p>
+                                    </div>
+                                  </Link>
+                                ))
+                              ) : (
+                                <p className="text-white/40 text-sm py-4">لا توجد كورسات</p>
+                              )}
+                            </div>
+                          </div>
+
+                          <div>
+                            <h3 className="text-white text-xl font-bold mb-4 pb-3 border-b border-white/40">المُعلمون</h3>
+                            <div className="space-y-1">
+                              {displayInstructors.length > 0 ? (
+                                displayInstructors.map((instructor: any) => (
+                                  <Link
+                                    key={instructor.id}
+                                    href={`#`}
+                                    onClick={() => { setIsSearchOpen(false); setSearchQuery(""); }}
+                                    className="flex items-center gap-4 p-3 hover:bg-white/10 rounded-lg transition-colors"
+                                  >
+                                    <div className="w-[90px] h-[60px] rounded-lg overflow-hidden bg-zinc-900 shrink-0">
+                                      {instructor.avatar_url ? (
+                                        <img src={instructor.avatar_url} alt="" className="w-full h-full object-cover" />
+                                      ) : (
+                                        <div className="w-full h-full flex items-center justify-center">
+                                          <User className="w-6 h-6 text-white/20" />
+                                        </div>
+                                      )}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-white text-base font-bold truncate">{instructor.first_name} {instructor.last_name}</p>
+                                      <p className="text-white/60 text-sm truncate">{instructor.email}</p>
+                                    </div>
+                                  </Link>
+                                ))
+                              ) : (
+                                <p className="text-white/40 text-sm py-4">لا يوجد معلمون</p>
+                              )}
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Vertical Separator */}
             <div className="hidden sm:block h-6 w-px bg-white/40"></div>

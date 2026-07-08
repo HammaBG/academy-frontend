@@ -83,6 +83,7 @@ export interface Course {
 
 interface CourseData {
     courses: Course[];
+    enrolledCourses: Course[];
     currentCourse: Course | null;
     isLoading: boolean;
     error: string | null;
@@ -99,6 +100,10 @@ interface CourseActions {
     deleteCourse: (id: string, token: string) => Promise<void>;
     clearError: () => void;
     clearCurrentCourse: () => void;
+    assignCourseToUser: (courseId: string, userId: string, token: string) => Promise<void>;
+    getEnrolledCourses: (token: string) => Promise<void>;
+    getCourseContent: (id: string, token: string) => Promise<void>;
+
 }
 
 export type CourseStore = CourseData & CourseActions;
@@ -110,6 +115,7 @@ export const useCourseStore = create<CourseStore>()(
         (set, get) => ({
             // State
             courses: [],
+            enrolledCourses: [],
             currentCourse: null,
             isLoading: false,
             error: null,
@@ -207,6 +213,28 @@ export const useCourseStore = create<CourseStore>()(
                 }
             },
 
+            getEnrolledCourses: async (token) => {
+                set({ isLoading: true, error: null });
+                try {
+                    const res = await fetch(`${API_URL}/get-enrolled-courses`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json',
+                        },
+                    });
+
+                    const data = await res.json();
+                    if (!res.ok) {
+                        throw new Error(data.error || 'Failed to fetch enrolled courses');
+                    }
+
+                    set({ enrolledCourses: data.courses || [], isLoading: false });
+                } catch (err: any) {
+                    set({ error: err.message, isLoading: false });
+                }
+            },
+
             getCourseById: async (id, token) => {
                 set({ isLoading: true, error: null });
                 try {
@@ -221,6 +249,28 @@ export const useCourseStore = create<CourseStore>()(
                     const data = await res.json();
                     if (!res.ok) {
                         throw new Error(data.error || 'Course not found');
+                    }
+
+                    set({ currentCourse: data.course, isLoading: false });
+                } catch (err: any) {
+                    set({ error: err.message, isLoading: false });
+                }
+            },
+
+            getCourseContent: async (id: string, token: string) => {
+                set({ isLoading: true, error: null });
+                try {
+                    const res = await fetch(`${API_URL}/get-course-content/${id}`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json',
+                        },
+                    });
+
+                    const data = await res.json();
+                    if (!res.ok) {
+                        throw new Error(data.error || 'Failed to fetch course content');
                     }
 
                     set({ currentCourse: data.course, isLoading: false });
@@ -274,6 +324,29 @@ export const useCourseStore = create<CourseStore>()(
                 }
             },
 
+            assignCourseToUser: async (courseId, userId, token) => {
+                set({ isLoading: true, error: null });
+                try {
+                    const res = await fetch(`${API_URL}/assign-course`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ courseId, userId }),
+                    });
+
+                    const data = await res.json();
+                    if (!res.ok) {
+                        throw new Error(data.error || 'Failed to assign course');
+                    }
+
+                    set({ isLoading: false });
+                } catch (err: any) {
+                    set({ error: err.message, isLoading: false });
+                }
+            },
+
             deleteCourse: async (id, token) => {
                 set({ isLoading: true, error: null });
                 try {
@@ -304,6 +377,7 @@ export const useCourseStore = create<CourseStore>()(
             storage: createSafeStorage(),
             partialize: (state) => ({
                 courses: state.courses,
+                enrolledCourses: state.enrolledCourses,
             }),
         }
     )

@@ -13,57 +13,13 @@ import {
    User,
    MessageSquare
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { CoursePlayer } from "@/components/CoursePlayer";
 
 interface CourseDetailsContentProps {
    course: Course;
 }
-
-const CoursePlayer: React.FC<{ videoUrl: string; title: string }> = ({ videoUrl }) => {
-  const [videoData, setVideoData] = useState({
-    otp: "",
-    playbackInfo: "",
-  });
-
-  useEffect(() => {
-    fetch("https://academy-backend-8gl3.onrender.com/api/courses/getVdoCipherOTP", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ videoId: videoUrl }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        setVideoData(data);
-      })
-      .catch((error) => {
-        console.error("Error fetching VdoCipher OTP:", error);
-      });
-  }, [videoUrl]);
-
-  return (
-    <div className="absolute inset-0 w-full h-full overflow-hidden">
-      {videoData.otp && videoData.playbackInfo !== "" && (
-        <iframe
-          src={`https://player.vdocipher.com/v2/?otp=${videoData?.otp}&playbackInfo=${videoData.playbackInfo}&player=IlvF0hkHRSgG2wGs&autoplay=true&mute=0`}
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            border: 0
-          }}
-          allowFullScreen={true}
-          allow="encrypted-media; autoplay"
-          allowTransparency={true}
-        ></iframe>
-      )}
-    </div>
-  );
-};
 
 export function CourseDetailsContent({ course }: CourseDetailsContentProps) {
    const [openSection, setOpenSection] = useState<number | null>(0);
@@ -113,9 +69,9 @@ export function CourseDetailsContent({ course }: CourseDetailsContentProps) {
 
          {/* Video Preview / Banner */}
          <div className="relative aspect-video rounded-3xl overflow-hidden border border-white/10 group shadow-2xl bg-zinc-950">
-            {isPlaying && course.demo_url ? (
-               <CoursePlayer videoUrl={course.demo_url} title={course.name} />
-            ) : (
+             {isPlaying && course.demo_url ? (
+                <CoursePlayer videoUrl={course.demo_url} />
+             ) : (
                <div 
                   onClick={() => setIsPlaying(true)}
                   className="w-full h-full cursor-pointer relative"

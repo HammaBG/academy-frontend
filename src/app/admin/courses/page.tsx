@@ -41,6 +41,7 @@ import {
   ExternalLink,
   UserPlus,
   Check,
+  Users,
 } from "lucide-react";
 
 import { useAuthStore } from "@/store/auth";
@@ -50,22 +51,29 @@ import type { Course } from "@/store/course";
 
 export default function CoursesPage() {
   const router = useRouter();
-  const { token, instructors, getInstructors } = useAuthStore();
-  const { courses, isLoading, error, getAllCourses, deleteCourse, updateCourse } = useCourseStore();
+  const { token, instructors, getInstructors, users, getAllUsers } = useAuthStore();
+  const { courses, isLoading, error, getAllCourses, deleteCourse, updateCourse, assignCourseToUser } = useCourseStore();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [assignTarget, setAssignTarget] = useState<Course | null>(null);
   const [selectedInstructorId, setSelectedInstructorId] = useState<string | null>(null);
   const [instructorSearch, setInstructorSearch] = useState("");
+
+  const [assignUserDialogOpen, setAssignUserDialogOpen] = useState(false);
+  const [assignUserTarget, setAssignUserTarget] = useState<Course | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [userSearch, setUserSearch] = useState("");
+  const [isAssigningUser, setIsAssigningUser] = useState(false);
   const [isAssigning, setIsAssigning] = useState(false);
 
   useEffect(() => {
     if (token) {
       getAllCourses(token);
       getInstructors();
+      getAllUsers();
     }
-  }, [token, getAllCourses, getInstructors]);
+  }, [token, getAllCourses, getInstructors, getAllUsers]);
 
   const filteredCourses = (courses ?? []).filter(course =>
     course.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -74,6 +82,11 @@ export default function CoursesPage() {
   const filteredInstructors = (instructors ?? []).filter((inst: User) => {
     const fullName = `${inst.first_name ?? ""} ${inst.last_name ?? ""}`.toLowerCase();
     return fullName.includes(instructorSearch.toLowerCase()) || inst.email.toLowerCase().includes(instructorSearch.toLowerCase());
+  });
+
+  const filteredUsers = (users ?? []).filter((usr: User) => {
+    const fullName = `${usr.first_name ?? ""} ${usr.last_name ?? ""}`.toLowerCase();
+    return fullName.includes(userSearch.toLowerCase()) || usr.email.toLowerCase().includes(userSearch.toLowerCase());
   });
 
   const handleCreate = () => {
@@ -115,6 +128,29 @@ export default function CoursesPage() {
       setIsAssigning(false);
     }
   };
+
+  const openAssignUserDialog = useCallback((course: Course) => {
+    setAssignUserTarget(course);
+    setSelectedUserId(null);
+    setUserSearch("");
+    setAssignUserDialogOpen(true);
+  }, []);
+
+  const handleAssignUser = async () => {
+    if (!token || !assignUserTarget || !selectedUserId) return;
+    setIsAssigningUser(true);
+    try {
+      await assignCourseToUser(assignUserTarget.id, selectedUserId, token);
+      await getAllCourses(token);
+      setAssignUserDialogOpen(false);
+      setAssignUserTarget(null);
+    } catch (err) {
+      console.error("Assign user error:", err);
+    } finally {
+      setIsAssigningUser(false);
+    }
+  };
+
 
   const getCreatorName = (course: Course): string => {
     if (!course.creator) return "Unassigned";
@@ -213,9 +249,9 @@ export default function CoursesPage() {
                 </TableCell>
                 <TableCell>
                   <div className="flex flex-col">
-                    <span className="font-bold text-[#2c1a4d]">${course.price}</span>
+                    <span className="font-bold text-[#2c1a4d]">{course.price} TND</span>
                     {course.estimated_price && (
-                      <span className="text-[10px] text-gray-400 line-through">${course.estimated_price}</span>
+                      <span className="text-[10px] text-gray-400 line-through">{course.estimated_price} TND</span>
                     )}
                   </div>
                 </TableCell>
@@ -257,6 +293,14 @@ export default function CoursesPage() {
                         >
                           <UserPlus className="w-4 h-4 text-teal-600" />
                           <span>Assign Instructor</span>
+                        </DropdownMenuItem>
+
+                        <DropdownMenuItem
+                          onClick={() => openAssignUserDialog(course)}
+                          className="gap-3 py-2.5 px-3 hover:bg-gray-50 transition-colors cursor-pointer rounded-md"
+                        >
+                          <Users className="w-4 h-4 text-indigo-600" />
+                          <span>Assign to User</span>
                         </DropdownMenuItem>
 
                         <Link href={`/courses/${course.id}`} target="_blank">
@@ -374,6 +418,87 @@ export default function CoursesPage() {
               className="bg-[#8b3d6f] hover:bg-[#7c3663] text-white font-bold gap-2"
             >
               {isAssigning ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
+              Assign
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Assign User Dialog */}
+      <Dialog open={assignUserDialogOpen} onOpenChange={setAssignUserDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-extrabold text-[#2c1a4d]">
+              Assign Course to User
+            </DialogTitle>
+            <DialogDescription>
+              Select a user to assign <strong className="text-[#2c1a4d]">{assignUserTarget?.name}</strong> to
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 py-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input
+                placeholder="Search users..."
+                className="pl-10 bg-gray-50 border-gray-200"
+                value={userSearch}
+                onChange={(e) => setUserSearch(e.target.value)}
+              />
+            </div>
+
+            <div className="max-h-[240px] overflow-y-auto space-y-1 rounded-lg border border-gray-100 p-1">
+              {filteredUsers.length === 0 && (
+                <p className="text-center text-gray-400 text-sm py-6 font-bold">No users found</p>
+              )}
+              {filteredUsers.map((usr: User) => {
+                const isSelected = selectedUserId === usr.id;
+                return (
+                  <button
+                    key={usr.id}
+                    type="button"
+                    onClick={() => setSelectedUserId(usr.id)}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all cursor-pointer ${isSelected
+                      ? "bg-[#8b3d6f]/10 border border-[#8b3d6f]/30"
+                      : "hover:bg-gray-50 border border-transparent"
+                      }`}
+                  >
+                    {usr.avatar_url ? (
+                      <img src={usr.avatar_url} alt="" className="w-9 h-9 rounded-full object-cover border border-gray-200" />
+                    ) : (
+                      <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center font-bold text-sm text-[#8b3d6f]">
+                        {usr.first_name?.[0] ?? "?"}
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-[#2c1a4d] truncate">
+                        {usr.first_name} {usr.last_name}
+                      </p>
+                      <p className="text-[11px] text-gray-400 truncate">{usr.email}</p>
+                    </div>
+                    {isSelected && (
+                      <Check className="w-5 h-5 text-[#8b3d6f] shrink-0" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setAssignUserDialogOpen(false)}
+              className="font-bold"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAssignUser}
+              disabled={!selectedUserId || isAssigningUser}
+              className="bg-[#8b3d6f] hover:bg-[#7c3663] text-white font-bold gap-2"
+            >
+              {isAssigningUser ? <Loader2 className="w-4 h-4 animate-spin" /> : <Users className="w-4 h-4" />}
               Assign
             </Button>
           </DialogFooter>
