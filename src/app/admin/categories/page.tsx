@@ -69,7 +69,7 @@ export default function CategoriesPage() {
     setIsSheetOpen(true);
   };
 
-  const handleSubmit = async (data: { name: string }) => {
+  const handleSubmit = async (data: { name: string; image_url?: string; color?: string }) => {
     if (!token) return;
     
     try {
@@ -141,7 +141,13 @@ export default function CategoriesPage() {
               <TableRow key={category.id} className="hover:bg-gray-50/80 transition-colors border-b border-gray-50">
                 <TableCell>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg border border-gray-100 bg-gray-50 flex items-center justify-center text-[#8b3d6f]">
+                    <div 
+                      className="w-10 h-10 rounded-lg border border-gray-100 flex items-center justify-center animate-none"
+                      style={{ 
+                        backgroundColor: category.color ? `${category.color}15` : '#f9fafb',
+                        color: category.color || '#8b3d6f'
+                      }}
+                    >
                        <Layers className="w-5 h-5" />
                     </div>
                     <span className="font-bold text-[#2c1a4d] text-[15px]">{category.name}</span>

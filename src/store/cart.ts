@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 import { createSafeStorage } from '@/lib/storage';
 import type { Course } from './course';
 
-interface CartItem {
+export interface CartItem {
   course: Course;
   addedAt: string;
 }

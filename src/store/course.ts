@@ -78,6 +78,7 @@ export interface Course {
     test: ITest;
     fake_user: number;
     display_order: number;
+    category_color?: string;
     created_at?: string;
 }
 
@@ -109,6 +110,7 @@ interface CourseActions {
 export type CourseStore = CourseData & CourseActions;
 
 const API_URL = 'https://academy-backend-8gl3.onrender.com/api/courses';
+// const API_URL = 'http://localhost:5000/api/courses';
 
 export const useCourseStore = create<CourseStore>()(
     persist(

@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useWishlistStore } from "@/store/wishlist";
 import { useAuthStore } from "@/store/auth";
 import { Heart, Loader2, BookOpen } from "lucide-react";
-import { CourseCard } from "@/app/(shop)/CourseCard";
+import { CourseCard } from "@/components/Course/CourseCard";
 import { useRouter } from "next/navigation";
 
 export default function FavoritesPage() {

@@ -5,6 +5,7 @@ export interface Category {
     id: string;
     name: string;
     image_url?: string;
+    color?: string;
     created_at?: string;
 }
 
@@ -16,11 +17,11 @@ interface CategoryData {
 }
 
 interface CategoryActions {
-    createCategory: (data: { name: string; image_url?: string }, token: string) => Promise<void>;
+    createCategory: (data: { name: string; image_url?: string; color?: string }, token: string) => Promise<void>;
     getAllCategories: (token: string) => Promise<void>;
     getPublicCategories: () => Promise<void>;
     getCategoryById: (id: string, token: string) => Promise<void>;
-    updateCategory: (id: string, data: { name: string; image_url?: string }, token: string) => Promise<void>;
+    updateCategory: (id: string, data: { name: string; image_url?: string; color?: string }, token: string) => Promise<void>;
     deleteCategory: (id: string, token: string) => Promise<void>;
     clearError: () => void;
     clearCurrentCategory: () => void;
@@ -29,6 +30,8 @@ interface CategoryActions {
 export type CategoryStore = CategoryData & CategoryActions;
 
 const API_URL = 'https://academy-backend-8gl3.onrender.com/api/categories';
+// const API_URL = 'http://localhost:5000/api/categories';
+
 
 export const useCategoryStore = create<CategoryStore>()(
     persist(

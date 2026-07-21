@@ -9,6 +9,14 @@ export interface Article {
     status: 'draft' | 'published';
     excerpt?: string;
     image_url?: string;
+    category_id?: string;
+    category_name?: string;
+    category_color?: string;
+    category?: {
+        id?: string;
+        name?: string;
+        color?: string;
+    };
     created_at?: string;
 }
 
@@ -37,6 +45,7 @@ interface ArticleActions {
 export type ArticleStore = ArticleData & ArticleActions;
 
 const API_URL = 'https://academy-backend-8gl3.onrender.com/api/articles';
+// const API_URL = 'http://localhost:5000/api/articles';
 
 export const useArticleStore = create<ArticleStore>()(
     persist(

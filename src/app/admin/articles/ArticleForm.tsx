@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Article } from "@/store/article";
+import { useCategoryStore } from "@/store/category";
 import { Image as ImageIcon, X, Loader2, Save } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -17,14 +18,23 @@ interface ArticleFormProps {
 }
 
 export function ArticleForm({ article, onSubmit, onCancel, isLoading }: ArticleFormProps) {
+  const { categories, getPublicCategories } = useCategoryStore();
+
   const [formData, setFormData] = useState({
     title: "",
     excerpt: "",
     content: "",
     status: "draft" as "draft" | "published",
+    category_id: "",
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (categories.length === 0) {
+      getPublicCategories();
+    }
+  }, [categories.length, getPublicCategories]);
 
   useEffect(() => {
     if (article) {
@@ -33,6 +43,7 @@ export function ArticleForm({ article, onSubmit, onCancel, isLoading }: ArticleF
         excerpt: article.excerpt || "",
         content: article.content || "",
         status: article.status || "draft",
+        category_id: article.category_id || article.category?.id || "",
       });
       setImagePreview(article.image_url || null);
     }
@@ -62,8 +73,16 @@ export function ArticleForm({ article, onSubmit, onCancel, isLoading }: ArticleF
     data.append("excerpt", formData.excerpt);
     data.append("content", formData.content);
     data.append("status", formData.status);
+    if (formData.category_id) {
+      data.append("category_id", formData.category_id);
+      const selectedCat = categories.find((c) => c.id === formData.category_id);
+      if (selectedCat) {
+        if (selectedCat.name) data.append("category_name", selectedCat.name);
+        if (selectedCat.color) data.append("category_color", selectedCat.color);
+      }
+    }
     if (imageFile) {
-      data.append("image", imageFile); // 'image' because the backend uses req.file
+      data.append("image", imageFile);
     }
     await onSubmit(data);
   };
@@ -111,6 +130,24 @@ export function ArticleForm({ article, onSubmit, onCancel, isLoading }: ArticleF
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
+            <Label htmlFor="category_id">Category</Label>
+            <select
+              id="category_id"
+              name="category_id"
+              value={formData.category_id}
+              onChange={handleChange}
+              className="w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#8b3d6f] transition-all font-medium h-10"
+            >
+              <option value="">Select a category</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="status">Status</Label>
             <select
               id="status"
@@ -123,41 +160,41 @@ export function ArticleForm({ article, onSubmit, onCancel, isLoading }: ArticleF
               <option value="published">Published</option>
             </select>
           </div>
+        </div>
 
-          <div className="space-y-2">
-            <Label>Cover Image</Label>
-            <div className="flex items-center gap-4">
-              <div 
-                className={cn(
-                  "relative w-24 h-24 rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden bg-gray-50 transition-colors",
-                  !imagePreview && "hover:border-[#8b3d6f] hover:bg-purple-50"
-                )}
-              >
-                {imagePreview ? (
-                  <>
-                    <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                    <button
-                      type="button"
-                      onClick={() => { setImageFile(null); setImagePreview(null); }}
-                      className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </>
-                ) : (
-                  <ImageIcon className="w-8 h-8 text-gray-300" />
-                )}
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="absolute inset-0 opacity-0 cursor-pointer"
-                />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-xs font-bold text-gray-500">Upload Image</span>
-                <span className="text-[10px] text-gray-400">Recommended: 1200x630px</span>
-              </div>
+        <div className="space-y-2">
+          <Label>Cover Image</Label>
+          <div className="flex items-center gap-4">
+            <div 
+              className={cn(
+                "relative w-24 h-24 rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden bg-gray-50 transition-colors",
+                !imagePreview && "hover:border-[#8b3d6f] hover:bg-purple-50"
+              )}
+            >
+              {imagePreview ? (
+                <>
+                  <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => { setImageFile(null); setImagePreview(null); }}
+                    className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </>
+              ) : (
+                <ImageIcon className="w-8 h-8 text-gray-300" />
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="absolute inset-0 opacity-0 cursor-pointer"
+              />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xs font-bold text-gray-500">Upload Image</span>
+              <span className="text-[10px] text-gray-400">Recommended: 1200x630px</span>
             </div>
           </div>
         </div>

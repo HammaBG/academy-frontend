@@ -134,6 +134,7 @@ export default function ArticlesPage() {
           <TableHeader className="bg-gray-100/50">
             <TableRow>
               <TableHead className="font-bold text-[#2c1a4d]">Article</TableHead>
+              <TableHead className="font-bold text-[#2c1a4d]">Category</TableHead>
               <TableHead className="font-bold text-[#2c1a4d]">Status</TableHead>
               <TableHead className="font-bold text-[#2c1a4d]">Created At</TableHead>
               <TableHead className="font-bold text-[#2c1a4d] text-right">Action</TableHead>
@@ -156,6 +157,22 @@ export default function ArticlesPage() {
                       <span className="text-[11px] text-gray-400 line-clamp-1">{article.excerpt || "No summary provided"}</span>
                     </div>
                   </div>
+                </TableCell>
+                <TableCell>
+                  {article.category_name || article.category?.name ? (
+                    <span 
+                      className="px-2.5 py-1 rounded-full text-[11px] font-bold border"
+                      style={{ 
+                        backgroundColor: (article.category_color || article.category?.color || '#8b3d6f') + '15',
+                        color: article.category_color || article.category?.color || '#8b3d6f',
+                        borderColor: (article.category_color || article.category?.color || '#8b3d6f') + '30',
+                      }}
+                    >
+                      {article.category_name || article.category?.name}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-gray-400 font-medium">—</span>
+                  )}
                 </TableCell>
                 <TableCell>
                   <span className={`px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest ${

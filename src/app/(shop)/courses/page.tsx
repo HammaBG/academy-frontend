@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, Suspense } from "react";
+import { useEffect, Suspense, FormEvent, useState, ChangeEvent } from "react";
 import { useCourseStore } from "@/store/course";
-import { BookOpen, Star, Loader2, Users } from "lucide-react";
+import { BookOpen, Loader2, Sparkles, Search, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { cn } from "@/lib/utils";
-import { CourseCard } from "@/app/(shop)/CourseCard";
+import { CourseCard } from "@/components/Course/CourseCard";
 
 function CoursesListContent() {
   const searchParams = useSearchParams();
@@ -14,65 +13,99 @@ function CoursesListContent() {
   const selectedCategory = searchParams.get("category");
 
   const { courses, isLoading, getPublicCourses } = useCourseStore();
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     getPublicCourses();
   }, [getPublicCourses]);
 
-  const filteredCourses = selectedCategory
-    ? courses.filter(course => course.categories === selectedCategory)
-    : courses;
+  const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const handleClearCategory = () => {
+    router.push("/courses");
+  };
+
+  const filteredCourses = (courses || []).filter((course) => {
+    const matchesCategory = selectedCategory ? course.categories === selectedCategory : true;
+    const matchesSearch = searchQuery
+      ? course.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (course.short_description || "").toLowerCase().includes(searchQuery.toLowerCase())
+      : true;
+    return matchesCategory && matchesSearch;
+  });
 
   return (
-    <div className="min-h-screen bg-[#1a0e16] text-white" dir="rtl">
-      <div className="fixed top-0 left-0 w-full h-full pointer-events-none overflow-hidden z-0">
-        <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-[#fbad26]/10 blur-[120px] rounded-full" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[30%] h-[30%] bg-[#8b3d6f]/10 blur-[120px] rounded-full" />
-      </div>
+    <div className="min-h-screen bg-background text-text-primary text-right" dir="rtl">
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 py-20">
-        <div className="text-center mb-16 space-y-4">
-          <h1 className="text-5xl font-black">
-            استكشف <span className="text-[#fbad26]">دوراتنا</span>
+      <div className="relative z-10 max-w-7xl mx-auto px-4 py-24">
+        {/* Header Block */}
+        <div className="text-center mb-16 space-y-4 pt-10">
+          <h1 className="text-4xl md:text-5xl font-black text-text-primary leading-tight">
+            استكشف <span className="text-brand-primary">دوراتنا</span> المميزة
           </h1>
-          {selectedCategory ? (
-            <div className="flex flex-col items-center gap-4">
-              <p className="text-zinc-400 font-medium">
-                عرض النتائج للتصنيف: <span className="text-[#fbad26] font-black uppercase tracking-wider">{selectedCategory}</span>
-              </p>
-              <button
-                onClick={() => router.push("/courses")}
-                className="px-4 py-1.5 bg-white/10 hover:bg-white/20 rounded-full text-xs font-bold transition-all border border-white/5"
-              >
-                إزالة التصفية
-              </button>
+
+          <p className="text-text-secondary max-w-2xl mx-auto font-medium text-sm sm:text-base">
+            انضم إلى آلاف الطلاب وابدأ رحلتك اليوم مع مناهجنا المصممة بشكل احترافي لتطوير مهاراتك.
+          </p>
+
+          {/* Filters & Search Row */}
+          <div className="max-w-2xl mx-auto mt-10 flex flex-col sm:flex-row items-center gap-4 justify-center">
+            {/* Search Input */}
+            <div className="w-full relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={handleSearchChange}
+                placeholder="ابحث عن الدورات..."
+                className="w-full bg-surface border border-border/40 rounded-2xl py-3.5 pr-12 pl-4 text-text-primary placeholder-text-secondary/45 focus:outline-none focus:border-brand-primary/60 focus:ring-1 focus:ring-brand-primary/60 transition-all text-right text-sm font-semibold"
+              />
+              <Search className="w-5 h-5 text-text-secondary/40 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
-          ) : (
-            <p className="text-zinc-400 max-w-2xl mx-auto font-medium">
-              انضم إلى آلاف الطلاب وابدأ رحلتك اليوم مع مناهجنا المصممة بشكل احترافي.
-            </p>
-          )}
+
+            {/* Selected Category Pill */}
+            {selectedCategory && (
+              <div className="flex items-center gap-2 bg-brand-primary/10 border border-brand-primary/25 rounded-2xl px-4 py-3 shrink-0 text-brand-primary text-sm font-extrabold">
+                <span>المسار: {selectedCategory}</span>
+                <button
+                  onClick={handleClearCategory}
+                  className="hover:bg-brand-primary/20 p-1 rounded-full transition-colors"
+                  aria-label="إزالة التصفية"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
+        {/* Content Area */}
         {isLoading && courses.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-40">
-            <Loader2 className="w-12 h-12 text-[#fbad26] animate-spin mb-4" />
-            <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs">جاري فتح الكتالوج...</p>
-          </div>
-        ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredCourses.map((course) => (
-              <CourseCard key={course.id} course={course} />
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="bg-surface/50 rounded-[32px] h-[450px] animate-pulse border border-border/40"
+              />
             ))}
           </div>
-        )}
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {filteredCourses.map((course) => (
+                <CourseCard key={course.id} course={course} />
+              ))}
+            </div>
 
-        {courses.length === 0 && !isLoading && (
-          <div className="py-20 text-center bg-white/5 rounded-3xl border border-dashed border-white/10">
-            <BookOpen className="w-16 h-16 text-white/5 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-zinc-400">لا توجد دورات متاحة حالياً</h3>
-            <p className="text-zinc-500 text-sm">تحقق مرة أخرى لاحقاً للحصول على محتوى تعليمي جديد.</p>
-          </div>
+            {filteredCourses.length === 0 && (
+              <div className="py-24 text-center bg-surface/30 rounded-[32px] border border-dashed border-border/60">
+                <BookOpen className="w-16 h-16 text-text-secondary/20 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-text-secondary">لا توجد دورات متاحة تطابق بحثك</h3>
+                <p className="text-text-secondary/60 text-sm mt-1">تحقق مرة أخرى لاحقاً للحصول على محتوى تعليمي جديد.</p>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
@@ -81,15 +114,11 @@ function CoursesListContent() {
 
 function LoadingFallback() {
   return (
-    <div className="min-h-screen bg-[#1a0e16] text-white" dir="rtl">
-      <div className="fixed top-0 left-0 w-full h-full pointer-events-none overflow-hidden z-0">
-        <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-[#fbad26]/10 blur-[120px] rounded-full" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[30%] h-[30%] bg-[#8b3d6f]/10 blur-[120px] rounded-full" />
-      </div>
-      <div className="relative z-10 max-w-7xl mx-auto px-4 py-20">
+    <div className="min-h-screen bg-background text-text-primary text-right" dir="rtl">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 py-24">
         <div className="flex flex-col items-center justify-center py-40">
-          <Loader2 className="w-12 h-12 text-[#fbad26] animate-spin mb-4" />
-          <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs">جاري فتح الكتالوج...</p>
+          <Loader2 className="w-12 h-12 text-brand-primary animate-spin mb-4" />
+          <p className="text-text-secondary font-bold uppercase tracking-widest text-xs">جاري فتح الكتالوج...</p>
         </div>
       </div>
     </div>
