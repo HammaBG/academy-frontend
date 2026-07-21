@@ -155,7 +155,7 @@ export function Footer() {
                   <MapPin className="w-4 h-4 text-brand-primary" />
                 </div>
                 <div>
-                  <span className="text-sm block">تونس العاصمة، تونس</span>
+                  <span className="text-sm block">سوسة، تونس</span>
                   <span className="text-xs text-text-secondary/60 group-hover:text-brand-primary/70 transition-colors">عرض على الخريطة</span>
                 </div>
               </a>
