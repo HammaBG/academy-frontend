@@ -17,10 +17,6 @@ export default function CategoriesPage() {
       {/* Header Banner */}
       <section className="relative overflow-hidden py-16 bg-surface/10">
         <div className="max-w-[1200px] mx-auto px-4 md:px-8 text-center relative z-10">
-          <div className="flex items-center gap-2 mb-2 text-brand-primary font-bold text-sm justify-center">
-            <Sparkles className="w-4 h-4" />
-            <span>مجالات وبناء الغد</span>
-          </div>
           <h1 className="text-3xl md:text-5xl font-black text-text-primary leading-tight mb-4">
             المسارات <span className="text-brand-primary">التعليمية</span>
           </h1>
@@ -69,12 +65,13 @@ export default function CategoriesPage() {
           </div>
         ) : (
           /* Categories Grid */
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {categories.map((category) => (
               <Link
                 key={category.id}
                 href={`/courses?category=${encodeURIComponent(category.name)}`}
-                className="relative group h-64 rounded-3xl overflow-hidden border border-border/40 hover:border-brand-primary/60 transition-all duration-500 shadow-sm hover:shadow-xl bg-surface flex flex-col justify-end p-8"
+                className="relative group h-64 rounded-3xl overflow-hidden transition-all duration-500 shadow-sm flex flex-col justify-end p-8"
+                style={{ borderColor: category.color }}
               >
                 {/* Background Image / Gradient Overlay */}
                 <div className="absolute inset-0 z-0">
@@ -89,35 +86,23 @@ export default function CategoriesPage() {
                       className="w-full h-full"
                       style={{
                         background: category.color
-                          ? `linear-gradient(135deg, ${category.color}, ${category.color}dd)`
-                          : "linear-gradient(135deg, var(--brand-primary), #ff6ba6)",
                       }}
                     />
                   )}
                   {/* Subtle dark gradient overlay */}
-                  <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors" />
+                  <div className="absolute inset-0 bg-black/10 transition-colors" />
                 </div>
 
                 {/* Content */}
                 <div className="relative z-10 text-right">
-                  <h2 className="text-2xl font-black text-white group-hover:text-brand-primary transition-colors leading-tight drop-shadow-md">
+                  <h2 className="text-2xl font-black text-white leading-tight drop-shadow-md">
                     {category.name}
                   </h2>
-                  <div className="flex items-center gap-1.5 text-white/80 group-hover:text-white transition-colors text-sm font-bold mt-3">
+                  <div className="flex items-center gap-1.5 text-white/80 transition-colors text-sm font-bold mt-3">
                     <span>تصفح الكورسات</span>
                     <ArrowLeft className="h-4 w-4 transform transition-transform group-hover:-translate-x-1" />
                   </div>
                 </div>
-
-                {/* Accent Top Border Line on Hover */}
-                <div
-                  className="absolute top-0 left-0 right-0 h-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                  style={{
-                    background: category.color
-                      ? `linear-gradient(to right, transparent, ${category.color}, transparent)`
-                      : "linear-gradient(to right, transparent, var(--brand-primary), transparent)",
-                  }}
-                />
               </Link>
             ))}
           </div>

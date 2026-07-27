@@ -7,72 +7,62 @@ interface Teacher {
     id: number;
     name: string;
     title: string;
-    specialty: string;
     image: string;
 }
 
 const teachers: Teacher[] = [
     {
         id: 1,
-        name: "د. أستاذ الأكاديمية",
-        title: "خبير تربوي وتدريبي",
-        specialty: "التنمية والتربية الحديثة",
+        name: "نايلة بن صالح",
+        title: "طبيبة نفسية",
         image: "/teachers/1.jpeg",
     },
     {
         id: 2,
-        name: "د. أستاذ الأكاديمية",
-        title: "خبير تربوي وتدريبي",
-        specialty: "التنمية والتربية الحديثة",
+        name: "مريم رڤية",
+        title: "طبيبة نفسية",
         image: "/teachers/2.jpeg",
     },
     {
         id: 3,
-        name: "د. أستاذ الأكاديمية",
-        title: "خبير تربوي وتدريبي",
-        specialty: "التنمية والتربية الحديثة",
+        name: "ريماح حناشي",
+        title: "طبيبة نفسية",
         image: "/teachers/3.jpeg",
     },
     {
         id: 4,
-        name: "د. أستاذ الأكاديمية",
-        title: "خبير تربوي وتدريبي",
-        specialty: "التنمية والتربية الحديثة",
+        name: "إنصاف شرف",
+        title: "مختصة في الصحة النفسية",
         image: "/teachers/4.jpg",
     },
     {
         id: 5,
-        name: "د. أستاذ الأكاديمية",
-        title: "خبير تربوي وتدريبي",
-        specialty: "التنمية والتربية الحديثة",
+        name: "مريم عول",
+        title: "مختصة في الصحة النفسية",
         image: "/teachers/5.JPG",
     },
     {
         id: 6,
-        name: "د. أستاذ الأكاديمية",
-        title: "خبير تربوي وتدريبي",
-        specialty: "التنمية والتربية الحديثة",
+        name: "ليليا كمون",
+        title: "أخصائية في التثقيف النفسي",
         image: "/teachers/6.jpg",
     },
     {
         id: 7,
-        name: "د. أستاذ الأكاديمية",
-        title: "خبير تربوي وتدريبي",
-        specialty: "التنمية والتربية الحديثة",
+        name: " أسماء الأمين",
+        title: "مهنسة و باحثة في علم الشريعة و الدين",
         image: "/teachers/7.jpg",
     },
     {
         id: 8,
-        name: "د. أستاذ الأكاديمية",
-        title: "خبير تربوي وتدريبي",
-        specialty: "التنمية والتربية الحديثة",
+        name: "إنصاف عبد سلام",
+        title: "طبيبة نساء و توليد",
         image: "/teachers/8.jpg",
     },
     {
         id: 9,
-        name: "د. أستاذ الأكاديمية",
-        title: "خبير تربوي وتدريبي",
-        specialty: "التنمية والتربية الحديثة",
+        name: "إبراهيم بن عبد الله",
+        title: "كوتش و مدرّب على القيادة الذّاتيّة و مستشار في التفكير و التّخطيط الإستراتيجي",
         image: "/teachers/9.png",
     },
 ];
@@ -110,12 +100,6 @@ export default function InstructorsPage() {
 
                                 {/* Dark Gradient Overlay */}
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-
-                                {/* Top Badge */}
-                                <div className="absolute top-4 right-4 bg-brand-primary/90 text-white text-[11px] font-extrabold px-3 py-1 rounded-full backdrop-blur-md shadow-md flex items-center gap-1.5">
-                                    <Award className="w-3.5 h-3.5" />
-                                    <span>{teacher.specialty}</span>
-                                </div>
 
                                 {/* Info Overlay at Bottom of Image */}
                                 <div className="absolute bottom-4 right-4 left-4 text-white space-y-1">

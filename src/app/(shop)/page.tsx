@@ -23,7 +23,7 @@ export default function HomePage() {
   }, [getPublicArticles, getPublicCourses, getPublicCategories]);
 
   return (
-    <div className="min-h-screen bg-background text-text-primary transition-colors duration-300">
+    <div className="min-h-screen bg-background text-text-primary transition-colors duration-300 relative overflow-hidden">
       <HeroSection />
       <FeaturesSection />
       <CategoriesSection categories={categories} />

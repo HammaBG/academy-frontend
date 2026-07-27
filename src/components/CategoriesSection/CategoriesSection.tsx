@@ -28,23 +28,15 @@ export function CategoriesSection({ categories }: CategoriesSectionProps) {
         <div className="w-full lg:w-[28%] flex shrink-0">
           <div className="relative w-full rounded-2xl overflow-hidden border border-border/40 shadow-xl group min-h-[240px] lg:min-h-full bg-surface">
             <img
-              src="/logo/ossos cat(white).jpg"
+              src="/logo/logo.jpeg"
               alt="أكاديمية أسس"
               className="w-full h-full object-cover dark:hidden transition-transform duration-750 group-hover:scale-105"
             />
             <img
-              src="/logo/ossos cat(black).jpg"
+              src="/logo/logo.jpeg"
               alt="أكاديمية أسس"
               className="w-full h-full object-cover hidden dark:block transition-transform duration-750 group-hover:scale-105"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex flex-col justify-end p-6">
-              <span className="text-xs font-bold text-brand-primary uppercase tracking-widest mb-1">
-                تخصصات شامِلة
-              </span>
-              <h3 className="text-xl font-black text-white leading-tight">
-                مسارات تعليمية متكاملة
-              </h3>
-            </div>
           </div>
         </div>
 
@@ -55,7 +47,8 @@ export function CategoriesSection({ categories }: CategoriesSectionProps) {
               <Link
                 key={category.id}
                 href={`/courses?category=${encodeURIComponent(category.name)}`}
-                className="relative group h-40 rounded-2xl overflow-hidden border border-border/40 hover:border-brand-primary/60 transition-all shadow-xl"
+                className="relative group h-40 rounded-2xl overflow-hidden transition-all shadow-xl"
+                style={{ borderColor: category.color || "var(--border)" }}
               >
                 <div className="absolute inset-0 z-0">
                   {category.image_url ? (
@@ -69,16 +62,14 @@ export function CategoriesSection({ categories }: CategoriesSectionProps) {
                       className="w-full h-full"
                       style={{
                         background: category.color
-                          ? `linear-gradient(135deg, ${category.color}, ${category.color}dd)`
-                          : "linear-gradient(135deg, var(--brand-primary), #ff6ba6)",
                       }}
                     />
                   )}
-                  <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors" />
+                  <div className="absolute inset-0 bg-black/10 transition-colors" />
                 </div>
 
                 <div className="relative z-10 h-full p-6 flex flex-col justify-end">
-                  <h3 className="text-xl font-black text-white drop-shadow-lg group-hover:text-brand-primary transition-colors leading-tight">
+                  <h3 className="text-xl font-black text-white drop-shadow-lg leading-tight">
                     {category.name}
                   </h3>
                 </div>

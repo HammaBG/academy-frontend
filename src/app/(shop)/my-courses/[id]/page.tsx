@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useCourseStore } from "@/store/course";
 import { useAuthStore } from "@/store/auth";
-import { Loader2, AlertCircle, PlayCircle, ChevronDown, BookOpen, Clock, ArrowRight } from "lucide-react";
+import { Loader2, AlertCircle, PlayCircle, BookOpen, Clock, ArrowRight, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { CoursePlayer } from "@/components/CoursePlayer";
@@ -14,8 +14,7 @@ export default function MyCourseDetailsPage() {
   const { token } = useAuthStore();
   const { currentCourse, isLoading, error, getCourseContent, clearCurrentCourse } = useCourseStore();
 
-  const [openSection, setOpenSection] = useState<number | null>(null);
-  const [playingSection, setPlayingSection] = useState<number | null>(null);
+  const [activeIdx, setActiveIdx] = useState<number>(0);
 
   useEffect(() => {
     if (id && token) {
@@ -26,9 +25,9 @@ export default function MyCourseDetailsPage() {
 
   if (isLoading && !currentCourse) {
     return (
-      <div className="min-h-screen bg-[#1a0e16] flex flex-col items-center justify-center p-4" dir="rtl">
-        <Loader2 className="w-12 h-12 text-[#fbad26] animate-spin mb-4" />
-        <p className="text-[#fbad26] font-bold animate-pulse uppercase tracking-[0.2em] text-sm">
+      <div className="min-h-screen bg-background text-text-primary flex flex-col items-center justify-center p-4 text-right" dir="rtl">
+        <Loader2 className="w-12 h-12 text-brand-primary animate-spin mb-4" />
+        <p className="text-brand-primary font-extrabold animate-pulse uppercase tracking-widest text-sm">
           جاري تحميل محتوى الدورة...
         </p>
       </div>
@@ -37,17 +36,17 @@ export default function MyCourseDetailsPage() {
 
   if (error || (!currentCourse && !isLoading)) {
     return (
-      <div className="min-h-screen bg-[#1a0e16] flex flex-col items-center justify-center p-6 text-center" dir="rtl">
+      <div className="min-h-screen bg-background text-text-primary flex flex-col items-center justify-center p-6 text-center" dir="rtl">
         <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mb-6 border border-red-500/20">
           <AlertCircle className="w-10 h-10 text-red-500" />
         </div>
-        <h2 className="text-3xl font-black text-white mb-2">حدث خطأ ما</h2>
-        <p className="text-zinc-500 max-w-md mb-8">
+        <h2 className="text-3xl font-black mb-2">حدث خطأ ما</h2>
+        <p className="text-text-secondary max-w-md mb-8 font-medium">
           {error || "لم نتمكن من تحميل محتوى الدورة. ربما لم تقم بالتسجيل في هذه الدورة."}
         </p>
         <Link
           href="/my-courses"
-          className="px-8 py-3 bg-[#fbad26] hover:bg-[#e6a325] text-black font-bold rounded-xl transition-colors inline-flex items-center gap-2"
+          className="px-8 py-3 bg-brand-primary hover:bg-brand-primary/90 text-white font-extrabold rounded-xl transition-colors inline-flex items-center gap-2"
         >
           <ArrowRight className="w-5 h-5 rotate-180" />
           العودة إلى دوراتي
@@ -58,155 +57,167 @@ export default function MyCourseDetailsPage() {
 
   if (!currentCourse) return null;
 
-  return (
-    <div className="min-h-screen bg-[#1a0e16] text-white" dir="rtl">
-      {/* Background blobs */}
-      <div className="fixed top-0 left-0 w-full h-full pointer-events-none overflow-hidden z-0">
-        <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-[#8b3d6f]/20 blur-[120px] rounded-full" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[30%] h-[30%] bg-[#fbad26]/10 blur-[120px] rounded-full" />
-      </div>
+  const sections = currentCourse.course_data || [];
+  const currentSection = sections[activeIdx];
 
-      <div className="relative z-10 max-w-5xl mx-auto px-4 py-12 md:py-20">
-        {/* Back button */}
+  const handlePrev = () => {
+    if (activeIdx > 0) {
+      setActiveIdx(activeIdx - 1);
+    }
+  };
+
+  const handleNext = () => {
+    if (activeIdx < sections.length - 1) {
+      setActiveIdx(activeIdx + 1);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-background text-text-primary relative overflow-x-hidden pt-24 text-right" dir="rtl">
+      {/* Background ambient glows */}
+      <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-brand-primary/5 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-[30%] h-[30%] bg-brand-primary/5 blur-[120px] rounded-full pointer-events-none" />
+
+      <div className="relative z-10 max-w-[1400px] mx-auto px-4">
+        {/* Back Link */}
         <Link
           href="/my-courses"
-          className="inline-flex items-center gap-2 text-zinc-400 hover:text-white font-bold text-sm mb-8 transition-colors"
+          className="inline-flex items-center gap-2 text-text-secondary hover:text-brand-primary font-bold text-sm mb-6 transition-colors"
         >
-          <ArrowRight className="w-4 h-4 rotate-180" />
-          العودة إلى دوراتي
+          <span>العودة إلى دوراتي</span>
+          <ArrowLeft className="w-4 h-4 rotate-180" />
         </Link>
 
-        {/* Course Header */}
-        <div className="bg-white/5 rounded-3xl p-8 border border-white/10 mb-12">
-          <div className="flex flex-col md:flex-row gap-8 items-start">
-            <div className="w-full md:w-48 h-32 rounded-2xl overflow-hidden border border-white/10 shrink-0">
-              {currentCourse.thumbnail?.url ? (
-                <img src={currentCourse.thumbnail.url} alt={currentCourse.name} className="w-full h-full object-cover" />
+        {/* Core LMS Split Screen Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mb-16">
+          {/* LEFT COLUMN: Player & Controls */}
+          <div className="lg:col-span-7 space-y-6 flex flex-col">
+            {/* Video Box Container */}
+            <div className="relative aspect-video rounded-[32px] overflow-hidden border border-border/40 bg-surface shadow-2xl">
+              {currentSection?.video_url ? (
+                <CoursePlayer videoUrl={currentSection.video_url} />
               ) : (
-                <div className="w-full h-full bg-zinc-900 flex items-center justify-center">
-                  <BookOpen className="w-12 h-12 text-white/10" />
+                <div className="w-full h-full flex flex-col items-center justify-center text-text-secondary/30 p-8">
+                  <PlayCircle className="w-16 h-16 mb-4" />
+                  <p className="text-sm font-bold">لا يوجد فيديو متاح لهذا الدرس</p>
                 </div>
               )}
             </div>
-            <div className="flex-1 space-y-3">
-              <h1 className="text-3xl md:text-4xl font-black leading-tight">{currentCourse.name}</h1>
-              <p className="text-zinc-400 font-medium leading-relaxed">{currentCourse.short_description}</p>
-              <div className="flex flex-wrap items-center gap-4 pt-2">
-                <div className="flex items-center gap-2 text-zinc-400">
-                  <BookOpen className="w-4 h-4" />
-                  <span className="text-sm font-bold">{currentCourse.course_data?.length || 0} أقسام</span>
-                </div>
-                <div className="flex items-center gap-2 text-zinc-400">
-                  <Clock className="w-4 h-4" />
-                  <span className="text-sm font-bold">
-                    {currentCourse.course_data?.reduce((acc: number, section: any) => acc + (section.video_length || 0), 0) || 0} دقيقة
-                  </span>
-                </div>
+
+            {/* Navigation Buttons under the Video Player */}
+            <div className="flex items-center justify-between gap-4">
+              <button
+                onClick={handlePrev}
+                disabled={activeIdx === 0}
+                className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-surface border border-border/40 hover:border-brand-primary/50 disabled:opacity-40 disabled:pointer-events-none text-text-primary text-sm font-extrabold transition-all"
+              >
+                <ArrowRight className="w-4 h-4" />
+                <span>الدرس السابق</span>
+              </button>
+
+              <div className="text-xs sm:text-sm font-extrabold text-text-secondary bg-surface px-4 py-2 rounded-xl border border-border/40">
+                {activeIdx + 1} / {sections.length}
               </div>
+
+              <button
+                onClick={handleNext}
+                disabled={activeIdx === sections.length - 1}
+                className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-brand-primary text-white hover:bg-brand-primary/95 disabled:opacity-40 disabled:pointer-events-none text-sm font-extrabold transition-all shadow-md shadow-brand-primary/10"
+              >
+                <span>الدرس التالي</span>
+                <ArrowLeft className="w-4 h-4" />
+              </button>
             </div>
-          </div>
-        </div>
 
-        {/* Course Sections */}
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-black">محتوى الدورة</h2>
-            <span className="text-sm font-bold text-zinc-500">{currentCourse.course_data?.length || 0} أقسام</span>
-          </div>
+            {/* Selected Lesson Description & Links */}
+            {currentSection && (
+              <div className="bg-surface border border-border/40 rounded-[32px] p-6 space-y-4 shadow-sm">
+                <h2 className="text-xl font-black text-text-primary">وصف الدرس: {currentSection.video_section || currentSection.title}</h2>
+                <p className="text-text-secondary text-sm leading-relaxed font-medium">{currentSection.description || "لا يوجد وصف إضافي متوفر للدرس الحالي."}</p>
 
-          <div className="space-y-4">
-            {currentCourse.course_data?.map((section: any, idx: number) => (
-              <div key={idx} className="border border-white/5 rounded-2xl overflow-hidden bg-white/[0.02] hover:border-white/10 transition-colors">
-                <button
-                  onClick={() => {
-                    if (openSection === idx) {
-                      setOpenSection(null);
-                      setPlayingSection(null);
-                    } else {
-                      setOpenSection(idx);
-                      setPlayingSection(section.video_url ? idx : null);
-                    }
-                  }}
-                  className="w-full p-6 flex items-center justify-between hover:bg-white/[0.04] transition-colors"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-white/5 flex items-center justify-center shrink-0">
-                      <PlayCircle className="w-6 h-6 text-zinc-500" />
-                    </div>
-                    <div className="text-right">
-                      <h3 className="font-black text-white text-lg">{section.video_section || `القسم ${idx + 1}`}</h3>
-                      <p className="text-xs text-zinc-500 font-bold">{section.title}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    {section.video_length && (
-                      <span className="text-xs font-bold text-zinc-500 bg-zinc-900 px-3 py-1 rounded-full border border-white/5">
-                        {Math.floor(section.video_length / 60)}:{(section.video_length % 60).toString().padStart(2, '0')}
-                      </span>
-                    )}
-                    <ChevronDown className={cn("w-5 h-5 text-zinc-500 transition-transform", openSection === idx && "rotate-180")} />
-                  </div>
-                </button>
-                {openSection === idx && (
-                  <div className="p-6 pt-0 border-t border-white/5 animate-in slide-in-from-top-2 duration-300">
-                    <div className="space-y-4">
-                      <p className="text-zinc-400 text-sm leading-relaxed text-right">{section.description}</p>
-
-                      {section.video_url && (
-                        <div className="aspect-video rounded-2xl overflow-hidden border border-white/10 bg-zinc-950 relative">
-                          {playingSection === idx ? (
-                            <CoursePlayer videoUrl={section.video_url} />
-                          ) : (
-                            <div
-                              className="w-full h-full cursor-pointer relative flex items-center justify-center"
-                              onClick={() => setPlayingSection(idx)}
-                            >
-                              {section.video_thumbnail ? (
-                                <img src={section.video_thumbnail} alt="" className="w-full h-full object-cover" />
-                              ) : (
-                                <div className="w-full h-full bg-zinc-900 flex items-center justify-center">
-                                  <BookOpen className="w-12 h-12 text-white/10" />
-                                </div>
-                              )}
-                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                                <div className="w-20 h-20 bg-[#fbad26] rounded-full flex items-center justify-center shadow-2xl">
-                                  <PlayCircle className="w-10 h-10 text-[#211] ml-1" />
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {section.links && section.links.length > 0 && (
-                        <div className="space-y-2">
-                          <h4 className="text-sm font-bold text-zinc-300">روابط مفيدة</h4>
-                          <div className="flex flex-wrap gap-2">
-                            {section.links.map((link: any, linkIdx: number) => (
-                              <a
-                                key={linkIdx}
-                                href={link.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm font-bold text-zinc-300 hover:text-white transition-colors"
-                              >
-                                {link.title}
-                              </a>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {section.suggestion && (
-                        <div className="p-4 bg-[#fbad26]/10 border border-[#fbad26]/20 rounded-xl">
-                          <p className="text-sm text-[#fbad26] font-medium text-right">{section.suggestion}</p>
-                        </div>
-                      )}
+                {currentSection.links && currentSection.links.length > 0 && (
+                  <div className="space-y-2 pt-2">
+                    <h4 className="text-sm font-bold text-text-primary">روابط ومرفقات الدرس:</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {currentSection.links.map((link: any, linkIdx: number) => (
+                        <a
+                          key={linkIdx}
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-4 py-2 bg-background hover:bg-surface border border-border/40 hover:border-brand-primary/50 rounded-xl text-xs font-bold text-text-secondary hover:text-brand-primary transition-all"
+                        >
+                          {link.title}
+                        </a>
+                      ))}
                     </div>
                   </div>
                 )}
               </div>
-            ))}
+            )}
+          </div>
+
+          {/* RIGHT COLUMN: Course Syllabus & Description */}
+          <div className="lg:col-span-5 space-y-6">
+            {/* Course Summary Card */}
+            <div className="bg-surface border border-border/40 rounded-[32px] p-6 shadow-sm">
+              <h1 className="text-2xl font-black text-text-primary mb-2 leading-tight">{currentCourse.name}</h1>
+              <p className="text-text-secondary text-sm leading-relaxed font-medium line-clamp-3 mb-4">{currentCourse.short_description}</p>
+              <div className="flex flex-wrap items-center gap-4 pt-3 border-t border-border/40">
+                <div className="flex items-center gap-2 text-text-secondary">
+                  <BookOpen className="w-4 h-4 text-brand-primary" />
+                  <span className="text-xs sm:text-sm font-bold">{sections.length} دروس</span>
+                </div>
+                <div className="flex items-center gap-2 text-text-secondary">
+                  <Clock className="w-4 h-4 text-brand-primary" />
+                  <span className="text-xs sm:text-sm font-bold">
+                    {sections.reduce((acc: number, section: any) => acc + (section.video_length || 0), 0)} ثانية
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Lessons List container */}
+            <div className="space-y-4">
+              <h2 className="text-lg font-black text-text-primary">قائمة الدروس والمقاطع</h2>
+              <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+                {sections.map((section: any, idx: number) => {
+                  const isActive = activeIdx === idx;
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => setActiveIdx(idx)}
+                      className={cn(
+                        "w-full p-4 rounded-2xl flex items-center justify-between border transition-all text-right shadow-sm",
+                        isActive
+                          ? "bg-brand-primary/10 border-brand-primary/45 text-brand-primary"
+                          : "bg-surface border-border/40 text-text-primary hover:border-brand-primary/40"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={cn(
+                          "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border",
+                          isActive
+                            ? "bg-brand-primary text-white border-brand-primary/20"
+                            : "bg-background border-border/40 text-text-secondary"
+                        )}>
+                          <PlayCircle className="w-5 h-5" />
+                        </div>
+                        <div className="truncate text-right">
+                          <h3 className="font-extrabold text-sm truncate">{section.video_section || `القسم ${idx + 1}`}</h3>
+                          <p className="text-[11px] text-text-secondary truncate">{section.title}</p>
+                        </div>
+                      </div>
+                      {section.video_length && (
+                        <span className="text-[10px] font-bold text-text-secondary bg-background px-2.5 py-1 rounded-full border border-border/40 shrink-0">
+                          {Math.floor(section.video_length / 60)}:{(section.video_length % 60).toString().padStart(2, '0')}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -729,7 +729,7 @@ export function Navbar() {
                 )}
               </div>
             ) : (
-              <div className="flex items-center gap-3">
+              <div className="hidden lg:flex items-center gap-3">
                 <Link
                   href="/login"
                   className="text-sm font-semibold text-text-primary px-5 py-2 rounded-lg border border-border hover:bg-surface transition-all duration-300"
@@ -765,7 +765,7 @@ export function Navbar() {
 
       {/* Mobile Menu Panel */}
       <div
-        className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${isMobileMenuOpen ? "max-h-96 opacity-100 bg-surface border-b border-border" : "max-h-0 opacity-0"
+        className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${isMobileMenuOpen ? "max-h-100 opacity-100 bg-surface border-b border-border" : "max-h-0 opacity-0"
           }`}
       >
         <div className="px-4 py-4 space-y-2 border-t border-border/40">
@@ -783,24 +783,26 @@ export function Navbar() {
             </Link>
           ))}
 
-          <div className="pt-4 border-t border-border sm:hidden">
-            <div className="grid grid-cols-2 gap-3">
-              <Link
-                href="/login"
-                className="text-center text-sm font-semibold text-text-primary border border-border hover:bg-surface px-4 py-2.5 rounded-lg transition-colors"
-                onClick={handleCloseMobileMenu}
-              >
-                دخول
-              </Link>
-              <Link
-                href="/signup"
-                className="text-center text-sm font-bold text-white bg-brand-primary hover:bg-brand-primary/95 px-4 py-2.5 rounded-lg transition-colors"
-                onClick={handleCloseMobileMenu}
-              >
-                تسجيل
-              </Link>
+          {!isAuthenticated && (
+            <div className="pt-4 border-t border-border/40">
+              <div className="grid grid-cols-2 gap-3">
+                <Link
+                  href="/login"
+                  className="text-center text-sm font-semibold text-text-primary border border-border hover:bg-surface px-4 py-2.5 rounded-lg transition-colors"
+                  onClick={handleCloseMobileMenu}
+                >
+                  دخول
+                </Link>
+                <Link
+                  href="/signup"
+                  className="text-center text-sm font-bold text-white bg-brand-primary hover:bg-brand-primary/95 px-4 py-2.5 rounded-lg transition-colors"
+                  onClick={handleCloseMobileMenu}
+                >
+                  تسجيل
+                </Link>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </nav>

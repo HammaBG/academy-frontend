@@ -69,7 +69,6 @@ export function Footer() {
       <div className="max-w-7xl mx-auto px-4 py-14">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-8 items-start">
           {/* Column 1: Brand (4 cols) */}
-          {/* Column 1: Brand (4 cols) */}
           <div className="lg:col-span-4 space-y-5">
             <Link href="/" className="inline-block group">
               <div className="flex items-center gap-3 group-hover:scale-105 transition-transform duration-300 origin-right">
@@ -146,8 +145,7 @@ export function Footer() {
             </h4>
             <div className="space-y-4">
               <a
-                href="https://maps.google.com/?q=تونس+العاصمة"
-                target="_blank"
+                href="https://www.google.com/maps/place/Cyber+Parc/@35.8466443,10.5902907,14.13z/data=!4m6!3m5!1s0x12fd8a42f3d81941:0x91566e7064e70917!8m2!3d35.8506281!4d10.59543!16s%2Fg%2F1vj6nvxq?entry=ttu&g_ep=EgoyMDI2MDcyMi4wIKXMDSoASAFQAw%3D%3D" target="_blank"
                 rel="noreferrer"
                 className="group flex items-start gap-3 text-text-secondary hover:text-brand-primary transition-colors duration-200"
               >
@@ -177,7 +175,7 @@ export function Footer() {
                 <div className="w-9 h-9 rounded-lg bg-brand-primary/10 flex items-center justify-center shrink-0">
                   <Phone className="w-4 h-4 text-brand-primary" />
                 </div>
-                <span className="text-sm dir-ltr inline-block">000 000 70 +216</span>
+                <span className="text-sm dir-ltr inline-block">50120566 +216</span>
               </a>
             </div>
           </div>
