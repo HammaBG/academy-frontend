@@ -39,8 +39,8 @@ interface AuthActions {
 
 export type AuthStore = AuthData & AuthActions;
 
-const API_URL = 'https://academy-backend-8gl3.onrender.com/api/auth';
-// const API_URL = 'http://localhost:5000/api/auth';
+//const API_URL = 'https://academy-backend-8gl3.onrender.com/api/auth';
+const API_URL = 'http://localhost:5000/api/auth';
 
 
 export const useAuthStore = create<AuthStore>()(
