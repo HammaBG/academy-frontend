@@ -118,7 +118,7 @@ export function ActivateSection() {
                     </Button>
                   </Link>
                   <Link href="/signup" className="w-full">
-                    <Button variant="outline" className="w-full py-5 border-white/20 text-white hover:bg-white/10 font-bold rounded-xl text-xs">
+                    <Button variant="outline" className="w-full py-5 border-white/20 text-black hover:bg-white/10 font-bold rounded-xl text-xs">
                       إنشاء حساب جديد
                     </Button>
                   </Link>
