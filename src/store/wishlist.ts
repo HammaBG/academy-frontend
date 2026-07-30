@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { createSafeStorage } from '@/lib/storage';
 import { Course } from './course';
 
@@ -13,8 +13,8 @@ interface WishlistStore {
   clearError: () => void;
 }
 
-const API_URL = 'https://academy-backend-8gl3.onrender.com/api/wishlist';
-// const API_URL = 'http://localhost:5000/api/wishlist';
+// const API_URL = 'https://academy-backend-8gl3.onrender.com/api/wishlist';
+const API_URL = 'http://localhost:5000/api/wishlist';
 
 export const useWishlistStore = create<WishlistStore>()(
   persist(
@@ -80,7 +80,7 @@ export const useWishlistStore = create<WishlistStore>()(
     }),
     {
       name: 'benaa-wishlist-storage',
-      storage: createSafeStorage(),
+      storage: createJSONStorage(() => createSafeStorage()),
       partialize: (state) => ({
         wishlist: state.wishlist,
       }),

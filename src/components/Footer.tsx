@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { FaFacebook, FaInstagram, FaTwitter, FaYoutube } from "react-icons/fa";
 import { Mail, MapPin, Phone, ChevronLeft, ExternalLink } from "lucide-react";
+import { useCategoryStore } from "@/store/category";
 
 const SOCIAL_LINKS = [
   { icon: FaFacebook, href: "https://www.facebook.com/OSSOS.Academy", label: "فيسبوك", color: "hover:text-[#1877F2] hover:border-[#1877F2]/40" },
@@ -20,7 +22,7 @@ const QUICK_LINKS = [
   { name: "تواصل معنا", href: "/contact" },
 ];
 
-const TRACK_LINKS = [
+const TRACK_LINKS_FALLBACK = [
   { name: "مهارات سوق العمل", href: "/courses?category=مهارات%20سوق%20العمل" },
   { name: "صناع المستقبل", href: "/courses?category=صناع%20المستقبل" },
   { name: "مهارات لغوية", href: "/courses?category=مهارات%20لغوية" },
@@ -30,6 +32,18 @@ const TRACK_LINKS = [
 ];
 
 export function Footer() {
+  const { categories, getPublicCategories } = useCategoryStore();
+
+  useEffect(() => {
+    getPublicCategories();
+  }, [getPublicCategories]);
+
+  const activeTrackLinks = categories.length > 0
+    ? categories.slice(0, 6).map((cat) => ({
+        name: cat.name,
+        href: `/courses?category=${encodeURIComponent(cat.name)}`,
+      }))
+    : TRACK_LINKS_FALLBACK;
   return (
     <footer className="bg-surface text-text-primary border-t border-border/30 relative overflow-hidden">
       {/* Decorative top gradient line */}
@@ -123,7 +137,7 @@ export function Footer() {
               المسارات التعليمية
             </h4>
             <ul className="space-y-3">
-              {TRACK_LINKS.map((track) => (
+              {activeTrackLinks.map((track) => (
                 <li key={track.name}>
                   <Link
                     href={track.href}

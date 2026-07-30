@@ -10,6 +10,8 @@ import { CategoriesSection } from "../../components/CategoriesSection/Categories
 import { LatestCoursesSection } from "../../components/LatestCoursesSection/LatestCoursesSection";
 import { LatestArticlesSection } from "../../components/LatestArticlesSection/LatestArticlesSection";
 import { InstructorsSection } from "../../components/InstructorsSection/InstructorsSection";
+import { ActivateSection } from "../../components/ActivateSection/ActivateSection";
+import { FAQSection } from "../../components/FAQSection/FAQSection";
 
 export default function HomePage() {
   const { articles, isLoading: isArticlesLoading, getPublicArticles } = useArticleStore();
@@ -30,6 +32,8 @@ export default function HomePage() {
       <LatestCoursesSection courses={courses} isLoading={isCoursesLoading} />
       <InstructorsSection />
       <LatestArticlesSection articles={articles} isLoading={isArticlesLoading} />
+      <ActivateSection />
+      <FAQSection />
     </div>
   );
 }

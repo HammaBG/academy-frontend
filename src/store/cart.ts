@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { createSafeStorage } from '@/lib/storage';
 import type { Course } from './course';
 
@@ -63,7 +63,7 @@ export const useCartStore = create<CartStore>()(
     }),
     {
       name: 'benaa-cart-storage',
-      storage: createSafeStorage(),
+      storage: createJSONStorage(() => createSafeStorage()),
       partialize: (state) => ({
         items: state.items,
       }),

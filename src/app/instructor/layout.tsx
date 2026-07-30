@@ -1,23 +1,38 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { InstructorSidebar } from "@/components/instructor/InstructorSidebar"
+import { Loader } from "@/components/ui/Loader";
 
 export default function InstructorLayout({ children }: { children: React.ReactNode }) {
+  const [isHydrated, setIsHydrated] = useState(false);
   const { user, isAuthenticated, isAuthLoading } = useAuthStore();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isAuthLoading && (!isAuthenticated || user?.role !== 'instructor')) {
+    if (useAuthStore.persist.hasHydrated()) {
+      setIsHydrated(true);
+      return;
+    }
+    const unsubFinish = useAuthStore.persist.onFinishHydration(() => {
+      setIsHydrated(true);
+    });
+    return () => {
+      unsubFinish();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isHydrated && !isAuthLoading && (!isAuthenticated || user?.role !== 'instructor')) {
       router.push("/");
     }
-  }, [user, isAuthenticated, isAuthLoading, router]);
+  }, [isHydrated, user, isAuthenticated, isAuthLoading, router]);
 
-  if (isAuthLoading || !isAuthenticated || user?.role !== 'instructor') {
-    return <div className="min-h-screen flex items-center justify-center text-[#0d7377] font-bold text-xl">Checking permissions...</div>;
+  if (!isHydrated || isAuthLoading || !isAuthenticated || user?.role !== 'instructor') {
+    return <Loader fullscreen size="lg" />;
   }
 
   return (

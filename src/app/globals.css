@@ -70,13 +70,13 @@
     }
 
     100% {
-      transform: translateY(-50%);
+      transform: translateY(-33.333%);
     }
   }
 
   @keyframes marquee-down {
     0% {
-      transform: translateY(-50%);
+      transform: translateY(-33.333%);
     }
 
     100% {

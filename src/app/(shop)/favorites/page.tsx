@@ -1,54 +1,77 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useWishlistStore } from "@/store/wishlist";
 import { useAuthStore } from "@/store/auth";
-import { Heart, Loader2, BookOpen } from "lucide-react";
+import { Heart, BookOpen, ArrowRight } from "lucide-react";
 import { CourseCard } from "@/components/Course/CourseCard";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Loader } from "@/components/ui/Loader";
 
 export default function FavoritesPage() {
+  const [isHydrated, setIsHydrated] = useState(false);
   const { wishlist, isLoading, fetchWishlist } = useWishlistStore();
   const { token, isAuthenticated } = useAuthStore();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (useAuthStore.persist.hasHydrated()) {
+      setIsHydrated(true);
+      return;
+    }
+    const unsubFinish = useAuthStore.persist.onFinishHydration(() => {
+      setIsHydrated(true);
+    });
+    return () => {
+      unsubFinish();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isHydrated && !isAuthenticated) {
       router.push("/login");
       return;
     }
 
-    if (token) {
+    if (isHydrated && token) {
       fetchWishlist(token);
     }
-  }, [fetchWishlist, token, isAuthenticated, router]);
+  }, [isHydrated, fetchWishlist, token, isAuthenticated, router]);
+
+  if (!isHydrated) {
+    return <Loader fullscreen size="lg" />;
+  }
 
   if (!isAuthenticated) {
     return null;
   }
 
   return (
-    <div className="min-h-screen bg-[#1a0e16] text-white">
-      {/* Background blobs */}
-      <div className="fixed top-0 left-0 w-full h-full pointer-events-none overflow-hidden z-0">
-        <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-[#fbad26]/10 blur-[120px] rounded-full" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[30%] h-[30%] bg-[#8b3d6f]/10 blur-[120px] rounded-full" />
-      </div>
+    <div className="min-h-screen bg-background/30 text-text-primary relative overflow-x-hidden pt-24 pb-20 text-right dir-rtl" dir="rtl">
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 py-20">
-        <div className="text-center mb-16 space-y-4">
-          <h1 className="text-5xl font-black">
-            قائمة <span className="text-[#fbad26]">المفضلة</span>
-          </h1>
-          <p className="text-zinc-400 max-w-2xl mx-auto font-medium">
-            هنا تجد جميع الكورسات التي لفتت انتباهك وحفظتها للرجوع إليها لاحقاً.
-          </p>
+      <div className="relative z-10 max-w-7xl mx-auto px-4 py-8 md:py-12">
+
+        {/* Banner Section */}
+        <div className="flex flex-col md:flex-row items-center justify-between pb-8 border-b border-border/40 mb-12 gap-4">
+          <div className="space-y-2">
+            <h1 className="text-3xl md:text-4xl font-black text-text-primary">
+              قائمتي <span className="text-brand-primary">المفضلة</span>
+            </h1>
+            <p className="text-text-secondary text-sm md:text-base font-semibold">
+              هنا تجد جميع الكورسات التي لفتت انتباهك وحفظتها للرجوع إليها لاحقاً.
+            </p>
+          </div>
+          <div className="p-4 bg-brand-primary/10 text-brand-primary rounded-[2rem] shadow-sm">
+            <Heart className="w-8 h-8 fill-current" />
+          </div>
         </div>
 
+        {/* Content Section */}
         {isLoading && wishlist.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-40">
-            <Loader2 className="w-12 h-12 text-[#fbad26] animate-spin mb-4" />
-            <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs">جاري تحميل المفضلة...</p>
+          <div className="flex flex-col items-center justify-center py-20 gap-3">
+            <Loader size="md" />
+            <p className="text-text-secondary font-bold text-sm">جاري تحميل دوراتك المفضلة...</p>
           </div>
         ) : (
           <>
@@ -59,10 +82,24 @@ export default function FavoritesPage() {
                 ))}
               </div>
             ) : (
-              <div className="py-20 text-center bg-white/5 rounded-3xl border border-dashed border-white/10">
-                <Heart className="w-16 h-16 text-white/5 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-zinc-400">لا توجد كورسات في المفضلة بعد</h3>
-                <p className="text-zinc-500 text-sm">تصفح الكورسات وأضف ما يعجبك للمفضلة.</p>
+              <div className="py-24 text-center bg-surface/50 border border-border/40 rounded-[3rem] shadow-xl max-w-2xl mx-auto space-y-6">
+                <div className="w-20 h-20 rounded-full bg-brand-primary/10 flex items-center justify-center mx-auto text-brand-primary">
+                  <Heart className="w-10 h-10" />
+                </div>
+                <div className="space-y-2 px-6">
+                  <h3 className="text-2xl font-black text-text-primary">لا توجد كورسات في المفضلة بعد</h3>
+                  <p className="text-text-secondary text-sm font-semibold max-w-md mx-auto leading-relaxed">
+                    تصفح كورس الأكاديمية المتنوعة، واختر ما يناسب شغفك وأضف ما يعجبك للمفضلة بضغطة زر.
+                  </p>
+                </div>
+                <div className="pt-2">
+                  <Link href="/courses">
+                    <span className="inline-flex items-center gap-2 px-6 py-3.5 bg-brand-primary text-white font-extrabold text-xs rounded-xl shadow-lg hover:bg-brand-primary/95 transition-all cursor-pointer">
+                      <span>تصفح الكورسات المتاحة</span>
+                      <ArrowRight className="w-4 h-4 rotate-180" />
+                    </span>
+                  </Link>
+                </div>
               </div>
             )}
           </>

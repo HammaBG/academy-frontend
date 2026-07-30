@@ -29,8 +29,13 @@ export default function LoginPage() {
     await login(email, password);
   };
 
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      router.push("/");
+    }
+  }, [isAuthenticated, user, router]);
+
   if (isAuthenticated && user) {
-    router.push("/");
     return null;
   }
 

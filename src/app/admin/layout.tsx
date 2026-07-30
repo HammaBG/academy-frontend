@@ -1,23 +1,38 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { AdminSidebar } from "@/components/admin/AdminSidebar"
+import { Loader } from "@/components/ui/Loader";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const [isHydrated, setIsHydrated] = useState(false);
   const { user, isAuthenticated, isAuthLoading } = useAuthStore();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isAuthLoading && (!isAuthenticated || user?.role !== 'admin')) {
+    if (useAuthStore.persist.hasHydrated()) {
+      setIsHydrated(true);
+      return;
+    }
+    const unsubFinish = useAuthStore.persist.onFinishHydration(() => {
+      setIsHydrated(true);
+    });
+    return () => {
+      unsubFinish();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isHydrated && !isAuthLoading && (!isAuthenticated || user?.role !== 'admin')) {
       router.push("/");
     }
-  }, [user, isAuthenticated, isAuthLoading, router]);
+  }, [isHydrated, user, isAuthenticated, isAuthLoading, router]);
 
-  if (isAuthLoading || !isAuthenticated || user?.role !== 'admin') {
-    return <div className="min-h-screen flex items-center justify-center text-[#8b3d6f] font-bold text-xl">Checking permissions...</div>;
+  if (!isHydrated || isAuthLoading || !isAuthenticated || user?.role !== 'admin') {
+    return <Loader fullscreen size="lg" />;
   }
 
   return (

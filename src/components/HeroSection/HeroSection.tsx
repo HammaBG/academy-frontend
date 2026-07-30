@@ -32,11 +32,11 @@ function BlobCard({ number, label, imageUrl, className = "", aspectClass = "aspe
       className={`w-full rounded-[1.5rem] bg-surface border border-border/40 p-4 flex flex-col justify-center items-center text-center shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-500 group ${aspectClass} ${className}`}
     >
       <span
-        className="text-lg sm:text-xl font-black bg-gradient-to-br from-brand-primary to-[#ff6ba6] bg-clip-text text-transparent group-hover:scale-105 transition-transform duration-300"
+        className="text-base sm:text-lg font-black bg-gradient-to-br from-brand-primary to-[#ff6ba6] bg-clip-text text-transparent group-hover:scale-105 transition-transform duration-300"
       >
         {number}
       </span>
-      <span className="text-[9px] sm:text-[11px] font-bold text-text-secondary mt-1 tracking-wide leading-tight">
+      <span className="text-[8px] sm:text-[10px] font-bold text-text-secondary mt-1 tracking-wide leading-tight">
         {label}
       </span>
     </div>
@@ -45,7 +45,7 @@ function BlobCard({ number, label, imageUrl, className = "", aspectClass = "aspe
 
 export function HeroSection() {
   return (
-    <section className="relative max-w-7xl mx-auto px-4 py-12 lg:py-20 overflow-hidden">
+    <section className="relative max-w-7xl mx-auto px-4 md:px-8 py-12 lg:py-20 overflow-hidden text-right" dir="rtl">
       {/* Background ambient glows */}
       <div
         className="absolute top-1/4 right-1/4 w-96 h-96 bg-[#F95353]/10 rounded-full blur-[120px] pointer-events-none"
@@ -54,9 +54,10 @@ export function HeroSection() {
         className="absolute bottom-1/3 left-1/4 w-96 h-96 bg-[#F95353]/10 rounded-full blur-[120px] pointer-events-none"
       />
 
-      <div className="relative flex flex-col lg:flex-row gap-16 items-center justify-between">
+      {/* Symmetric Grid Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center relative z-10 w-full">
         {/* Right Column: Hero call to action */}
-        <div className="w-full lg:w-[45%] flex flex-col items-center lg:items-start text-center lg:text-right">
+        <div className="w-full lg:col-span-7 flex flex-col items-center lg:items-start text-center lg:text-right">
           <div className="w-full max-w-[500px] mb-8 hover:scale-[1.01] transition-transform duration-500">
             <HeroTextSvg className="w-full h-auto" />
           </div>
@@ -79,42 +80,61 @@ export function HeroSection() {
           </div>
         </div>
 
-        {/* Left Column: 2 side-by-side vertical scrolling marquees reaching up to the header */}
-        <div className="w-full lg:w-[50%] flex items-center justify-center gap-4 relative h-[600px] max-w-[420px] mx-auto overflow-hidden rounded-[2.5rem] lg:-mt-28 z-0">
-          {/* Top and Bottom Fading Overlays */}
-          <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-background to-transparent z-10 pointer-events-none" />
-          <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background to-transparent z-10 pointer-events-none" />
+        {/* Left Column: 3 side-by-side vertical scrolling marquees aligned perfectly to the left edge of the grid */}
+        <div className="w-full lg:col-span-5 flex justify-center lg:justify-end">
+          {/* items-start is critical here to align cards to the top of the container, preventing blank spaces when translated */}
+          <div className="relative h-[600px] w-full max-w-[500px] mx-auto overflow-hidden flex gap-3 items-start lg:-mt-28 z-0">
+            {/* Top and Bottom Fading Overlays */}
+            <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-background to-transparent z-10 pointer-events-none" />
+            <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background to-transparent z-10 pointer-events-none" />
 
-          {/* Column 1: Scrolls UP */}
-          <div className="w-1/2 flex flex-col gap-4 animate-marquee-up hover:[animation-play-state:paused] py-2">
-            {/* Set 1 */}
-            <BlobCard number="+24k" label="مستخدم نشط" aspectClass="aspect-square" />
-            <BlobCard imageUrl="/Ossos/blob image1.jpg" aspectClass="aspect-[3/4]" />
-            <BlobCard number="+200k" label="متابع على المنصات" aspectClass="aspect-square" />
-            {/* Set 2 */}
-            <BlobCard number="+24k" label="مستخدم نشط" aspectClass="aspect-square" />
-            <BlobCard imageUrl="/Ossos/blob image1.jpg" aspectClass="aspect-[3/4]" />
-            <BlobCard number="+200k" label="متابع على المنصات" aspectClass="aspect-square" />
-            {/* Set 3 */}
-            <BlobCard number="+24k" label="مستخدم نشط" aspectClass="aspect-square" />
-            <BlobCard imageUrl="/Ossos/blob image1.jpg" aspectClass="aspect-[3/4]" />
-            <BlobCard number="+200k" label="متابع على المنصات" aspectClass="aspect-square" />
-          </div>
+            {/* Column 1: Scrolls UP */}
+            <div className="w-1/3 flex flex-col gap-4 animate-marquee-up hover:[animation-play-state:paused]">
+              {/* Set 1 */}
+              <BlobCard number="+24k" label="مستخدم نشط" aspectClass="aspect-square" />
+              <BlobCard imageUrl="/Ossos/blob image1.jpg" aspectClass="aspect-[3/4]" />
+              <BlobCard number="+200k" label="متابع على المنصات" aspectClass="aspect-square" />
+              {/* Set 2 */}
+              <BlobCard number="+24k" label="مستخدم نشط" aspectClass="aspect-square" />
+              <BlobCard imageUrl="/Ossos/blob image1.jpg" aspectClass="aspect-[3/4]" />
+              <BlobCard number="+200k" label="متابع على المنصات" aspectClass="aspect-square" />
+              {/* Set 3 */}
+              <BlobCard number="+24k" label="مستخدم نشط" aspectClass="aspect-square" />
+              <BlobCard imageUrl="/Ossos/blob image1.jpg" aspectClass="aspect-[3/4]" />
+              <BlobCard number="+200k" label="متابع على المنصات" aspectClass="aspect-square" />
+            </div>
 
-          {/* Column 2: Scrolls DOWN */}
-          <div className="w-1/2 flex flex-col gap-4 animate-marquee-down hover:[animation-play-state:paused] py-2">
-            {/* Set 1 */}
-            <BlobCard number="+10" label="شركاء الأكاديمية" aspectClass="aspect-[4/3]" />
-            <BlobCard number="+150" label="كادر طبي" aspectClass="aspect-square" />
-            <BlobCard imageUrl="/Ossos/blob image 2.jpg" aspectClass="aspect-[3/4]" />
-            {/* Set 2 */}
-            <BlobCard number="+10" label="شركاء الأكاديمية" aspectClass="aspect-[4/3]" />
-            <BlobCard number="+150" label="كادر طبي" aspectClass="aspect-square" />
-            <BlobCard imageUrl="/Ossos/blob image 2.jpg" aspectClass="aspect-[3/4]" />
-            {/* Set 3 */}
-            <BlobCard number="+10" label="شركاء الأكاديمية" aspectClass="aspect-[4/3]" />
-            <BlobCard number="+150" label="كادر طبي" aspectClass="aspect-square" />
-            <BlobCard imageUrl="/Ossos/blob image 2.jpg" aspectClass="aspect-[3/4]" />
+            {/* Column 2: Scrolls DOWN */}
+            <div className="w-1/3 flex flex-col gap-4 animate-marquee-down hover:[animation-play-state:paused]">
+              {/* Set 1 */}
+              <BlobCard number="+10" label="شركاء الأكاديمية" aspectClass="aspect-[4/3]" />
+              <BlobCard imageUrl="/Ossos/blob image 3.jpeg" aspectClass="aspect-[3/4]" />
+              <BlobCard number="+150" label="كادر طبي" aspectClass="aspect-square" />
+              {/* Set 2 */}
+              <BlobCard number="+10" label="شركاء الأكاديمية" aspectClass="aspect-[4/3]" />
+              <BlobCard imageUrl="/Ossos/blob image 3.jpeg" aspectClass="aspect-[3/4]" />
+              <BlobCard number="+150" label="كادر طبي" aspectClass="aspect-square" />
+              {/* Set 3 */}
+              <BlobCard number="+10" label="شركاء الأكاديمية" aspectClass="aspect-[4/3]" />
+              <BlobCard imageUrl="/Ossos/blob image 3.jpeg" aspectClass="aspect-[3/4]" />
+              <BlobCard number="+150" label="كادر طبي" aspectClass="aspect-square" />
+            </div>
+
+            {/* Column 3: Scrolls UP */}
+            <div className="w-1/3 flex flex-col gap-4 animate-marquee-up hover:[animation-play-state:paused]">
+              {/* Set 1 */}
+              <BlobCard number="98%" label="نسبة الرضا" aspectClass="aspect-square" />
+              <BlobCard imageUrl="/Ossos/blob image 2.jpg" aspectClass="aspect-[3/4]" />
+              <BlobCard number="+200k" label="متابع على المنصات" aspectClass="aspect-square" />
+              {/* Set 2 */}
+              <BlobCard number="98%" label="نسبة الرضا" aspectClass="aspect-square" />
+              <BlobCard imageUrl="/Ossos/blob image 2.jpg" aspectClass="aspect-[3/4]" />
+              <BlobCard number="+200k" label="متابع على المنصات" aspectClass="aspect-square" />
+              {/* Set 3 */}
+              <BlobCard number="98%" label="نسبة الرضا" aspectClass="aspect-square" />
+              <BlobCard imageUrl="/Ossos/blob image 2.jpg" aspectClass="aspect-[3/4]" />
+              <BlobCard number="+200k" label="متابع على المنصات" aspectClass="aspect-square" />
+            </div>
           </div>
         </div>
       </div>

@@ -1,10 +1,20 @@
 export const createSafeStorage = () => {
-  if (typeof window !== 'undefined') {
-    return localStorage as any;
-  }
   return {
-    getItem: () => null,
-    setItem: () => {},
-    removeItem: () => {},
+    getItem: (name: string) => {
+      if (typeof window !== 'undefined') {
+        return localStorage.getItem(name);
+      }
+      return null;
+    },
+    setItem: (name: string, value: string) => {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(name, value);
+      }
+    },
+    removeItem: (name: string) => {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem(name);
+      }
+    },
   };
 };

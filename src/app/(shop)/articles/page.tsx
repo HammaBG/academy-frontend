@@ -159,10 +159,6 @@ export default function ArticlesListPage() {
             <span>العودة للرئيسية</span>
             <ArrowLeft className="w-4 h-4 rotate-180" />
           </Link>
-          <div className="flex items-center gap-2 mb-2 text-brand-primary font-bold text-sm justify-start dir-rtl">
-            <Sparkles className="w-4 h-4" />
-            <span>مدونة المعرفة</span>
-          </div>
           <h1 className="text-4xl md:text-5xl font-black text-text-primary mb-4 leading-tight">
             مدونة <span className="text-brand-primary">أسس</span>
           </h1>

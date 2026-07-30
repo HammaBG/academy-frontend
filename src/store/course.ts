@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { createSafeStorage } from '@/lib/storage';
 
 export interface IComment {
@@ -376,7 +376,7 @@ export const useCourseStore = create<CourseStore>()(
         }),
         {
             name: 'benaa-course-storage',
-            storage: createSafeStorage(),
+            storage: createJSONStorage(() => createSafeStorage()),
             partialize: (state) => ({
                 courses: state.courses,
                 enrolledCourses: state.enrolledCourses,

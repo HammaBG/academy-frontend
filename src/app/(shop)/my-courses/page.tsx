@@ -3,9 +3,10 @@
 import { useEffect } from "react";
 import { useCourseStore } from "@/store/course";
 import { useAuthStore } from "@/store/auth";
-import { BookOpen, Loader2, PlayCircle, Star, User as UserIcon } from "lucide-react";
+import { BookOpen, PlayCircle, Star, User as UserIcon } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { Loader } from "@/components/ui/Loader";
 
 function EnrolledCourseCard({ course }: { course: any }) {
     const categoryColor = course.category_color || "#F95353";
@@ -140,8 +141,8 @@ export default function MyCoursesPage() {
                 )}
 
                 {isLoading && enrolledCourses.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-40">
-                        <Loader2 className="w-12 h-12 text-brand-primary animate-spin mb-4" />
+                    <div className="flex flex-col items-center justify-center py-20 gap-3">
+                        <Loader size="md" />
                         <p className="text-text-secondary font-bold text-sm">جاري تحميل دوراتك...</p>
                     </div>
                 ) : (

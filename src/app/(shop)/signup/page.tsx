@@ -51,8 +51,13 @@ export default function SignupPage() {
     }
   };
 
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push("/");
+    }
+  }, [isAuthenticated, router]);
+
   if (isAuthenticated) {
-    router.push("/");
     return null;
   }
 
