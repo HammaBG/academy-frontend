@@ -64,7 +64,7 @@ export default function ActivateCodePage() {
     }
   };
 
-  if (!isHydrated || isAuthLoading) {
+  if (!isHydrated) {
     return (
       <div className="min-h-[70vh] flex flex-col items-center justify-center gap-3">
         <Loader2 className="w-10 h-10 text-brand-primary animate-spin" />

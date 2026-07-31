@@ -4,14 +4,14 @@ import Link from "next/link";
 import { Sparkles, ArrowLeft, User as UserIcon } from "lucide-react";
 
 const staticTeachers = [
-  { id: "t1", name: "نايلة بن صالح", title: "طبيبة نفسية", image: "/teachers/1.jpeg" },
-  { id: "t2", name: "مريم رڤية", title: "طبيبة نفسية", image: "/teachers/2.jpeg" },
-  { id: "t3", name: "ريماح حناشي", title: "طبيبة نفسية", image: "/teachers/3.jpeg" },
-  { id: "t4", name: "إنصاف شرف", title: "مختصة في الصحة النفسية", image: "/teachers/4.jpg" },
-  { id: "t5", name: "مريم عول", title: "مختصة في الصحة النفسية", image: "/teachers/5.JPG" },
-  { id: "t6", name: "ليليا كمون", title: "أخصائية في التثقيف النفسي", image: "/teachers/6.jpg" },
-  { id: "t7", name: " أسماء الأمين", title: "مهنسة و باحثة في علم الشريعة و الدين", image: "/teachers/7.jpg" },
-  { id: "t8", name: "إنصاف عبد سلام", title: "طبيبة نساء و توليد", image: "/teachers/8.jpg" },
+  { id: "t1", name: "نايلة بن صالح", title: "طبيبة نفسية", image: "/teachers/1.png" },
+  { id: "t2", name: "مريم رڤية", title: "طبيبة نفسية", image: "/teachers/2.png" },
+  { id: "t3", name: "ريماح حناشي", title: "طبيبة نفسية", image: "/teachers/3.png" },
+  { id: "t4", name: "إنصاف شرف", title: "مختصة في الصحة النفسية", image: "/teachers/4.png" },
+  { id: "t5", name: "مريم عول", title: "مختصة في الصحة النفسية", image: "/teachers/5.png" },
+  { id: "t6", name: "ليليا كمون", title: "أخصائية في التثقيف النفسي", image: "/teachers/6.png" },
+  { id: "t7", name: " أسماء الأمين", title: "مهنسة و باحثة في علم الشريعة و الدين", image: "/teachers/7.png" },
+  { id: "t8", name: "إنصاف عبد سلام", title: "طبيبة نساء و توليد", image: "/teachers/8.png" },
 ];
 
 export function InstructorsSection() {
@@ -25,10 +25,10 @@ export function InstructorsSection() {
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
           <div>
             <h2 className="text-3xl sm:text-4xl font-black text-text-primary">
-              فريق <span className="text-brand-primary">المعلمين والدكاترة</span>
+              فريق <span className="text-brand-primary">الخبراء</span>
             </h2>
             <p className="text-text-secondary text-sm sm:text-base max-w-xl font-medium mt-2">
-              تعرف على نخبة المعلمين والخبراء التربويين في أكاديمية أسس والذين يقودون أبنائكم نحو التميز والإبداع.
+              تعرف على  الخبراء في أكاديمية أسس والذين يقودون حياتكم نحو التميز والإبداع.
             </p>
           </div>
 
@@ -36,7 +36,7 @@ export function InstructorsSection() {
             href="/instructors"
             className="group flex items-center gap-2 text-brand-primary font-extrabold hover:text-brand-primary/80 transition-colors self-start md:self-auto"
           >
-            <span>عرض جميع المعلمين</span>
+            <span>عرض جميع الخبراء</span>
             <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
           </Link>
         </div>
@@ -84,7 +84,7 @@ export function InstructorsSection() {
             href="/instructors"
             className="inline-flex items-center gap-2.5 bg-brand-primary hover:bg-brand-primary/90 text-white font-black px-8 py-3.5 rounded-2xl transition-all shadow-lg shadow-brand-primary/10 hover:scale-105"
           >
-            <span>عرض جميع المعلمين والدكاترة</span>
+            <span>عرض جميع الخبراء</span>
             <ArrowLeft className="w-4 h-4" />
           </Link>
         </div>

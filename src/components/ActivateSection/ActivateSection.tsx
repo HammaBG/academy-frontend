@@ -61,7 +61,7 @@ export function ActivateSection() {
     }
   };
 
-  if (!isHydrated || isAuthLoading) {
+  if (!isHydrated) {
     return null; // Don't render until client store is ready to avoid UI shift
   }
 

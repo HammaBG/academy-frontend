@@ -15,49 +15,49 @@ const teachers: Teacher[] = [
         id: 1,
         name: "نايلة بن صالح",
         title: "طبيبة نفسية",
-        image: "/teachers/1.jpeg",
+        image: "/teachers/1.png",
     },
     {
         id: 2,
         name: "مريم رڤية",
         title: "طبيبة نفسية",
-        image: "/teachers/2.jpeg",
+        image: "/teachers/2.png",
     },
     {
         id: 3,
         name: "ريماح حناشي",
         title: "طبيبة نفسية",
-        image: "/teachers/3.jpeg",
+        image: "/teachers/3.png",
     },
     {
         id: 4,
         name: "إنصاف شرف",
         title: "مختصة في الصحة النفسية",
-        image: "/teachers/4.jpg",
+        image: "/teachers/4.png",
     },
     {
         id: 5,
         name: "مريم عول",
         title: "مختصة في الصحة النفسية",
-        image: "/teachers/5.JPG",
+        image: "/teachers/5.png",
     },
     {
         id: 6,
         name: "ليليا كمون",
         title: "أخصائية في التثقيف النفسي",
-        image: "/teachers/6.jpg",
+        image: "/teachers/6.png",
     },
     {
         id: 7,
         name: " أسماء الأمين",
         title: "مهنسة و باحثة في علم الشريعة و الدين",
-        image: "/teachers/7.jpg",
+        image: "/teachers/7.png",
     },
     {
         id: 8,
         name: "إنصاف عبد سلام",
         title: "طبيبة نساء و توليد",
-        image: "/teachers/8.jpg",
+        image: "/teachers/8.png",
     },
     {
         id: 9,
@@ -74,10 +74,10 @@ export default function InstructorsPage() {
             <section className="relative overflow-hidden py-16 bg-surface/10 border-b border-border/40">
                 <div className="max-w-[1200px] mx-auto px-4 md:px-8 text-center relative z-10">
                     <h1 className="text-3xl md:text-5xl font-black text-text-primary leading-tight mb-4">
-                        فريق <span className="text-brand-primary">المعلمين والدكاترة</span>
+                        فريق <span className="text-brand-primary">الخبراء</span>
                     </h1>
                     <p className="max-w-2xl mx-auto text-sm sm:text-base text-text-secondary font-medium leading-relaxed">
-                        تعرف على نخبة المعلمين والخبراء التربويين في أكاديمية أسس والذين يقودون أبنائكم نحو التميز والإبداع.
+                        تعرف على الخبراء في أكاديمية أسس والذين يقودون حياتكم نحو التميز والإبداع.
                     </p>
                 </div>
             </section>

@@ -172,7 +172,7 @@ export function Navbar() {
       { name: "الباقات", href: "/packages", active: pathname === "/packages" || pathname.startsWith("/packages/") },
       { name: "تفعيل كود الاشتراك", href: "/activate", active: pathname === "/activate" },
       { name: "عن الأكاديمية", href: "/about", active: pathname === "/about" },
-      { name: "عن المُعلمون", href: "/instructors", active: pathname === "/instructors" || pathname.startsWith("/instructors/") }
+      { name: "عن الخبراء", href: "/instructors", active: pathname === "/instructors" || pathname.startsWith("/instructors/") }
     ],
     [pathname]
   );
