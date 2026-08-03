@@ -32,11 +32,11 @@ function BlobCard({ number, label, imageUrl, className = "", aspectClass = "aspe
       className={`w-full rounded-[1.5rem] bg-surface border border-border/40 p-4 flex flex-col justify-center items-center text-center shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-500 group ${aspectClass} ${className}`}
     >
       <span
-        className="text-base sm:text-lg font-black bg-gradient-to-br from-brand-primary to-[#ff6ba6] bg-clip-text text-transparent group-hover:scale-105 transition-transform duration-300"
+        className="text-xl sm:text-2xl font-black bg-gradient-to-br from-brand-primary to-[#ff6ba6] bg-clip-text text-transparent group-hover:scale-105 transition-transform duration-300"
       >
         {number}
       </span>
-      <span className="text-[8px] sm:text-[10px] font-bold text-text-secondary mt-1 tracking-wide leading-tight">
+      <span className="text-[10px] sm:text-xs font-bold text-text-secondary mt-1.5 tracking-wide leading-tight px-1">
         {label}
       </span>
     </div>
@@ -57,7 +57,7 @@ export function HeroSection() {
       {/* Symmetric Grid Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center relative z-10 w-full">
         {/* Right Column: Hero call to action */}
-        <div className="w-full lg:col-span-7 flex flex-col items-center lg:items-start text-center lg:text-right">
+        <div className="w-full lg:col-span-6 flex flex-col items-center lg:items-start text-center lg:text-right">
           <div className="w-full max-w-[500px] mb-8 hover:scale-[1.01] transition-transform duration-500">
             <HeroTextSvg className="w-full h-auto" />
           </div>
@@ -81,9 +81,9 @@ export function HeroSection() {
         </div>
 
         {/* Left Column: 3 side-by-side vertical scrolling marquees aligned perfectly to the left edge of the grid */}
-        <div className="w-full lg:col-span-5 flex justify-center lg:justify-end">
+        <div className="w-full lg:col-span-6 flex justify-center lg:justify-end">
           {/* items-start is critical here to align cards to the top of the container, preventing blank spaces when translated */}
-          <div className="relative h-[600px] w-full max-w-[500px] mx-auto overflow-hidden flex gap-3 items-start lg:-mt-28 z-0">
+          <div className="relative h-[650px] w-full max-w-[580px] mx-auto overflow-hidden flex gap-4 items-start lg:-mt-20 z-0">
             {/* Top and Bottom Fading Overlays */}
             <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-background to-transparent z-10 pointer-events-none" />
             <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background to-transparent z-10 pointer-events-none" />
