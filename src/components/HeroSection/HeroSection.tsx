@@ -92,31 +92,31 @@ export function HeroSection() {
             <div className="w-1/3 flex flex-col gap-4 animate-marquee-up hover:[animation-play-state:paused]">
               {/* Set 1 */}
               <BlobCard number="+24k" label="مستخدم نشط" aspectClass="aspect-square" />
-              <BlobCard imageUrl="/Ossos/blob image1.jpg" aspectClass="aspect-[3/4]" />
+              <BlobCard imageUrl="/Ossos/ca.jpeg" aspectClass="aspect-square" />
               <BlobCard number="+200k" label="متابع على المنصات" aspectClass="aspect-square" />
               {/* Set 2 */}
               <BlobCard number="+24k" label="مستخدم نشط" aspectClass="aspect-square" />
-              <BlobCard imageUrl="/Ossos/blob image1.jpg" aspectClass="aspect-[3/4]" />
+              <BlobCard imageUrl="/Ossos/ca.jpeg" aspectClass="aspect-square" />
               <BlobCard number="+200k" label="متابع على المنصات" aspectClass="aspect-square" />
               {/* Set 3 */}
               <BlobCard number="+24k" label="مستخدم نشط" aspectClass="aspect-square" />
-              <BlobCard imageUrl="/Ossos/blob image1.jpg" aspectClass="aspect-[3/4]" />
+              <BlobCard imageUrl="/Ossos/ca.jpeg" aspectClass="aspect-square" />
               <BlobCard number="+200k" label="متابع على المنصات" aspectClass="aspect-square" />
             </div>
 
             {/* Column 2: Scrolls DOWN */}
             <div className="w-1/3 flex flex-col gap-4 animate-marquee-down hover:[animation-play-state:paused]">
               {/* Set 1 */}
-              <BlobCard number="+10" label="شركاء الأكاديمية" aspectClass="aspect-[4/3]" />
-              <BlobCard imageUrl="/Ossos/blob image 3.jpeg" aspectClass="aspect-[3/4]" />
+              <BlobCard number="+10" label="شركاء الأكاديمية" aspectClass="aspect-square" />
+              <BlobCard imageUrl="/Ossos/ca.jpeg" aspectClass="aspect-square" />
               <BlobCard number="+150" label="كادر طبي" aspectClass="aspect-square" />
               {/* Set 2 */}
-              <BlobCard number="+10" label="شركاء الأكاديمية" aspectClass="aspect-[4/3]" />
-              <BlobCard imageUrl="/Ossos/blob image 3.jpeg" aspectClass="aspect-[3/4]" />
+              <BlobCard number="+10" label="شركاء الأكاديمية" aspectClass="aspect-square" />
+              <BlobCard imageUrl="/Ossos/ca.jpeg" aspectClass="aspect-square" />
               <BlobCard number="+150" label="كادر طبي" aspectClass="aspect-square" />
               {/* Set 3 */}
-              <BlobCard number="+10" label="شركاء الأكاديمية" aspectClass="aspect-[4/3]" />
-              <BlobCard imageUrl="/Ossos/blob image 3.jpeg" aspectClass="aspect-[3/4]" />
+              <BlobCard number="+10" label="شركاء الأكاديمية" aspectClass="aspect-square" />
+              <BlobCard imageUrl="/Ossos/ca.jpeg" aspectClass="aspect-square" />
               <BlobCard number="+150" label="كادر طبي" aspectClass="aspect-square" />
             </div>
 
@@ -124,16 +124,16 @@ export function HeroSection() {
             <div className="w-1/3 flex flex-col gap-4 animate-marquee-up hover:[animation-play-state:paused]">
               {/* Set 1 */}
               <BlobCard number="98%" label="نسبة الرضا" aspectClass="aspect-square" />
-              <BlobCard imageUrl="/Ossos/blob image 2.jpg" aspectClass="aspect-[3/4]" />
-              <BlobCard number="+200k" label="متابع على المنصات" aspectClass="aspect-square" />
+              <BlobCard imageUrl="/Ossos/ca.jpeg" aspectClass="aspect-square" />
+              <BlobCard number="4.9★" label="تقييم العملاء" aspectClass="aspect-square" />
               {/* Set 2 */}
               <BlobCard number="98%" label="نسبة الرضا" aspectClass="aspect-square" />
-              <BlobCard imageUrl="/Ossos/blob image 2.jpg" aspectClass="aspect-[3/4]" />
-              <BlobCard number="+200k" label="متابع على المنصات" aspectClass="aspect-square" />
+              <BlobCard imageUrl="/Ossos/ca.jpeg" aspectClass="aspect-square" />
+              <BlobCard number="4.9★" label="تقييم العملاء" aspectClass="aspect-square" />
               {/* Set 3 */}
               <BlobCard number="98%" label="نسبة الرضا" aspectClass="aspect-square" />
-              <BlobCard imageUrl="/Ossos/blob image 2.jpg" aspectClass="aspect-[3/4]" />
-              <BlobCard number="+200k" label="متابع على المنصات" aspectClass="aspect-square" />
+              <BlobCard imageUrl="/Ossos/ca.jpeg" aspectClass="aspect-square" />
+              <BlobCard number="4.9★" label="تقييم العملاء" aspectClass="aspect-square" />
             </div>
           </div>
         </div>
