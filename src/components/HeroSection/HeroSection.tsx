@@ -91,7 +91,7 @@ export function HeroSection() {
         </div>
 
         {/* Left Column: 3 side-by-side vertical scrolling marquees aligned perfectly to the left edge of the grid */}
-        <div className="w-full lg:col-span-6 flex justify-center lg:justify-end">
+        <div className="hidden lg:flex lg:col-span-6 justify-center lg:justify-end">
           {/* items-start is critical here to align cards to the top of the container, preventing blank spaces when translated */}
           <div className="relative h-[650px] w-full max-w-[580px] mx-auto overflow-hidden flex gap-4 items-start lg:-mt-20 z-0">
             {/* Top and Bottom Fading Overlays */}

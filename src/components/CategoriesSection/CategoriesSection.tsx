@@ -40,14 +40,14 @@ export function CategoriesSection({ categories }: CategoriesSectionProps) {
           </div>
         </div>
 
-        {/* Left Column: Categories Grid (RTL end) */}
+        {/* Left Column: Categories Grid (RTL end) / Scrollable on Mobile */}
         <div className="w-full lg:w-[72%]">
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+          <div className="flex overflow-x-auto lg:grid lg:grid-cols-2 xl:grid-cols-4 gap-6 pb-6 lg:pb-0 scrollbar-none snap-x snap-mandatory scroll-smooth dir-rtl">
             {categories.slice(0, 8).map((category) => (
               <Link
                 key={category.id}
                 href={`/courses?category=${encodeURIComponent(category.name)}`}
-                className="relative group h-40 rounded-2xl overflow-hidden transition-all shadow-xl"
+                className="relative group h-40 rounded-2xl overflow-hidden transition-all shadow-xl w-[200px] shrink-0 lg:w-auto snap-center"
                 style={{ borderColor: category.color || "var(--border)" }}
               >
                 <div className="absolute inset-0 z-0">

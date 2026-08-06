@@ -50,7 +50,7 @@ function ArticleCard({ article }: ArticleCardProps) {
   return (
     <Link
       href={`/articles/${article.id}`}
-      className="group flex flex-col bg-surface backdrop-blur-md rounded-none overflow-hidden border border-border/40 hover:border-brand-primary/60 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-2xl shadow-md"
+      className="group flex flex-col bg-surface backdrop-blur-md rounded-3xl overflow-hidden border border-border/40 hover:border-brand-primary/60 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-2xl shadow-md w-[290px] shrink-0 lg:w-auto snap-center"
     >
       <div className="relative h-100 w-full overflow-hidden bg-background">
         {/* Article Image */}
@@ -148,16 +148,16 @@ export function LatestArticlesSection({ articles, isLoading }: LatestArticlesSec
       </div>
 
       {isLoading && articles.length === 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="flex overflow-x-auto lg:grid lg:grid-cols-3 gap-8 pb-6 lg:pb-0 scrollbar-none snap-x snap-mandatory scroll-smooth dir-rtl">
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="bg-surface/50 rounded-3xl h-[420px] animate-pulse border border-border/40"
+              className="bg-surface/50 rounded-3xl h-[420px] animate-pulse border border-border/40 w-[290px] shrink-0 lg:w-auto snap-center"
             />
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="flex overflow-x-auto lg:grid lg:grid-cols-3 gap-8 pb-6 lg:pb-0 scrollbar-none snap-x snap-mandatory scroll-smooth dir-rtl">
           {(articles || []).slice(0, 3).map((article) => (
             <ArticleCard key={article.id} article={article} />
           ))}
