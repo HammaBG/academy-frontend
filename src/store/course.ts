@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { createSafeStorage } from '@/lib/storage';
+import { authenticatedFetch } from '@/lib/api';
 
 export interface IComment {
     user: any;
@@ -110,7 +111,7 @@ interface CourseActions {
 export type CourseStore = CourseData & CourseActions;
 
 const API_URL = 'https://academy-backend-8gl3.onrender.com/api/courses';
-//const API_URL = 'http://localhost:5000/api/courses';
+// const API_URL = 'http://localhost:5000/api/courses';
 
 export const useCourseStore = create<CourseStore>()(
     persist(
@@ -129,7 +130,7 @@ export const useCourseStore = create<CourseStore>()(
             createCourse: async (courseData, token) => {
                 set({ isLoading: true, error: null });
                 try {
-                    const res = await fetch(`${API_URL}/create-course`, {
+                    const res = await authenticatedFetch(`${API_URL}/create-course`, {
                         method: 'POST',
                         headers: {
                             'Authorization': `Bearer ${token}`,
@@ -153,7 +154,7 @@ export const useCourseStore = create<CourseStore>()(
             getAllCourses: async (token) => {
                 set({ isLoading: true, error: null });
                 try {
-                    const res = await fetch(`${API_URL}/get-admin-courses`, {
+                    const res = await authenticatedFetch(`${API_URL}/get-admin-courses`, {
                         method: 'GET',
                         headers: {
                             'Authorization': `Bearer ${token}`,
@@ -175,7 +176,7 @@ export const useCourseStore = create<CourseStore>()(
             getInstructorCourses: async (token) => {
                 set({ isLoading: true, error: null });
                 try {
-                    const res = await fetch(`${API_URL}/get-instructor-courses`, {
+                    const res = await authenticatedFetch(`${API_URL}/get-instructor-courses`, {
                         method: 'GET',
                         headers: {
                             'Authorization': `Bearer ${token}`,
@@ -197,7 +198,7 @@ export const useCourseStore = create<CourseStore>()(
             getPublicCourses: async () => {
                 set({ isLoading: true, error: null });
                 try {
-                    const res = await fetch(`${API_URL}/get-courses`, {
+                    const res = await authenticatedFetch(`${API_URL}/get-courses`, {
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/json',
@@ -218,7 +219,7 @@ export const useCourseStore = create<CourseStore>()(
             getEnrolledCourses: async (token) => {
                 set({ isLoading: true, error: null });
                 try {
-                    const res = await fetch(`${API_URL}/get-enrolled-courses`, {
+                    const res = await authenticatedFetch(`${API_URL}/get-enrolled-courses`, {
                         method: 'GET',
                         headers: {
                             'Authorization': `Bearer ${token}`,
@@ -240,7 +241,7 @@ export const useCourseStore = create<CourseStore>()(
             getCourseById: async (id, token) => {
                 set({ isLoading: true, error: null });
                 try {
-                    const res = await fetch(`${API_URL}/get-course/${id}`, {
+                    const res = await authenticatedFetch(`${API_URL}/get-course/${id}`, {
                         method: 'GET',
                         headers: {
                             'Authorization': `Bearer ${token}`,
@@ -262,7 +263,7 @@ export const useCourseStore = create<CourseStore>()(
             getCourseContent: async (id: string, token: string) => {
                 set({ isLoading: true, error: null });
                 try {
-                    const res = await fetch(`${API_URL}/get-course-content/${id}`, {
+                    const res = await authenticatedFetch(`${API_URL}/get-course-content/${id}`, {
                         method: 'GET',
                         headers: {
                             'Authorization': `Bearer ${token}`,
@@ -284,7 +285,7 @@ export const useCourseStore = create<CourseStore>()(
             getPublicCourseById: async (id) => {
                 set({ isLoading: true, error: null });
                 try {
-                    const res = await fetch(`${API_URL}/get-course/${id}`, {
+                    const res = await authenticatedFetch(`${API_URL}/get-course/${id}`, {
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/json',
@@ -305,7 +306,7 @@ export const useCourseStore = create<CourseStore>()(
             updateCourse: async (id, courseData, token) => {
                 set({ isLoading: true, error: null });
                 try {
-                    const res = await fetch(`${API_URL}/edit-course/${id}`, {
+                    const res = await authenticatedFetch(`${API_URL}/edit-course/${id}`, {
                         method: 'PUT',
                         headers: {
                             'Authorization': `Bearer ${token}`,
@@ -329,7 +330,7 @@ export const useCourseStore = create<CourseStore>()(
             assignCourseToUser: async (courseId, userId, token) => {
                 set({ isLoading: true, error: null });
                 try {
-                    const res = await fetch(`${API_URL}/assign-course`, {
+                    const res = await authenticatedFetch(`${API_URL}/assign-course`, {
                         method: 'POST',
                         headers: {
                             'Authorization': `Bearer ${token}`,
@@ -352,7 +353,7 @@ export const useCourseStore = create<CourseStore>()(
             deleteCourse: async (id, token) => {
                 set({ isLoading: true, error: null });
                 try {
-                    const res = await fetch(`${API_URL}/delete-course/${id}`, {
+                    const res = await authenticatedFetch(`${API_URL}/delete-course/${id}`, {
                         method: 'DELETE',
                         headers: {
                             'Authorization': `Bearer ${token}`,

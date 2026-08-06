@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { authenticatedFetch } from '@/lib/api';
 
 // Article TypeScript Interface based on your backend controller
 export interface Article {
@@ -45,7 +46,7 @@ interface ArticleActions {
 export type ArticleStore = ArticleData & ArticleActions;
 
 const API_URL = 'https://academy-backend-8gl3.onrender.com/api/articles';
-//const API_URL = 'http://localhost:5000/api/articles';
+// const API_URL = 'http://localhost:5000/api/articles';
 
 export const useArticleStore = create<ArticleStore>()(
     persist(
@@ -63,7 +64,7 @@ export const useArticleStore = create<ArticleStore>()(
             createArticle: async (formData, token) => {
                 set({ isLoading: true, error: null });
                 try {
-                    const res = await fetch(`${API_URL}/`, {
+                    const res = await authenticatedFetch(`${API_URL}/`, {
                         method: 'POST',
                         headers: {
                             'Authorization': `Bearer ${token}`,
@@ -89,7 +90,7 @@ export const useArticleStore = create<ArticleStore>()(
             getPublicArticles: async () => {
                 set({ isLoading: true, error: null });
                 try {
-                    const res = await fetch(`${API_URL}/public`, {
+                    const res = await authenticatedFetch(`${API_URL}/public`, {
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/json',
@@ -111,7 +112,7 @@ export const useArticleStore = create<ArticleStore>()(
 
                 set({ isLoading: true, error: null });
                 try {
-                    const res = await fetch(`${API_URL}/`, {
+                    const res = await authenticatedFetch(`${API_URL}/`, {
                         method: 'GET',
                         headers: {
                             'Authorization': `Bearer ${token}`,
@@ -134,7 +135,7 @@ export const useArticleStore = create<ArticleStore>()(
 
                 set({ isLoading: true, error: null });
                 try {
-                    const res = await fetch(`${API_URL}/public/${id}`, {
+                    const res = await authenticatedFetch(`${API_URL}/public/${id}`, {
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/json',
@@ -156,7 +157,7 @@ export const useArticleStore = create<ArticleStore>()(
 
                 set({ isLoading: true, error: null });
                 try {
-                    const res = await fetch(`${API_URL}/${id}`, {
+                    const res = await authenticatedFetch(`${API_URL}/${id}`, {
                         method: 'GET',
                         headers: {
                             'Authorization': `Bearer ${token}`,
@@ -178,7 +179,7 @@ export const useArticleStore = create<ArticleStore>()(
             updateArticle: async (id, formData, token) => {
                 set({ isLoading: true, error: null });
                 try {
-                    const res = await fetch(`${API_URL}/${id}`, {
+                    const res = await authenticatedFetch(`${API_URL}/${id}`, {
                         method: 'PUT',
                         headers: {
                             'Authorization': `Bearer ${token}`,
@@ -203,7 +204,7 @@ export const useArticleStore = create<ArticleStore>()(
             deleteArticle: async (id, token) => {
                 set({ isLoading: true, error: null });
                 try {
-                    const res = await fetch(`${API_URL}/${id}`, {
+                    const res = await authenticatedFetch(`${API_URL}/${id}`, {
                         method: 'DELETE',
                         headers: {
                             'Authorization': `Bearer ${token}`,

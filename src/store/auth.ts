@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { createSafeStorage } from '@/lib/storage';
+import { authenticatedFetch } from '@/lib/api';
 
 // Update these types based on your actual backend response
 export interface User {
@@ -62,7 +63,7 @@ export const useAuthStore = create<AuthStore>()(
       signup: async (email, password, firstName, lastName, phone) => {
         set({ isAuthLoading: true, error: null });
         try {
-          const res = await fetch(`${API_URL}/signup`, {
+          const res = await authenticatedFetch(`${API_URL}/signup`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password, firstName, lastName, phone }),
@@ -82,7 +83,7 @@ export const useAuthStore = create<AuthStore>()(
       login: async (email, password) => {
         set({ isAuthLoading: true, error: null });
         try {
-          const res = await fetch(`${API_URL}/login`, {
+          const res = await authenticatedFetch(`${API_URL}/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password }),
@@ -125,7 +126,7 @@ export const useAuthStore = create<AuthStore>()(
 
         set({ isAuthLoading: true, error: null });
         try {
-          const res = await fetch(`${API_URL}/profile`, {
+          const res = await authenticatedFetch(`${API_URL}/profile`, {
             method: 'GET',
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -161,7 +162,7 @@ export const useAuthStore = create<AuthStore>()(
 
         set({ isDataLoading: true, error: null });
         try {
-          const res = await fetch(`${API_URL}/users`, {
+          const res = await authenticatedFetch(`${API_URL}/users`, {
             method: 'GET',
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -183,7 +184,7 @@ export const useAuthStore = create<AuthStore>()(
       getInstructors: async () => {
         set({ isDataLoading: true, error: null });
         try {
-          const res = await fetch(`${API_URL}/instructors`, {
+          const res = await authenticatedFetch(`${API_URL}/instructors`, {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' },
           });
@@ -202,7 +203,7 @@ export const useAuthStore = create<AuthStore>()(
       updateProfile: async (profileData, token) => {
         set({ isDataLoading: true, error: null });
         try {
-          const res = await fetch(`${API_URL}/update-profile`, {
+          const res = await authenticatedFetch(`${API_URL}/update-profile`, {
             method: 'PUT',
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -233,7 +234,7 @@ export const useAuthStore = create<AuthStore>()(
 
         set({ isDataLoading: true, error: null });
         try {
-          const res = await fetch(`${API_URL}/users/${id}`, {
+          const res = await authenticatedFetch(`${API_URL}/users/${id}`, {
             method: 'PUT',
             headers: {
               'Authorization': `Bearer ${token}`,

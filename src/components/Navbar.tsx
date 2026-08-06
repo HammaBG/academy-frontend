@@ -668,20 +668,18 @@ export function Navbar() {
 
         {/* Mobile Menu Panel */}
         <div
-          className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${
-            isMobileMenuOpen ? "max-h-[600px] opacity-100 bg-surface border-b border-border" : "max-h-0 opacity-0"
-          }`}
+          className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${isMobileMenuOpen ? "max-h-[600px] opacity-100 bg-surface border-b border-border" : "max-h-0 opacity-0"
+            }`}
         >
           <div className="px-4 py-4 space-y-2 border-t border-border/40">
             {links.map((link) => (
               <Link
                 key={link.name}
                 href={link.href}
-                className={`block px-4 py-2.5 rounded-lg text-base font-semibold transition-colors ${
-                  link.active
-                    ? "text-brand-primary bg-brand-primary/5 font-bold"
-                    : "text-text-secondary hover:text-text-primary hover:bg-surface"
-                }`}
+                className={`block px-4 py-2.5 rounded-lg text-base font-semibold transition-colors ${link.active
+                  ? "text-brand-primary bg-brand-primary/5 font-bold"
+                  : "text-text-secondary hover:text-text-primary hover:bg-surface"
+                  }`}
                 onClick={handleCloseMobileMenu}
               >
                 {link.name}
@@ -691,7 +689,7 @@ export function Navbar() {
             {isAuthenticated ? (
               <div className="pt-4 border-t border-border/40 space-y-2">
                 <p className="px-4 text-xs font-bold text-text-secondary">مرحباً، {user?.first_name || "المستخدم"}</p>
-                
+
                 <Link
                   href="/my-courses"
                   className="block px-4 py-2.5 rounded-lg text-base font-semibold text-text-secondary hover:text-text-primary hover:bg-surface"

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { authenticatedFetch } from '@/lib/api';
 
 export interface Category {
     id: string;
@@ -49,7 +50,7 @@ export const useCategoryStore = create<CategoryStore>()(
             createCategory: async (categoryData, token) => {
                 set({ isLoading: true, error: null });
                 try {
-                    const res = await fetch(`${API_URL}/`, {
+                    const res = await authenticatedFetch(`${API_URL}/`, {
                         method: 'POST',
                         headers: {
                             'Authorization': `Bearer ${token}`,
@@ -73,7 +74,7 @@ export const useCategoryStore = create<CategoryStore>()(
             getAllCategories: async (token) => {
                 set({ isLoading: true, error: null });
                 try {
-                    const res = await fetch(`${API_URL}/`, {
+                    const res = await authenticatedFetch(`${API_URL}/`, {
                         method: 'GET',
                         headers: {
                             'Authorization': `Bearer ${token}`,
@@ -95,7 +96,7 @@ export const useCategoryStore = create<CategoryStore>()(
             getPublicCategories: async () => {
                 set({ isLoading: true, error: null });
                 try {
-                    const res = await fetch(`${API_URL}/`, {
+                    const res = await authenticatedFetch(`${API_URL}/`, {
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/json',
@@ -116,7 +117,7 @@ export const useCategoryStore = create<CategoryStore>()(
             getCategoryById: async (id, token) => {
                 set({ isLoading: true, error: null });
                 try {
-                    const res = await fetch(`${API_URL}/${id}`, {
+                    const res = await authenticatedFetch(`${API_URL}/${id}`, {
                         method: 'GET',
                         headers: {
                             'Authorization': `Bearer ${token}`,
@@ -138,7 +139,7 @@ export const useCategoryStore = create<CategoryStore>()(
             updateCategory: async (id, categoryData, token) => {
                 set({ isLoading: true, error: null });
                 try {
-                    const res = await fetch(`${API_URL}/${id}`, {
+                    const res = await authenticatedFetch(`${API_URL}/${id}`, {
                         method: 'PUT',
                         headers: {
                             'Authorization': `Bearer ${token}`,
@@ -162,7 +163,7 @@ export const useCategoryStore = create<CategoryStore>()(
             deleteCategory: async (id, token) => {
                 set({ isLoading: true, error: null });
                 try {
-                    const res = await fetch(`${API_URL}/${id}`, {
+                    const res = await authenticatedFetch(`${API_URL}/${id}`, {
                         method: 'DELETE',
                         headers: {
                             'Authorization': `Bearer ${token}`,
