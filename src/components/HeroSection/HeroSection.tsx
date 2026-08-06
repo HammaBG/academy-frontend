@@ -9,9 +9,10 @@ interface BlobCardProps {
   imageUrl?: string;
   className?: string;
   aspectClass?: string;
+  bgColor?: string;
 }
 
-function BlobCard({ number, label, imageUrl, className = "", aspectClass = "aspect-square" }: BlobCardProps) {
+function BlobCard({ number, label, imageUrl, className = "", aspectClass = "aspect-square", bgColor }: BlobCardProps) {
   if (imageUrl) {
     return (
       <div
@@ -29,14 +30,23 @@ function BlobCard({ number, label, imageUrl, className = "", aspectClass = "aspe
 
   return (
     <div
-      className={`w-full rounded-[1.5rem] bg-surface border border-border/40 p-4 flex flex-col justify-center items-center text-center shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-500 group ${aspectClass} ${className}`}
+      style={bgColor ? { backgroundColor: bgColor, borderColor: `${bgColor}20` } : undefined}
+      className={`w-full rounded-[1.5rem] p-4 flex flex-col justify-center items-center text-center shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-500 group ${aspectClass} ${className} ${
+        bgColor ? "text-white border-0" : "bg-surface border border-border/40"
+      }`}
     >
       <span
-        className="text-xl sm:text-2xl font-black bg-gradient-to-br from-brand-primary to-[#ff6ba6] bg-clip-text text-transparent group-hover:scale-105 transition-transform duration-300"
+        className={`text-xl sm:text-2xl font-black transition-transform duration-300 group-hover:scale-105 ${
+          bgColor ? "text-white" : "bg-gradient-to-br from-brand-primary to-[#ff6ba6] bg-clip-text text-transparent"
+        }`}
       >
         {number}
       </span>
-      <span className="text-[10px] sm:text-xs font-bold text-text-secondary mt-1.5 tracking-wide leading-tight px-1">
+      <span
+        className={`text-[10px] sm:text-xs font-bold mt-1.5 tracking-wide leading-tight px-1 ${
+          bgColor ? "text-white/90" : "text-text-secondary"
+        }`}
+      >
         {label}
       </span>
     </div>
@@ -91,49 +101,49 @@ export function HeroSection() {
             {/* Column 1: Scrolls UP */}
             <div className="w-1/3 flex flex-col gap-4 animate-marquee-up hover:[animation-play-state:paused]">
               {/* Set 1 */}
-              <BlobCard number="+24k" label="مستخدم نشط" aspectClass="aspect-square" />
+              <BlobCard number="+24k" label="مستخدم نشط" aspectClass="aspect-square" bgColor="#6a67ce" />
               <BlobCard imageUrl="/Ossos/ca.jpeg" aspectClass="aspect-square" />
-              <BlobCard number="+200k" label="متابع على المنصات" aspectClass="aspect-square" />
+              <BlobCard number="+200k" label="متابع على المنصات" aspectClass="aspect-square" bgColor="#e94394" />
               {/* Set 2 */}
-              <BlobCard number="+24k" label="مستخدم نشط" aspectClass="aspect-square" />
+              <BlobCard number="+24k" label="مستخدم نشط" aspectClass="aspect-square" bgColor="#6a67ce" />
               <BlobCard imageUrl="/Ossos/ca.jpeg" aspectClass="aspect-square" />
-              <BlobCard number="+200k" label="متابع على المنصات" aspectClass="aspect-square" />
+              <BlobCard number="+200k" label="متابع على المنصات" aspectClass="aspect-square" bgColor="#e94394" />
               {/* Set 3 */}
-              <BlobCard number="+24k" label="مستخدم نشط" aspectClass="aspect-square" />
+              <BlobCard number="+24k" label="مستخدم نشط" aspectClass="aspect-square" bgColor="#6a67ce" />
               <BlobCard imageUrl="/Ossos/ca.jpeg" aspectClass="aspect-square" />
-              <BlobCard number="+200k" label="متابع على المنصات" aspectClass="aspect-square" />
+              <BlobCard number="+200k" label="متابع على المنصات" aspectClass="aspect-square" bgColor="#e94394" />
             </div>
 
             {/* Column 2: Scrolls DOWN */}
             <div className="w-1/3 flex flex-col gap-4 animate-marquee-down hover:[animation-play-state:paused]">
               {/* Set 1 */}
-              <BlobCard number="+10" label="شركاء الأكاديمية" aspectClass="aspect-square" />
+              <BlobCard number="+10" label="شركاء الأكاديمية" aspectClass="aspect-square" bgColor="#4da1f7" />
               <BlobCard imageUrl="/Ossos/ca.jpeg" aspectClass="aspect-square" />
-              <BlobCard number="+150" label="كادر طبي" aspectClass="aspect-square" />
+              <BlobCard number="+150" label="كادر طبي" aspectClass="aspect-square" bgColor="#37c597" />
               {/* Set 2 */}
-              <BlobCard number="+10" label="شركاء الأكاديمية" aspectClass="aspect-square" />
+              <BlobCard number="+10" label="شركاء الأكاديمية" aspectClass="aspect-square" bgColor="#4da1f7" />
               <BlobCard imageUrl="/Ossos/ca.jpeg" aspectClass="aspect-square" />
-              <BlobCard number="+150" label="كادر طبي" aspectClass="aspect-square" />
+              <BlobCard number="+150" label="كادر طبي" aspectClass="aspect-square" bgColor="#37c597" />
               {/* Set 3 */}
-              <BlobCard number="+10" label="شركاء الأكاديمية" aspectClass="aspect-square" />
+              <BlobCard number="+10" label="شركاء الأكاديمية" aspectClass="aspect-square" bgColor="#4da1f7" />
               <BlobCard imageUrl="/Ossos/ca.jpeg" aspectClass="aspect-square" />
-              <BlobCard number="+150" label="كادر طبي" aspectClass="aspect-square" />
+              <BlobCard number="+150" label="كادر طبي" aspectClass="aspect-square" bgColor="#37c597" />
             </div>
 
             {/* Column 3: Scrolls UP */}
             <div className="w-1/3 flex flex-col gap-4 animate-marquee-up hover:[animation-play-state:paused]">
               {/* Set 1 */}
-              <BlobCard number="98%" label="نسبة الرضا" aspectClass="aspect-square" />
+              <BlobCard number="98%" label="نسبة الرضا" aspectClass="aspect-square" bgColor="#ff8200" />
               <BlobCard imageUrl="/Ossos/ca.jpeg" aspectClass="aspect-square" />
-              <BlobCard number="4.9★" label="تقييم العملاء" aspectClass="aspect-square" />
+              <BlobCard number="4.9★" label="تقييم العملاء" aspectClass="aspect-square" bgColor="#4271d6" />
               {/* Set 2 */}
-              <BlobCard number="98%" label="نسبة الرضا" aspectClass="aspect-square" />
+              <BlobCard number="98%" label="نسبة الرضا" aspectClass="aspect-square" bgColor="#ff8200" />
               <BlobCard imageUrl="/Ossos/ca.jpeg" aspectClass="aspect-square" />
-              <BlobCard number="4.9★" label="تقييم العملاء" aspectClass="aspect-square" />
+              <BlobCard number="4.9★" label="تقييم العملاء" aspectClass="aspect-square" bgColor="#4271d6" />
               {/* Set 3 */}
-              <BlobCard number="98%" label="نسبة الرضا" aspectClass="aspect-square" />
+              <BlobCard number="98%" label="نسبة الرضا" aspectClass="aspect-square" bgColor="#ff8200" />
               <BlobCard imageUrl="/Ossos/ca.jpeg" aspectClass="aspect-square" />
-              <BlobCard number="4.9★" label="تقييم العملاء" aspectClass="aspect-square" />
+              <BlobCard number="4.9★" label="تقييم العملاء" aspectClass="aspect-square" bgColor="#4271d6" />
             </div>
           </div>
         </div>

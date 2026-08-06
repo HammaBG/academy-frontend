@@ -4,14 +4,14 @@ import Link from "next/link";
 import { Sparkles, ArrowLeft, User as UserIcon } from "lucide-react";
 
 const staticTeachers = [
-  { id: "t1", name: "نايلة بن صالح", title: "طبيبة نفسية", image: "/teachers/1.png" },
-  { id: "t2", name: "مريم رڤية", title: "طبيبة نفسية", image: "/teachers/2.png" },
-  { id: "t3", name: "ريماح حناشي", title: "طبيبة نفسية", image: "/teachers/3.png" },
-  { id: "t4", name: "إنصاف شرف", title: "مختصة في الصحة النفسية", image: "/teachers/4.png" },
-  { id: "t5", name: "مريم عول", title: "مختصة في الصحة النفسية", image: "/teachers/5.png" },
-  { id: "t6", name: "ليليا كمون", title: "أخصائية في التثقيف النفسي", image: "/teachers/6.png" },
-  { id: "t7", name: " أسماء الأمين", title: "مهنسة و باحثة في علم الشريعة و الدين", image: "/teachers/7.png" },
-  { id: "t8", name: "إنصاف عبد سلام", title: "طبيبة نساء و توليد", image: "/teachers/8.png" },
+  { id: "t1", name: "نايلة بن صالح", title: "طبيبة نفسية", image: "/teachers/1-preview.png" },
+  { id: "t2", name: "مريم رڤية", title: "طبيبة نفسية", image: "/teachers/2-preview.png" },
+  { id: "t3", name: "ريماح حناشي", title: "مختصة في الصحة النفسية", image: "/teachers/3-preview.png" },
+  { id: "t4", name: "إنصاف شرف", title: "مختصة في الصحة النفسية", image: "/teachers/4-preview.png" },
+  { id: "t5", name: "مريم عول", title: "مختصة في الصحة النفسية", image: "/teachers/5-preview.png" },
+  { id: "t6", name: "ليليا كمون", title: "أخصائية في التثقيف النفسي", image: "/teachers/6-preview.png" },
+  { id: "t7", name: " أسماء الأمين", title: "مهنسة و باحثة في علم الشريعة و الدين", image: "/teachers/7-preview.png" },
+  { id: "t8", name: "إنصاف عبد سلام", title: "طبيبة نساء و توليد", image: "/teachers/8-preview.png" },
 ];
 
 export function InstructorsSection() {

@@ -83,9 +83,8 @@ export default function SignupPage() {
 
           {(error || successMsg) && (
             <div
-              className={`w-full p-3 mb-6 rounded-xl border text-sm text-center font-semibold ${
-                error ? "bg-red-500/10 border-red-500/30 text-red-400" : "bg-green-500/10 border-green-500/30 text-green-400"
-              }`}
+              className={`w-full p-3 mb-6 rounded-xl border text-sm text-center font-semibold ${error ? "bg-red-500/10 border-red-500/30 text-red-400" : "bg-green-500/10 border-green-500/30 text-green-400"
+                }`}
             >
               {error || successMsg}
             </div>
@@ -118,12 +117,13 @@ export default function SignupPage() {
             </div>
             <div className="space-y-1.5 text-right">
               <label className="text-xs font-bold text-text-secondary mr-1">
-                رقم الهاتف <span className="text-text-secondary/60">(اختياري)</span>
+                رقم الهاتف <span className="text-text-secondary/60"></span>
               </label>
               <input
                 type="tel"
                 value={phone}
                 onChange={handlePhoneChange}
+                required
                 className="w-full bg-surface border border-border/40 rounded-2xl px-4 py-3 text-text-primary placeholder-text-secondary/40 focus:outline-none focus:border-brand-primary/60 focus:ring-1 focus:ring-brand-primary/60 transition-all text-right"
                 placeholder="+216 xx xxx xxx"
                 dir="ltr"
