@@ -10,6 +10,7 @@ import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -19,12 +20,16 @@ export default function InstructorDashboardPage() {
 
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [newTitle, setNewTitle] = useState(user?.title || "");
+  const [bio, setBio] = useState(user?.bio || "");
+  const [linkedinUrl, setLinkedinUrl] = useState(user?.linkedin_url || "");
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (user?.title) {
-      setNewTitle(user.title);
+    if (user) {
+      setNewTitle(user.title || "");
+      setBio(user.bio || "");
+      setLinkedinUrl(user.linkedin_url || "");
     }
   }, [user]);
 
@@ -58,6 +63,8 @@ export default function InstructorDashboardPage() {
     try {
       await updateProfile({
         title: newTitle,
+        bio,
+        linkedin_url: linkedinUrl,
         avatar_url: avatarPreview || undefined
       }, token);
       toast.success("Profile updated successfully!");
@@ -144,6 +151,26 @@ export default function InstructorDashboardPage() {
                              className="border-[#0d7377]/20 focus:border-[#0d7377] h-12 font-bold text-[#0a3d3f]" 
                            />
                            <p className="text-[10px] text-gray-400 font-medium">This title will be displayed next to your name on all your course cards.</p>
+                        </div>
+                        <div className="space-y-2">
+                           <Label htmlFor="linkedin" className="text-xs font-black uppercase tracking-widest text-[#0d7377]">LinkedIn Profile URL</Label>
+                           <Input 
+                             id="linkedin" 
+                             value={linkedinUrl} 
+                             onChange={(e) => setLinkedinUrl(e.target.value)} 
+                             placeholder="https://linkedin.com/in/username" 
+                             className="border-[#0d7377]/20 focus:border-[#0d7377] h-12 font-bold text-[#0a3d3f]" 
+                           />
+                        </div>
+                        <div className="space-y-2">
+                           <Label htmlFor="bio" className="text-xs font-black uppercase tracking-widest text-[#0d7377]">Short Description (Bio)</Label>
+                           <Textarea 
+                             id="bio" 
+                             value={bio} 
+                             onChange={(e) => setBio(e.target.value)} 
+                             placeholder="Write a short description about your professional background and courses..." 
+                             className="border-[#0d7377]/20 focus:border-[#0d7377] min-h-[100px] font-bold text-[#0a3d3f]" 
+                           />
                         </div>
                       </div>
 

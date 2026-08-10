@@ -3,7 +3,6 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { createSafeStorage } from '@/lib/storage';
 import { authenticatedFetch } from '@/lib/api';
 
-// Update these types based on your actual backend response
 export interface User {
   id: string;
   email: string;
@@ -13,6 +12,8 @@ export interface User {
   role?: 'user' | 'instructor' | 'admin';
   avatar_url?: string;
   title?: string;
+  bio?: string;
+  linkedin_url?: string;
 }
 
 interface AuthData {
@@ -33,7 +34,7 @@ interface AuthActions {
   getProfile: () => Promise<void>;
   getAllUsers: () => Promise<void>;
   getInstructors: () => Promise<void>;
-  updateProfile: (data: { title?: string; avatar_url?: string }, token: string) => Promise<void>;
+  updateProfile: (data: { title?: string; avatar_url?: string; bio?: string; linkedin_url?: string }, token: string) => Promise<void>;
   updateUser: (id: string, data: Partial<User>) => Promise<void>;
   clearError: () => void;
 }
