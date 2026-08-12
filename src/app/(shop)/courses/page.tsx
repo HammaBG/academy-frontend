@@ -47,7 +47,7 @@ function CoursesListContent() {
           </h1>
 
           <p className="text-text-secondary max-w-2xl mx-auto font-medium text-sm sm:text-base">
-            انضم إلى آلاف الطلاب وابدأ رحلتك اليوم مع مناهجنا المصممة بشكل احترافي لتطوير مهاراتك.
+            برامج ودورات رقمية مبنية على أسس علمية في علم النفس والعلاقات والتربية الواعية، لمساعدتك على بناء حياة أسرية أكثر وعياً واستقراراً.
           </p>
 
           {/* Filters & Search Row */}

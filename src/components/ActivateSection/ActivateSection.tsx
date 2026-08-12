@@ -77,7 +77,7 @@ export function ActivateSection() {
           تفعيل <span className="text-brand-primary">كود الاشتراك</span>
         </h2>
         <p className="text-text-secondary text-sm sm:text-base max-w-xl font-medium mt-2">
-          سجل في الكورسات مدى الحياة باستخدام كود تفعيلي مخصص لك.
+          لديك كود تفعيل؟ استخدمه للوصول إلى برنامجك والبدء في رحلة تعليمية وتوعوية تساعدك على فهم نفسك، تطوير علاقاتك، والاستعداد لحياة أسرية أكثر وعياً.
         </p>
       </div>
 
@@ -93,7 +93,7 @@ export function ActivateSection() {
               هل حصلت على رمز تفعيل؟
             </h3>
             <p className="text-white/85 text-base leading-relaxed font-medium">
-              قم بإدخال الرمز الخاص بك في الحقل المجاور للانضمام فوراً إلى الطلاب المشتركين والبدء في التعلم في أي وقت تريده.
+              أدخل رمز التفعيل الخاص بك للوصول إلى برنامجك والاستفادة من المحتوى المتخصص في العلاقات، الحياة الأسرية، والتربية الواعية.
             </p>
           </div>
 
@@ -157,7 +157,7 @@ export function ActivateSection() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-1">
                   <h3 className="text-lg font-bold text-white">تفعيل الكود</h3>
-                  <p className="text-xs text-white/70">أدخل كود الاشتراك لتفعيل المساقات</p>
+                  <p className="text-xs text-white/70">أدخل كود الاشتراك لتفعيل برنامجك</p>
                 </div>
 
                 {(validationError || storeError) && (

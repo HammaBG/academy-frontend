@@ -169,7 +169,7 @@ export function Navbar() {
       { name: "الرئيسية", href: "/", active: pathname === "/" },
       { name: "المسارات", href: "/categories", active: pathname === "/categories" || pathname.startsWith("/categories/") },
       { name: "الكورسات", href: "/courses", active: pathname === "/courses" || pathname.startsWith("/courses/") },
-      { name: "الباقات", href: "/packages", active: pathname === "/packages" || pathname.startsWith("/packages/") },
+      // { name: "الباقات", href: "/packages", active: pathname === "/packages" || pathname.startsWith("/packages/") },
       { name: "تفعيل كود الاشتراك", href: "/activate", active: pathname === "/activate" },
       { name: "عن الأكاديمية", href: "/about", active: pathname === "/about" },
       { name: "عن الخبراء", href: "/instructors", active: pathname === "/instructors" || pathname.startsWith("/instructors/") }
@@ -685,93 +685,24 @@ export function Navbar() {
                 {link.name}
               </Link>
             ))}
-
-            {isAuthenticated ? (
-              <div className="pt-4 border-t border-border/40 space-y-2">
-                <p className="px-4 text-xs font-bold text-text-secondary">مرحباً، {user?.first_name || "المستخدم"}</p>
-
+            <div className="pt-4 border-t border-border/40">
+              <div className="grid grid-cols-2 gap-3">
                 <Link
-                  href="/my-courses"
-                  className="block px-4 py-2.5 rounded-lg text-base font-semibold text-text-secondary hover:text-text-primary hover:bg-surface"
+                  href="/login"
+                  className="text-center text-sm font-semibold text-text-primary border border-border hover:bg-surface px-4 py-2.5 rounded-lg transition-colors"
                   onClick={handleCloseMobileMenu}
                 >
-                  كورساتي
+                  دخول
                 </Link>
-
                 <Link
-                  href="/profile/edit"
-                  className="block px-4 py-2.5 rounded-lg text-base font-semibold text-text-secondary hover:text-text-primary hover:bg-surface"
+                  href="/signup"
+                  className="text-center text-sm font-bold text-white bg-brand-primary hover:bg-brand-primary/95 px-4 py-2.5 rounded-lg transition-colors"
                   onClick={handleCloseMobileMenu}
                 >
-                  تعديل الحساب
+                  تسجيل
                 </Link>
-
-                <Link
-                  href="/activate"
-                  className="block px-4 py-2.5 rounded-lg text-base font-semibold text-text-secondary hover:text-text-primary hover:bg-surface"
-                  onClick={handleCloseMobileMenu}
-                >
-                  تفعيل كود الاشتراك
-                </Link>
-
-                <Link
-                  href="/favorites"
-                  className="block px-4 py-2.5 rounded-lg text-base font-semibold text-text-secondary hover:text-text-primary hover:bg-surface"
-                  onClick={handleCloseMobileMenu}
-                >
-                  المفضلة
-                </Link>
-
-                {user?.role === "admin" && (
-                  <Link
-                    href="/admin/dashboard"
-                    className="block px-4 py-2.5 rounded-lg text-base font-semibold text-blue-600 hover:bg-surface"
-                    onClick={handleCloseMobileMenu}
-                  >
-                    لوحة تحكم الإدارة
-                  </Link>
-                )}
-
-                {user?.role === "instructor" && (
-                  <Link
-                    href="/instructor/dashboard"
-                    className="block px-4 py-2.5 rounded-lg text-base font-semibold text-purple-600 hover:bg-surface"
-                    onClick={handleCloseMobileMenu}
-                  >
-                    لوحة تحكم المدرب
-                  </Link>
-                )}
-
-                <button
-                  onClick={() => {
-                    handleLogout();
-                    handleCloseMobileMenu();
-                  }}
-                  className="w-full text-right block px-4 py-2.5 rounded-lg text-base font-bold text-brand-primary hover:bg-surface"
-                >
-                  تسجيل الخروج
-                </button>
               </div>
-            ) : (
-              <div className="pt-4 border-t border-border/40">
-                <div className="grid grid-cols-2 gap-3">
-                  <Link
-                    href="/login"
-                    className="text-center text-sm font-semibold text-text-primary border border-border hover:bg-surface px-4 py-2.5 rounded-lg transition-colors"
-                    onClick={handleCloseMobileMenu}
-                  >
-                    دخول
-                  </Link>
-                  <Link
-                    href="/signup"
-                    className="text-center text-sm font-bold text-white bg-brand-primary hover:bg-brand-primary/95 px-4 py-2.5 rounded-lg transition-colors"
-                    onClick={handleCloseMobileMenu}
-                  >
-                    تسجيل
-                  </Link>
-                </div>
-              </div>
-            )}
+            </div>
           </div>
         </div>
       </nav>

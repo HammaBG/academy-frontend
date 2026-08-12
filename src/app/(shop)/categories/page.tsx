@@ -21,7 +21,7 @@ export default function CategoriesPage() {
             المسارات <span className="text-brand-primary">التعليمية</span>
           </h1>
           <p className="max-w-2xl mx-auto text-sm sm:text-base text-text-secondary font-medium leading-relaxed">
-            استكشف المسارات المختلفة وابدأ رحلة التعلم اليوم مع أفضل الكورسات والبرامج التعليمية المتخصصة.
+            اختر المجال الذي يناسب احتياجاتك وابدأ رحلة واعية نحو حياة أسرية أكثر استقراراً، من خلال محتوى متخصص ومبني على أسس علمية.
           </p>
         </div>
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-brand-primary/5 rounded-full blur-3xl pointer-events-none -z-10" />

@@ -19,7 +19,7 @@ export function CategoriesSection({ categories }: CategoriesSectionProps) {
           </h2>
         </div>
         <p className="text-text-secondary text-sm sm:text-base max-w-md">
-          اختر المجال الذي يناسب طموحاتك وابدأ رحلتك التعليمية مع أفضل الخبراء المتخصصين.
+          اختر المجال الذي يناسب احتياجاتك وابدأ رحلة واعية نحو حياة أسرية أكثر استقراراً، من خلال محتوى متخصص ومبني على أسس علمية.
         </p>
       </div>
 

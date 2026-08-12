@@ -19,7 +19,7 @@ export function LatestCoursesSection({ courses, isLoading }: LatestCoursesSectio
             استكشف <span className="text-brand-primary">الدورات</span> المميزة
           </h2>
           <p className="text-text-secondary text-sm sm:text-base max-w-xl font-medium mt-2">
-            ابدأ رحلتك التعليمية اليوم مع أفضل الدورات المصممة لتطوير مهاراتك والارتقاء بمسارك المهني.
+            برامج ودورات رقمية مبنية على أسس علمية في علم النفس والعلاقات والتربية الواعية، لمساعدتك على بناء حياة أسرية أكثر وعياً واستقراراً.
           </p>
         </div>
         <Link

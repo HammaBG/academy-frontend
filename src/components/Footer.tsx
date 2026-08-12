@@ -10,7 +10,6 @@ const SOCIAL_LINKS = [
   { icon: FaFacebook, href: "https://www.facebook.com/OSSOS.Academy", label: "فيسبوك", color: "hover:text-[#1877F2] hover:border-[#1877F2]/40" },
   { icon: FaInstagram, href: "https://www.instagram.com/ossosacademy", label: "إنستغرام", color: "hover:text-[#E4405F] hover:border-[#E4405F]/40" },
   { icon: FaYoutube, href: "#", label: "يوتيوب", color: "hover:text-[#FF0000] hover:border-[#FF0000]/40" },
-  { icon: FaTwitter, href: "#", label: "تويتر", color: "hover:text-[#1DA1F2] hover:border-[#1DA1F2]/40" },
 ];
 
 const QUICK_LINKS = [
@@ -40,9 +39,9 @@ export function Footer() {
 
   const activeTrackLinks = categories.length > 0
     ? categories.slice(0, 6).map((cat) => ({
-        name: cat.name,
-        href: `/courses?category=${encodeURIComponent(cat.name)}`,
-      }))
+      name: cat.name,
+      href: `/courses?category=${encodeURIComponent(cat.name)}`,
+    }))
     : TRACK_LINKS_FALLBACK;
   return (
     <footer className="bg-surface text-text-primary border-t border-border/30 relative overflow-hidden">

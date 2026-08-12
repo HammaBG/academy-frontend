@@ -40,6 +40,7 @@ export interface ITest {
 
 export interface ICourseData {
     id?: string;
+    _id?: string;
     title: string;
     description: string;
     video_url: string;
@@ -49,6 +50,7 @@ export interface ICourseData {
     video_player: string;
     links: ILink[];
     suggestion: string;
+    questions?: IComment[];
 }
 
 export interface Course {
@@ -105,7 +107,8 @@ interface CourseActions {
     assignCourseToUser: (courseId: string, userId: string, token: string) => Promise<void>;
     getEnrolledCourses: (token: string) => Promise<void>;
     getCourseContent: (id: string, token: string) => Promise<void>;
-
+    addQuestion: (question: string, courseId: string, contentId: string, token: string) => Promise<void>;
+    addAnswer: (answer: string, courseId: string, contentId: string, questionId: string, token: string) => Promise<void>;
 }
 
 export type CourseStore = CourseData & CourseActions;
@@ -372,6 +375,64 @@ export const useCourseStore = create<CourseStore>()(
                     }));
                 } catch (err: any) {
                     set({ error: err.message, isLoading: false });
+                }
+            },
+
+            addQuestion: async (question, courseId, contentId, token) => {
+                set({ isLoading: true, error: null });
+                try {
+                    const res = await authenticatedFetch(`${API_URL}/add-question`, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ question, courseId, contentId }),
+                    });
+
+                    const data = await res.json();
+                    if (!res.ok) {
+                        throw new Error(data.error || 'Failed to add question');
+                    }
+
+                    set((state) => ({
+                        currentCourse: state.currentCourse && data.course
+                            ? { ...state.currentCourse, course_data: data.course.course_data || data.course }
+                            : (data.course || state.currentCourse),
+                        isLoading: false,
+                    }));
+                } catch (err: any) {
+                    set({ error: err.message, isLoading: false });
+                    throw err;
+                }
+            },
+
+            addAnswer: async (answer, courseId, contentId, questionId, token) => {
+                set({ isLoading: true, error: null });
+                try {
+                    const res = await authenticatedFetch(`${API_URL}/add-answer`, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ answer, courseId, contentId, questionId }),
+                    });
+
+                    const data = await res.json();
+                    if (!res.ok) {
+                        throw new Error(data.error || 'Failed to add answer');
+                    }
+
+                    set((state) => ({
+                        currentCourse: state.currentCourse && data.course
+                            ? { ...state.currentCourse, course_data: data.course.course_data || data.course }
+                            : (data.course || state.currentCourse),
+                        isLoading: false,
+                    }));
+                } catch (err: any) {
+                    set({ error: err.message, isLoading: false });
+                    throw err;
                 }
             },
         }),

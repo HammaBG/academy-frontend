@@ -112,57 +112,90 @@ function EnrolledCourseCard({ course }: { course: any }) {
 }
 
 export default function MyCoursesPage() {
-    const { token } = useAuthStore();
-    const { enrolledCourses, isLoading, error, getEnrolledCourses } = useCourseStore();
+    const { token, user } = useAuthStore();
+    const { enrolledCourses, courses, isLoading, error, getEnrolledCourses, getAllCourses, getInstructorCourses } = useCourseStore();
+
+    const isAdmin = user?.role === "admin";
+    const isInstructor = user?.role === "instructor";
 
     useEffect(() => {
         if (token) {
-            getEnrolledCourses(token);
+            if (isAdmin) {
+                getAllCourses(token);
+            } else if (isInstructor) {
+                getInstructorCourses(token);
+            } else {
+                getEnrolledCourses(token);
+            }
         }
-    }, [token, getEnrolledCourses]);
+    }, [token, isAdmin, isInstructor, getEnrolledCourses, getAllCourses, getInstructorCourses]);
+
+    const displayCourses = displayCoursesList(isAdmin, isInstructor, enrolledCourses, courses);
+
+    function displayCoursesList(adminMode: boolean, instructorMode: boolean, enrolled: any[], all: any[]) {
+        return (adminMode || instructorMode) ? all : enrolled;
+    }
 
     return (
         <div className="min-h-screen bg-background text-text-primary relative overflow-x-hidden pt-24 text-right" dir="rtl">
             <div className="relative z-10 max-w-7xl mx-auto px-4 py-12 md:py-16">
                 <div className="text-center mb-16 space-y-4">
                     <h1 className="text-4xl md:text-5xl font-black text-text-primary">
-                        دوراتي <span className="text-brand-primary">المسجلة</span>
+                        {isAdmin ? (
+                            <>لوحة التحكم: <span className="text-brand-primary">جميع الكورسات</span></>
+                        ) : isInstructor ? (
+                            <>لوحة التحكم: <span className="text-brand-primary">كورساتي التعليمية</span></>
+                        ) : (
+                            <>دوراتي <span className="text-brand-primary">المسجلة</span></>
+                        )}
                     </h1>
                     <p className="text-text-secondary max-w-2xl mx-auto font-medium text-sm sm:text-base">
-                        استمر في رحلة التعلم الخاصة بك. الوصول سريع ومباشر إلى جميع دوراتك المسجلة.
+                        {isAdmin 
+                            ? "بصفتك مديراً للنظام، يمكنك تصفح ومشاهدة محتويات جميع الكورسات المتاحة في المنصة."
+                            : isInstructor
+                            ? "هنا تجد جميع الكورسات التي قمت بإنشائها أو الإشراف على تقديمها للطلاب."
+                            : "استمر في رحلة التعلم الخاصة بك. الوصول سريع ومباشر إلى جميع دوراتك المسجلة."
+                        }
                     </p>
                 </div>
 
                 {error && (
                     <div className="p-4 bg-red-500/10 border border-red-500/30 text-red-400 rounded-2xl text-sm font-bold flex items-center gap-2 mb-8 justify-start">
                         <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                        <span>خطأ في تحميل دوراتك: {error}</span>
+                        <span>خطأ في تحميل الكورسات: {error}</span>
                     </div>
                 )}
 
-                {isLoading && enrolledCourses.length === 0 ? (
+                {isLoading && displayCourses.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-20 gap-3">
                         <Loader size="md" />
-                        <p className="text-text-secondary font-bold text-sm">جاري تحميل دوراتك...</p>
+                        <p className="text-text-secondary font-bold text-sm">جاري تحميل الكورسات...</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {enrolledCourses.map((course) => (
+                        {displayCourses.map((course) => (
                             <EnrolledCourseCard key={course.id} course={course} />
                         ))}
                     </div>
                 )}
 
-                {!isLoading && enrolledCourses.length === 0 && (
+                {!isLoading && displayCourses.length === 0 && (
                     <div className="py-24 text-center bg-surface rounded-[32px] border border-dashed border-border/60 max-w-2xl mx-auto">
                         <BookOpen className="w-16 h-16 text-text-secondary/20 mx-auto mb-4" />
-                        <h3 className="text-xl font-bold text-text-primary mb-1">لم تقم بالتسجيل في أي دورة بعد</h3>
-                        <p className="text-text-secondary text-sm mb-6 max-w-sm mx-auto font-medium">استكشف كتالوج المسارات والدورات وابدأ رحلتك التعليمية اليوم.</p>
+                        <h3 className="text-xl font-bold text-text-primary mb-1">
+                            {isAdmin ? "لا توجد كورسات مضافة بعد" : isInstructor ? "لم تقم بإضافة أي كورس بعد" : "لم تقم بالتسجيل في أي دورة بعد"}
+                        </h3>
+                        <p className="text-text-secondary text-sm mb-6 max-w-sm mx-auto font-medium">
+                            {isAdmin || isInstructor
+                                ? "قم بإنشاء كورس جديد من لوحة تحكم الإدارة لبدء نشره."
+                                : "استكشف كتالوج المسارات والدورات وابدأ رحلتك التعليمية اليوم."
+                            }
+                        </p>
                         <Link
-                            href="/courses"
-                            className="inline-flex items-center gap-2 px-6 py-3.5 bg-brand-primary hover:bg-brand-primary/90 text-white font-extrabold rounded-2xl transition-all shadow-lg shadow-brand-primary/10 hover:scale-105"
+                            href={isAdmin || isInstructor ? "/instructor/courses" : "/courses"}
+                            className="inline-flex items-center gap-2 px-6 py-3.5 bg-brand-primary hover:bg-brand-primary/95 text-white font-extrabold rounded-2xl transition-all shadow-lg shadow-brand-primary/10 hover:scale-105"
                         >
-                            تصفح الكورسات
+                            {isAdmin || isInstructor ? "إدارة الكورسات" : "تصفح الكورسات"}
                         </Link>
                     </div>
                 )}

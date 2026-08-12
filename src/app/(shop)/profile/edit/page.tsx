@@ -115,7 +115,7 @@ export default function EditProfilePage() {
   return (
     <div className="min-h-[85vh] py-12 px-4 bg-background/30 dir-rtl text-right">
       <div className="max-w-4xl mx-auto space-y-8">
-        
+
         {/* Page Header */}
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl font-black text-text-primary">إعدادات الحساب</h1>
@@ -123,11 +123,11 @@ export default function EditProfilePage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
-          
+
           {/* Right Column: Avatar Manager Card */}
           <div className="md:col-span-4 bg-surface border border-border/40 p-8 rounded-[2rem] shadow-xl flex flex-col items-center text-center space-y-6 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary/5 rounded-full filter blur-2xl pointer-events-none" />
-            
+
             <div className="relative group cursor-pointer" onClick={handleAvatarClick} aria-label="تغيير الصورة الشخصية" role="button">
               {/* Image Circle */}
               <div className="w-32 h-32 rounded-full overflow-hidden border-2 border-border/60 bg-surface flex items-center justify-center shadow-lg relative z-10 group-hover:border-brand-primary transition-all duration-300">
@@ -136,7 +136,7 @@ export default function EditProfilePage() {
                 ) : (
                   <UserIcon className="w-16 h-16 text-text-secondary/30" />
                 )}
-                
+
                 {/* Upload Overlay */}
                 <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <Camera className="w-8 h-8 text-white animate-bounce" />
@@ -170,7 +170,7 @@ export default function EditProfilePage() {
             </div>
 
             {fileError && <p className="text-xs font-bold text-brand-primary">{fileError}</p>}
-            
+
             <p className="text-[10px] text-text-secondary font-medium leading-relaxed max-w-[200px]">
               صيغ الصور المدعومة: PNG, JPG. أقصى حجم مسموح به هو 5 ميجابايت.
             </p>
@@ -178,7 +178,7 @@ export default function EditProfilePage() {
 
           {/* Left Column: Info Card & Form */}
           <div className="md:col-span-8 bg-surface border border-border/40 p-8 md:p-10 rounded-[2.5rem] shadow-xl space-y-8">
-            
+
             {/* Alerts */}
             {successMsg && (
               <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 rounded-2xl text-sm font-semibold text-center">
@@ -237,7 +237,7 @@ export default function EditProfilePage() {
                   <Briefcase className="w-5 h-5 text-brand-primary" />
                   <span>البيانات المهنية للخبراء</span>
                 </h3>
-                
+
                 <div className="space-y-2">
                   <label htmlFor="title-input" className="text-sm font-bold text-text-secondary">
                     المسمى المهني / التخصص
