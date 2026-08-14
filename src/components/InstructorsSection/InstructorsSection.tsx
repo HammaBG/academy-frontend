@@ -8,9 +8,10 @@ const staticTeachers = [
   { id: "t2", name: "مريم رڤية", title: "طبيبة نفسية", image: "/teachers/2AI.png" },
   { id: "t3", name: "ريماح حناشي", title: "مختصة في الصحة النفسية", image: "/teachers/3AI.png" },
   { id: "t4", name: "إنصاف شرف", title: "مختصة في الصحة النفسية", image: "/teachers/4AI.png" },
-  { id: "t5", name: "مريم عول", title: "مختصة في الصحة النفسية", image: "/teachers/5AI.png" },
+  { id: "t5", name: "مريم عون", title: "مختصة في الصحة النفسية", image: "/teachers/5AI.png" },
   { id: "t6", name: "ليليا كمون", title: "أخصائية في التثقيف النفسي", image: "/teachers/6AI.png" },
-  { id: "t7", name: " أسماء الأمين", title: "مهنسة و باحثة في علم الشريعة و الدين", image: "/teachers/7AI.png" },
+  // { id: "t7", name: " أسماء الأمين", title: "مهنسة و باحثة في علم الشريعة و الدين", image: "/teachers/7AI.png" },
+  { id: "t10", name: "أمينة الرڨيڨ", title: "استشارية أسرية و خبيرة في العلاقات", image: "/teachers/10AI.png" },
   // { id: "t8", name: "إنصاف عبد سلام", title: "طبيبة نساء و توليد", image: "/teachers/8AI.png" },
   { id: "t9", name: "إبراهيم بن عبد الله", title: "كوتش و مدرّب على القيادة الذّاتيّة و مستشار في التفكير و التّخطيط الإستراتيجي", image: "/teachers/9AI.png", },
 ];

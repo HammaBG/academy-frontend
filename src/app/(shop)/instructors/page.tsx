@@ -37,7 +37,7 @@ const teachers: Teacher[] = [
     },
     {
         id: 5,
-        name: "مريم عول",
+        name: "مريم عون",
         title: "مختصة في الصحة النفسية",
         image: "/teachers/5AI.png",
     },
@@ -64,6 +64,12 @@ const teachers: Teacher[] = [
         name: "إبراهيم بن عبد الله",
         title: "كوتش و مدرّب على القيادة الذّاتيّة و مستشار في التفكير و التّخطيط الإستراتيجي",
         image: "/teachers/9AI.png",
+    },
+    {
+        id: 10,
+        name: "أمينة الرڨيڨ",
+        title: "استشارية أسرية و خبيرة في العلاقات",
+        image: "/teachers/10AI.png",
     },
 ];
 

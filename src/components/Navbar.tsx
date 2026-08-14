@@ -189,6 +189,8 @@ export function Navbar() {
       const [coursesRes, instructorsRes] = await Promise.all([
         fetch("https://academy-backend-8gl3.onrender.com/api/courses/get-courses"),
         fetch("https://academy-backend-8gl3.onrender.com/api/auth/instructors"),
+        // fetch("http://localhost:5000/api/courses/get-courses"),
+        // fetch("http://localhost:5000/api/auth/instructors"),
       ]);
 
       const coursesData = coursesRes.ok ? await coursesRes.json() : { courses: [] };

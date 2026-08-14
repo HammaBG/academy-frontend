@@ -28,6 +28,7 @@ export default function PublicInstructorPage() {
       setError(null);
       try {
         const res = await fetch(`https://academy-backend-8gl3.onrender.com/api/auth/instructors/${id}`);
+        // const res = await fetch(`http://localhost:5000/api/auth/instructors/${id}`);
         const data = await res.json();
         if (!res.ok) {
           throw new Error(data.error || "Instructor not found");
