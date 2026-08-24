@@ -1,16 +1,13 @@
 "use client";
 
 import { useState, useEffect, FormEvent, ChangeEvent } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuthStore } from "@/store/auth";
 
-export default function LoginPage() {
-  const { user, isAuthenticated, isAuthLoading, error, login, clearError } = useAuthStore();
-  const router = useRouter();
-
+export default function ForgotPasswordPage() {
+  const { isAuthLoading, error, forgotPassword, clearError } = useAuthStore();
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
     clearError();
@@ -20,28 +17,21 @@ export default function LoginPage() {
     setEmail(e.target.value);
   };
 
-  const handlePasswordChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setPassword(e.target.value);
-  };
-
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    await login(email, password);
-  };
-
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      router.push("/");
+    setSuccessMessage("");
+    try {
+      await forgotPassword(email);
+      setSuccessMessage("تم إرسال رابط استعادة كلمة المرور إلى بريدك الإلكتروني بنجاح.");
+      setEmail("");
+    } catch (err) {
+      // Error is handled in store
     }
-  }, [isAuthenticated, user, router]);
-
-  if (isAuthenticated && user) {
-    return null;
-  }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background text-text-primary p-4 relative overflow-hidden">
-      {/* Decorative ambient background blur lights */}
+      {/* Decorative ambient lights */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-brand-primary/10 rounded-full blur-[140px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#ff6ba6]/5 rounded-full blur-[140px] pointer-events-none" />
 
@@ -56,12 +46,18 @@ export default function LoginPage() {
             />
           </div>
 
-          <h2 className="text-3xl font-black mb-2 text-text-primary text-center">تسجيل الدخول</h2>
-          <p className="text-text-secondary mb-8 text-center text-sm font-semibold">أدخل بياناتك للوصول إلى حسابك</p>
+          <h2 className="text-3xl font-black mb-2 text-text-primary text-center">استعادة كلمة المرور</h2>
+          <p className="text-text-secondary mb-8 text-center text-sm font-semibold">أدخل بريدك الإلكتروني لإرسال رابط الاستعادة</p>
 
           {error && (
             <div className="w-full p-3 mb-6 rounded-xl border text-sm text-center bg-red-500/10 border-red-500/30 text-red-400 font-semibold">
               {error}
+            </div>
+          )}
+
+          {successMessage && (
+            <div className="w-full p-3 mb-6 rounded-xl border text-sm text-center bg-emerald-500/10 border-emerald-500/30 text-emerald-400 font-semibold">
+              {successMessage}
             </div>
           )}
 
@@ -79,25 +75,6 @@ export default function LoginPage() {
               />
             </div>
 
-            <div className="space-y-1.5 pb-2 text-right">
-              <label className="text-xs font-bold text-text-secondary mr-1">كلمة المرور</label>
-              <input
-                type="password"
-                value={password}
-                onChange={handlePasswordChange}
-                required
-                className="w-full bg-surface border border-border/40 rounded-2xl px-4 py-3 text-text-primary placeholder-text-secondary/40 focus:outline-none focus:border-brand-primary/60 focus:ring-1 focus:ring-brand-primary/60 transition-all text-right"
-                placeholder="••••••••"
-                dir="ltr"
-              />
-            </div>
-
-            <div className="flex justify-end items-center px-1 pb-1">
-              <Link href="/forgot-password" className="text-xs font-extrabold text-brand-primary hover:underline">
-                نسيت كلمة المرور؟
-              </Link>
-            </div>
-
             <button
               type="submit"
               disabled={isAuthLoading}
@@ -106,14 +83,14 @@ export default function LoginPage() {
               {isAuthLoading ? (
                 <span className="animate-spin h-5 w-5 border-2 border-white/80 border-t-transparent rounded-full"></span>
               ) : (
-                "تسجيل الدخول"
+                "إرسال رابط الاستعادة"
               )}
             </button>
           </form>
 
           <div className="mt-8">
-            <Link href="/signup" className="text-sm text-text-secondary hover:text-brand-primary transition-colors underline decoration-dotted font-bold">
-              ليس لديك حساب؟ سجل الآن
+            <Link href="/login" className="text-sm text-text-secondary hover:text-brand-primary transition-colors underline decoration-dotted font-bold">
+              العودة لتسجيل الدخول
             </Link>
           </div>
         </div>

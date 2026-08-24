@@ -36,6 +36,8 @@ interface AuthActions {
   getInstructors: () => Promise<void>;
   updateProfile: (data: { title?: string; avatar_url?: string; bio?: string; linkedin_url?: string }, token: string) => Promise<void>;
   updateUser: (id: string, data: Partial<User>) => Promise<void>;
+  forgotPassword: (email: string) => Promise<void>;
+  resetPassword: (password: string, token: string) => Promise<void>;
   clearError: () => void;
 }
 
@@ -75,7 +77,17 @@ export const useAuthStore = create<AuthStore>()(
             throw new Error(data.message || data.error || 'Signup failed');
           }
 
-          set({ isAuthLoading: false });
+          const token = data.data?.session?.access_token;
+          if (token) {
+            set({
+              token,
+              isAuthenticated: true,
+              isAuthLoading: false
+            });
+            await get().getProfile();
+          } else {
+            set({ isAuthLoading: false });
+          }
         } catch (err: any) {
           set({ error: err.message, isAuthLoading: false });
         }
@@ -252,6 +264,48 @@ export const useAuthStore = create<AuthStore>()(
           await get().getAllUsers();
         } catch (err: any) {
           set({ error: err.message, isDataLoading: false });
+          throw err;
+        }
+      },
+
+      forgotPassword: async (email) => {
+        set({ isAuthLoading: true, error: null });
+        try {
+          const res = await authenticatedFetch(`${API_URL}/forgot-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email }),
+          });
+
+          const data = await res.json();
+          if (!res.ok) {
+            throw new Error(data.message || data.error || 'Failed to request password reset');
+          }
+
+          set({ isAuthLoading: false });
+        } catch (err: any) {
+          set({ error: err.message, isAuthLoading: false });
+          throw err;
+        }
+      },
+
+      resetPassword: async (password, token) => {
+        set({ isAuthLoading: true, error: null });
+        try {
+          const res = await authenticatedFetch(`${API_URL}/reset-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password, token }),
+          });
+
+          const data = await res.json();
+          if (!res.ok) {
+            throw new Error(data.message || data.error || 'Failed to reset password');
+          }
+
+          set({ isAuthLoading: false });
+        } catch (err: any) {
+          set({ error: err.message, isAuthLoading: false });
           throw err;
         }
       },

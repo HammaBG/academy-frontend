@@ -178,7 +178,7 @@ export function Footer() {
                 <div className="w-9 h-9 rounded-lg bg-brand-primary/10 flex items-center justify-center shrink-0">
                   <Mail className="w-4 h-4 text-brand-primary" />
                 </div>
-                <span className="text-sm">contact@ossos-academy.com</span>
+                <span className="text-sm">academyossos@gmail.com</span>
               </a>
 
               <a
