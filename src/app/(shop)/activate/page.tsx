@@ -115,7 +115,7 @@ export default function ActivateCodePage() {
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3 justify-center pt-4">
-              <Link href="/profile" className="w-full sm:w-auto">
+              <Link href="/my-courses" className="w-full sm:w-auto">
                 <Button className="w-full sm:w-48 py-6 bg-brand-primary hover:bg-brand-primary/95 text-white font-bold rounded-xl text-sm shadow-md flex items-center justify-center gap-2">
                   <BookOpen className="w-4 h-4" />
                   <span>الذهاب إلى كورساتي</span>

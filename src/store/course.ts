@@ -83,6 +83,8 @@ export interface Course {
     display_order: number;
     category_color?: string;
     created_at?: string;
+    completedVideos?: string[];
+    progress?: number;
 }
 
 interface CourseData {
@@ -109,6 +111,7 @@ interface CourseActions {
     getCourseContent: (id: string, token: string) => Promise<void>;
     addQuestion: (question: string, courseId: string, contentId: string, token: string) => Promise<void>;
     addAnswer: (answer: string, courseId: string, contentId: string, questionId: string, token: string) => Promise<void>;
+    toggleVideoProgress: (courseId: string, videoSectionTitle: string, token: string) => Promise<void>;
 }
 
 export type CourseStore = CourseData & CourseActions;
@@ -432,6 +435,42 @@ export const useCourseStore = create<CourseStore>()(
                     }));
                 } catch (err: any) {
                     set({ error: err.message, isLoading: false });
+                    throw err;
+                }
+            },
+
+            toggleVideoProgress: async (courseId, videoSectionTitle, token) => {
+                try {
+                    const res = await authenticatedFetch(`${API_URL}/toggle-video-progress`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ courseId, videoSectionTitle }),
+                    });
+
+                    const data = await res.json();
+                    if (!res.ok) {
+                        throw new Error(data.error || 'Failed to update video progress');
+                    }
+
+                    set((state) => {
+                        const updatedCourse = state.currentCourse && state.currentCourse.id === courseId
+                            ? { ...state.currentCourse, completedVideos: data.completedVideos, progress: data.progress }
+                            : state.currentCourse;
+
+                        const updatedEnrolled = state.enrolledCourses.map(c =>
+                            c.id === courseId ? { ...c, completedVideos: data.completedVideos, progress: data.progress } : c
+                        );
+
+                        return {
+                            currentCourse: updatedCourse,
+                            enrolledCourses: updatedEnrolled
+                        };
+                    });
+                } catch (err: any) {
+                    set({ error: err.message });
                     throw err;
                 }
             },

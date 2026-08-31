@@ -12,7 +12,9 @@ import { CoursePlayer } from "@/components/CoursePlayer";
 export default function MyCourseDetailsPage() {
   const { id } = useParams();
   const { token, user } = useAuthStore();
-  const { currentCourse, isLoading, error, getCourseContent, clearCurrentCourse, addQuestion, addAnswer } = useCourseStore();
+  const { currentCourse, isLoading, error, getCourseContent, clearCurrentCourse, addQuestion, addAnswer, toggleVideoProgress } = useCourseStore();
+  const completedVideos = currentCourse?.completedVideos || [];
+  const progress = currentCourse?.progress || 0;
 
   const [activeIdx, setActiveIdx] = useState<number>(0);
   const [questionText, setQuestionText] = useState("");
@@ -149,24 +151,40 @@ export default function MyCourseDetailsPage() {
             </div>
 
             {/* Navigation Buttons under the Video Player */}
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
               <button
                 onClick={handlePrev}
                 disabled={activeIdx === 0}
-                className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-surface border border-border/40 hover:border-brand-primary/50 disabled:opacity-40 disabled:pointer-events-none text-text-primary text-sm font-extrabold transition-all"
+                className="flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-surface border border-border/40 hover:border-brand-primary/50 disabled:opacity-40 disabled:pointer-events-none text-text-primary text-sm font-extrabold transition-all"
               >
                 <ArrowRight className="w-4 h-4" />
                 <span>الدرس السابق</span>
               </button>
 
-              <div className="text-xs sm:text-sm font-extrabold text-text-secondary bg-surface px-4 py-2 rounded-xl border border-border/40">
-                {activeIdx + 1} / {sections.length}
-              </div>
+              <button
+                onClick={async () => {
+                  if (token && currentSection) {
+                    const sectionTitle = currentSection.video_section || `القسم ${activeIdx + 1}`;
+                    await toggleVideoProgress(currentCourse.id, sectionTitle, token);
+                  }
+                }}
+                className={cn(
+                  "flex items-center justify-center gap-2 px-6 py-3 rounded-2xl border text-sm font-extrabold transition-all",
+                  completedVideos.includes(currentSection?.video_section || `القسم ${activeIdx + 1}`)
+                    ? "bg-emerald-500/10 border-emerald-500/35 text-emerald-500 hover:bg-emerald-500/20"
+                    : "bg-surface border-border/40 hover:border-brand-primary text-text-primary"
+                )}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                  <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                </svg>
+                <span>{completedVideos.includes(currentSection?.video_section || `القسم ${activeIdx + 1}`) ? "تم إكمال الدرس" : "تحديد كمكتمل"}</span>
+              </button>
 
               <button
                 onClick={handleNext}
                 disabled={activeIdx === sections.length - 1}
-                className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-brand-primary text-white hover:bg-brand-primary/95 disabled:opacity-40 disabled:pointer-events-none text-sm font-extrabold transition-all shadow-md shadow-brand-primary/10"
+                className="flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-brand-primary text-white hover:bg-brand-primary/95 disabled:opacity-40 disabled:pointer-events-none text-sm font-extrabold transition-all shadow-md shadow-brand-primary/10"
               >
                 <span>الدرس التالي</span>
                 <ArrowLeft className="w-4 h-4" />
@@ -367,9 +385,26 @@ export default function MyCourseDetailsPage() {
           {/* RIGHT COLUMN: Course Syllabus & Description */}
           <div className="lg:col-span-5 space-y-6">
             {/* Course Summary Card */}
-            <div className="bg-surface border border-border/40 rounded-[32px] p-6 shadow-sm">
-              <h1 className="text-2xl font-black text-text-primary mb-2 leading-tight">{currentCourse.name}</h1>
-              <p className="text-text-secondary text-sm leading-relaxed font-medium line-clamp-3 mb-4">{currentCourse.short_description}</p>
+            <div className="bg-surface border border-border/40 rounded-[32px] p-6 shadow-sm space-y-4">
+              <div>
+                <h1 className="text-2xl font-black text-text-primary mb-2 leading-tight">{currentCourse.name}</h1>
+                <p className="text-text-secondary text-sm leading-relaxed font-medium line-clamp-3">{currentCourse.short_description}</p>
+              </div>
+
+              {/* Progress bar */}
+              <div className="space-y-1.5 pt-2 border-t border-border/40 animate-fade-in">
+                <div className="flex items-center justify-between text-xs font-black text-text-secondary">
+                  <span>نسبة التقدم وإكمال الكورس</span>
+                  <span className="text-brand-primary">{progress}%</span>
+                </div>
+                <div className="w-full h-2 bg-background border border-border/40 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-brand-primary transition-all duration-500 rounded-full" 
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+              </div>
+
               <div className="flex flex-wrap items-center gap-4 pt-3 border-t border-border/40">
                 <div className="flex items-center gap-2 text-text-secondary">
                   <BookOpen className="w-4 h-4 text-brand-primary" />
@@ -390,6 +425,8 @@ export default function MyCourseDetailsPage() {
               <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
                 {sections.map((section: any, idx: number) => {
                   const isActive = activeIdx === idx;
+                  const sectionTitle = section.video_section || `القسم ${idx + 1}`;
+                  const isCompleted = completedVideos.includes(sectionTitle);
                   return (
                     <button
                       key={idx}
@@ -408,6 +445,32 @@ export default function MyCourseDetailsPage() {
                       )}
                     >
                       <div className="flex items-center gap-3">
+                        {/* Clickable check-circle status */}
+                        <div 
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            if (token) {
+                              try {
+                                await toggleVideoProgress(currentCourse.id, sectionTitle, token);
+                              } catch (err) {
+                                console.error(err);
+                              }
+                            }
+                          }}
+                          className={cn(
+                            "w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-colors cursor-pointer",
+                            isCompleted 
+                              ? "bg-emerald-500 border-emerald-500 text-white" 
+                              : "border-border hover:border-brand-primary bg-background"
+                          )}
+                        >
+                          {isCompleted && (
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
+                              <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                            </svg>
+                          )}
+                        </div>
+
                         <div className={cn(
                           "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border",
                           isActive
@@ -417,7 +480,7 @@ export default function MyCourseDetailsPage() {
                           <PlayCircle className="w-5 h-5" />
                         </div>
                         <div className="truncate text-right">
-                          <h3 className="font-extrabold text-sm truncate">{section.video_section || `القسم ${idx + 1}`}</h3>
+                          <h3 className="font-extrabold text-sm truncate">{sectionTitle}</h3>
                           <p className="text-[11px] text-text-secondary truncate">{section.title}</p>
                         </div>
                       </div>

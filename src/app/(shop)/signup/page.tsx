@@ -4,6 +4,7 @@ import { useState, useEffect, FormEvent, ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuthStore } from "@/store/auth";
+import { GoogleSignInButton } from "@/components/GoogleSignInButton";
 
 export default function SignupPage() {
   const { isAuthenticated, isAuthLoading, error, signup, clearError } = useAuthStore();
@@ -167,7 +168,17 @@ export default function SignupPage() {
             </button>
           </form>
 
-          <div className="mt-8">
+          <div className="w-full flex items-center gap-3 my-6">
+            <div className="flex-1 h-[1px] bg-border/30" />
+            <span className="text-[10px] font-extrabold text-text-secondary/60 tracking-wider">أو التسجيل بواسطة</span>
+            <div className="flex-1 h-[1px] bg-border/30" />
+          </div>
+
+          <div className="flex items-center justify-center">
+            <GoogleSignInButton />
+          </div>
+
+          <div className="mt-6">
             <Link href="/login" className="text-sm text-text-secondary hover:text-brand-primary transition-colors underline decoration-dotted font-bold">
               لديك حساب بالفعل؟ سجل دخولك
             </Link>

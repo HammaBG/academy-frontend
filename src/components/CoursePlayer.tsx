@@ -42,9 +42,8 @@ export function CoursePlayer({ videoUrl }: CoursePlayerProps) {
             height: "100%",
             border: 0,
           }}
-          allowFullScreen={true}
+          allowFullScreen
           allow="encrypted-media; autoplay"
-          allowTransparency={true}
         ></iframe>
       )}
     </div>

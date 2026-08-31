@@ -38,6 +38,7 @@ interface AuthActions {
   updateUser: (id: string, data: Partial<User>) => Promise<void>;
   forgotPassword: (email: string) => Promise<void>;
   resetPassword: (password: string, token: string) => Promise<void>;
+  googleLogin: (credential: string) => Promise<void>;
   clearError: () => void;
 }
 
@@ -108,6 +109,37 @@ export const useAuthStore = create<AuthStore>()(
           }
 
           const token = data.data?.session?.access_token;
+          if (token) {
+            set({
+              token,
+              isAuthenticated: true,
+              isAuthLoading: false
+            });
+
+            await get().getProfile();
+          } else {
+            throw new Error('No token received');
+          }
+        } catch (err: any) {
+          set({ error: err.message, isAuthLoading: false });
+        }
+      },
+
+      googleLogin: async (credential) => {
+        set({ isAuthLoading: true, error: null });
+        try {
+          const res = await authenticatedFetch(`${API_URL}/google`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ credential }),
+          });
+
+          const data = await res.json();
+          if (!res.ok) {
+            throw new Error(data.message || data.error || 'Google login failed');
+          }
+
+          const token = data.access_token || data.data?.session?.access_token;
           if (token) {
             set({
               token,

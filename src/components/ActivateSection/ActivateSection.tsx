@@ -137,7 +137,7 @@ export function ActivateSection() {
                   </p>
                 </div>
                 <div className="flex flex-col gap-2 pt-2">
-                  <Link href="/profile" className="w-full">
+                  <Link href="/my-courses" className="w-full">
                     <Button className="w-full py-5 bg-white hover:bg-white/95 text-[#f95353] font-bold rounded-xl text-xs shadow-md flex items-center justify-center gap-2">
                       <BookOpen className="w-4 h-4" />
                       <span>الذهاب إلى كورساتي</span>
