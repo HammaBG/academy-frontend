@@ -15,6 +15,8 @@ import {
   Save,
   Bold,
   Italic,
+  Underline,
+  Strikethrough,
   Heading1,
   Heading2,
   Heading3,
@@ -24,6 +26,13 @@ import {
   Link2,
   Eye,
   Edit3,
+  Highlighter,
+  Palette,
+  AlignRight,
+  AlignCenter,
+  AlignLeft,
+  Minus,
+  Table as TableIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -200,6 +209,7 @@ export function ArticleForm({ article, onSubmit, onCancel, isLoading }: ArticleF
             <div className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
               {/* Toolbar */}
               <div className="flex flex-wrap items-center gap-1 p-2 bg-gray-50 border-b border-gray-200">
+                {/* Headings */}
                 <button
                   type="button"
                   title="Heading 1"
@@ -224,7 +234,10 @@ export function ArticleForm({ article, onSubmit, onCancel, isLoading }: ArticleF
                 >
                   H3
                 </button>
+
                 <div className="h-4 w-px bg-gray-300 mx-1" />
+
+                {/* Text Formatting */}
                 <button
                   type="button"
                   title="Bold"
@@ -241,7 +254,100 @@ export function ArticleForm({ article, onSubmit, onCancel, isLoading }: ArticleF
                 >
                   <Italic className="w-4 h-4" />
                 </button>
+                <button
+                  type="button"
+                  title="Underline (تسطير النص)"
+                  onClick={() => applyFormatting("<u>", "</u>", "نص مسطّر")}
+                  className="p-1.5 hover:bg-gray-200 rounded text-gray-700 transition-colors"
+                >
+                  <Underline className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  title="Strikethrough (شطب النص)"
+                  onClick={() => applyFormatting("<s>", "</s>", "نص مشطوب")}
+                  className="p-1.5 hover:bg-gray-200 rounded text-gray-700 transition-colors"
+                >
+                  <Strikethrough className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  title="Highlight (تمريز خلفية النص)"
+                  onClick={() => applyFormatting('<mark style="background-color: #fef08a; padding: 2px 6px; border-radius: 4px;">', "</mark>", "نص مميّز")}
+                  className="p-1.5 hover:bg-gray-200 rounded text-yellow-600 transition-colors"
+                >
+                  <Highlighter className="w-4 h-4" />
+                </button>
+
                 <div className="h-4 w-px bg-gray-300 mx-1" />
+
+                {/* Text Colors */}
+                <span className="text-[11px] font-bold text-gray-400 flex items-center gap-1 px-1">
+                  <Palette className="w-3.5 h-3.5" />
+                  ألوان:
+                </span>
+                <button
+                  type="button"
+                  title="Red Text"
+                  onClick={() => applyFormatting('<span style="color: #ef4444;">', "</span>", "نص أحمر")}
+                  className="w-5 h-5 rounded-full bg-red-500 hover:scale-110 transition-transform border border-white shadow-xs"
+                />
+                <button
+                  type="button"
+                  title="Blue Text"
+                  onClick={() => applyFormatting('<span style="color: #3b82f6;">', "</span>", "نص أزرق")}
+                  className="w-5 h-5 rounded-full bg-blue-500 hover:scale-110 transition-transform border border-white shadow-xs"
+                />
+                <button
+                  type="button"
+                  title="Green Text"
+                  onClick={() => applyFormatting('<span style="color: #10b981;">', "</span>", "نص أخضر")}
+                  className="w-5 h-5 rounded-full bg-emerald-500 hover:scale-110 transition-transform border border-white shadow-xs"
+                />
+                <button
+                  type="button"
+                  title="Purple (Brand) Text"
+                  onClick={() => applyFormatting('<span style="color: #8b3d6f;">', "</span>", "نص بنفسجي")}
+                  className="w-5 h-5 rounded-full bg-[#8b3d6f] hover:scale-110 transition-transform border border-white shadow-xs"
+                />
+                <button
+                  type="button"
+                  title="Amber Text"
+                  onClick={() => applyFormatting('<span style="color: #f59e0b;">', "</span>", "نص برتقالي")}
+                  className="w-5 h-5 rounded-full bg-amber-500 hover:scale-110 transition-transform border border-white shadow-xs"
+                />
+
+                <div className="h-4 w-px bg-gray-300 mx-1" />
+
+                {/* Alignment */}
+                <button
+                  type="button"
+                  title="Align Right"
+                  onClick={() => applyFormatting('<div style="text-align: right;">\n', "\n</div>", "مكناسبة لليمين")}
+                  className="p-1.5 hover:bg-gray-200 rounded text-gray-700 transition-colors"
+                >
+                  <AlignRight className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  title="Align Center"
+                  onClick={() => applyFormatting('<div style="text-align: center;">\n', "\n</div>", "توسط في المنتصف")}
+                  className="p-1.5 hover:bg-gray-200 rounded text-gray-700 transition-colors"
+                >
+                  <AlignCenter className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  title="Align Left"
+                  onClick={() => applyFormatting('<div style="text-align: left;">\n', "\n</div>", "محاذاة لليسار")}
+                  className="p-1.5 hover:bg-gray-200 rounded text-gray-700 transition-colors"
+                >
+                  <AlignLeft className="w-4 h-4" />
+                </button>
+
+                <div className="h-4 w-px bg-gray-300 mx-1" />
+
+                {/* Structure / Extras */}
                 <button
                   type="button"
                   title="Quote"
@@ -257,6 +363,38 @@ export function ArticleForm({ article, onSubmit, onCancel, isLoading }: ArticleF
                   className="p-1.5 hover:bg-gray-200 rounded text-gray-700 transition-colors"
                 >
                   <List className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  title="Code"
+                  onClick={() => applyFormatting("<code>", "</code>", "كود")}
+                  className="p-1.5 hover:bg-gray-200 rounded text-gray-700 transition-colors"
+                >
+                  <Code className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  title="Link"
+                  onClick={() => applyFormatting('<a href="https://example.com" target="_blank" rel="noopener noreferrer" style="color: #8b3d6f; text-decoration: underline;">', "</a>", "نص الرابط")}
+                  className="p-1.5 hover:bg-gray-200 rounded text-gray-700 transition-colors"
+                >
+                  <Link2 className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  title="Divider Line (فاصل)"
+                  onClick={() => applyFormatting('<hr style="margin: 24px 0; border: 0; border-top: 1px solid #e5e7eb;" />\n', "", "")}
+                  className="p-1.5 hover:bg-gray-200 rounded text-gray-700 transition-colors"
+                >
+                  <Minus className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  title="Insert Table (جدول)"
+                  onClick={() => applyFormatting('<table style="width:100%; border-collapse:collapse; margin:16px 0; border: 1px solid #e5e7eb;">\n  <thead>\n    <tr style="background:#f9fafb;">\n      <th style="padding:10px; border:1px solid #e5e7eb; text-align:right;">عنوان 1</th>\n      <th style="padding:10px; border:1px solid #e5e7eb; text-align:right;">عنوان 2</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td style="padding:10px; border:1px solid #e5e7eb;">بيانات 1</td>\n      <td style="padding:10px; border:1px solid #e5e7eb;">بيانات 2</td>\n    </tr>\n  </tbody>\n</table>\n', "", "")}
+                  className="p-1.5 hover:bg-gray-200 rounded text-gray-700 transition-colors"
+                >
+                  <TableIcon className="w-4 h-4" />
                 </button>
                 <button
                   type="button"
