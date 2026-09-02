@@ -12,7 +12,7 @@ const PARTNERS = [
   { name: "GIZ", logo: "/partenaires/giz.webp" },
   { name: "Famille", logo: "/partenaires/ministere-de-la-famille-de-la-femme-de-lenfance-et-des-seniors-1-removebg-preview.png" },
   { name: "Psy", logo: "/partenaires/psy logo.png" },
-  { name: "Orange", logo: "/partenaires/orange.png" },
+  { name: "Orange", logo: "/partenaires/Orange.png" },
 ];
 
 export function FeaturesSection() {

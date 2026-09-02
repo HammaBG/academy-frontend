@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { API_ENDPOINTS } from "@/config/api";
 
 interface CoursePlayerProps {
   videoUrl: string;
@@ -13,7 +14,7 @@ export function CoursePlayer({ videoUrl }: CoursePlayerProps) {
   });
 
   useEffect(() => {
-    fetch("https://academy-backend-8gl3.onrender.com/api/courses/getVdoCipherOTP", {
+    fetch(`${API_ENDPOINTS.courses}/getVdoCipherOTP`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

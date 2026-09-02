@@ -8,6 +8,7 @@ import { useCartStore, type CartItem as ICartItem } from "@/store/cart";
 import { useCourseStore, type Course } from "@/store/course";
 import { useTheme } from "@/components/providers/ThemeProvider";
 import logo from "../../public/ossosacademy.jpg";
+import { API_ENDPOINTS } from "@/config/api";
 import { Search, X, BookOpen, User as UserIcon, Sun, Moon, Ticket } from "lucide-react";
 
 interface SearchCourseResultProps {
@@ -170,9 +171,9 @@ export function Navbar() {
       { name: "المسارات", href: "/categories", active: pathname === "/categories" || pathname.startsWith("/categories/") },
       { name: "الكورسات", href: "/courses", active: pathname === "/courses" || pathname.startsWith("/courses/") },
       // { name: "الباقات", href: "/packages", active: pathname === "/packages" || pathname.startsWith("/packages/") },
-      { name: "تفعيل كود الاشتراك", href: "/activate", active: pathname === "/activate" },
       { name: "عن الأكاديمية", href: "/about", active: pathname === "/about" },
-      { name: "عن الخبراء", href: "/instructors", active: pathname === "/instructors" || pathname.startsWith("/instructors/") }
+      { name: "عن الخبراء", href: "/instructors", active: pathname === "/instructors" || pathname.startsWith("/instructors/") },
+      { name: "تفعيل كود الاشتراك", href: "/activate", active: pathname === "/activate" },
     ],
     [pathname]
   );
@@ -187,10 +188,8 @@ export function Navbar() {
     setIsSearching(true);
     try {
       const [coursesRes, instructorsRes] = await Promise.all([
-        fetch("https://academy-backend-8gl3.onrender.com/api/courses/get-courses"),
-        fetch("https://academy-backend-8gl3.onrender.com/api/auth/instructors"),
-        // fetch("http://localhost:5000/api/courses/get-courses"),
-        // fetch("http://localhost:5000/api/auth/instructors"),
+        fetch(`${API_ENDPOINTS.courses}/get-courses`),
+        fetch(`${API_ENDPOINTS.auth}/instructors`),
       ]);
 
       const coursesData = coursesRes.ok ? await coursesRes.json() : { courses: [] };
@@ -294,22 +293,39 @@ export function Navbar() {
               </div>
 
               {/* Desktop Navigation Links */}
-              <div className="hidden lg:flex items-stretch gap-6">
-                {links.map((link) => (
-                  <Link
-                    key={link.name}
-                    href={link.href}
-                    className={`flex items-center text-[15px] font-semibold tracking-wide transition-all duration-300 relative py-2 ${link.active
-                      ? "text-brand-primary font-bold"
-                      : "text-text-secondary hover:text-text-primary"
+              <div className="hidden lg:flex items-center gap-6">
+                {links.map((link) => {
+                  if (link.href === "/activate") {
+                    return (
+                      <Link
+                        key={link.name}
+                        href={link.href}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold text-white bg-brand-primary hover:bg-brand-primary/90 transition-all duration-300 shadow-sm hover:shadow-brand-primary/20 hover:scale-[1.03] active:scale-95 ${
+                          link.active ? "ring-2 ring-brand-primary/40 ring-offset-2 ring-offset-background" : ""
+                        }`}
+                      >
+                        <Ticket className="w-4 h-4" />
+                        <span>{link.name}</span>
+                      </Link>
+                    );
+                  }
+                  return (
+                    <Link
+                      key={link.name}
+                      href={link.href}
+                      className={`flex items-center text-[15px] font-semibold tracking-wide transition-all duration-300 relative py-2 ${
+                        link.active
+                          ? "text-brand-primary font-bold"
+                          : "text-text-secondary hover:text-text-primary"
                       }`}
-                  >
-                    {link.name}
-                    {link.active && (
-                      <span className="absolute bottom-0 right-0 left-0 h-[2px] bg-brand-primary rounded-full" />
-                    )}
-                  </Link>
-                ))}
+                    >
+                      {link.name}
+                      {link.active && (
+                        <span className="absolute bottom-0 right-0 left-0 h-[2px] bg-brand-primary rounded-full" />
+                      )}
+                    </Link>
+                  );
+                })}
               </div>
             </div>
 
@@ -674,19 +690,37 @@ export function Navbar() {
             }`}
         >
           <div className="px-4 py-4 space-y-2 border-t border-border/40">
-            {links.map((link) => (
-              <Link
-                key={link.name}
-                href={link.href}
-                className={`block px-4 py-2.5 rounded-lg text-base font-semibold transition-colors ${link.active
-                  ? "text-brand-primary bg-brand-primary/5 font-bold"
-                  : "text-text-secondary hover:text-text-primary hover:bg-surface"
+            {links.map((link) => {
+              if (link.href === "/activate") {
+                return (
+                  <Link
+                    key={link.name}
+                    href={link.href}
+                    className={`flex items-center justify-between px-4 py-2.5 rounded-full text-base font-bold text-white bg-brand-primary hover:bg-brand-primary/95 transition-all shadow-sm ${
+                      link.active ? "ring-2 ring-brand-primary/40 ring-offset-1 ring-offset-background" : ""
+                    }`}
+                    onClick={handleCloseMobileMenu}
+                  >
+                    <span>{link.name}</span>
+                    <Ticket className="w-5 h-5" />
+                  </Link>
+                );
+              }
+              return (
+                <Link
+                  key={link.name}
+                  href={link.href}
+                  className={`block px-4 py-2.5 rounded-lg text-base font-semibold transition-colors ${
+                    link.active
+                      ? "text-brand-primary bg-brand-primary/5 font-bold"
+                      : "text-text-secondary hover:text-text-primary hover:bg-surface"
                   }`}
-                onClick={handleCloseMobileMenu}
-              >
-                {link.name}
-              </Link>
-            ))}
+                  onClick={handleCloseMobileMenu}
+                >
+                  {link.name}
+                </Link>
+              );
+            })}
             <div className="pt-4 border-t border-border/40">
               <div className="grid grid-cols-2 gap-3">
                 <Link

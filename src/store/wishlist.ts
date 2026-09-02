@@ -13,8 +13,9 @@ interface WishlistStore {
   clearError: () => void;
 }
 
-const API_URL = 'https://academy-backend-8gl3.onrender.com/api/wishlist';
-// const API_URL = 'http://localhost:5000/api/wishlist';
+import { API_ENDPOINTS } from '@/config/api';
+
+const API_URL = API_ENDPOINTS.wishlist;
 
 export const useWishlistStore = create<WishlistStore>()(
   persist(

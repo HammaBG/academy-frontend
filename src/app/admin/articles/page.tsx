@@ -35,12 +35,12 @@ import {
 import { useAuthStore } from "@/store/auth";
 import { useArticleStore, Article } from "@/store/article";
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { ArticleForm } from "./ArticleForm";
 
 export default function ArticlesPage() {
@@ -246,30 +246,28 @@ export default function ArticlesPage() {
         )}
       </div>
 
-      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-        <SheetContent side="right" className="sm:max-w-2xl bg-white p-0">
-          <div className="flex flex-col h-full">
-            <SheetHeader className="p-6 border-b border-gray-100">
-              <SheetTitle className="text-2xl font-extrabold text-[#2c1a4d]">
-                {currentArticle ? "Edit Article" : "Write New Article"}
-              </SheetTitle>
-              <SheetDescription className="text-gray-500 font-medium">
-                {currentArticle 
-                  ? "Update your article content and status." 
-                  : "Fill in the details below to create a new article for your academy."}
-              </SheetDescription>
-            </SheetHeader>
-            <div className="flex-1 overflow-y-auto p-6">
-              <ArticleForm 
-                article={currentArticle} 
-                onSubmit={handleSubmit} 
-                onCancel={() => setIsSheetOpen(false)}
-                isLoading={isLoading}
-              />
-            </div>
+      <Dialog open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+        <DialogContent className="sm:max-w-5xl w-[95vw] max-h-[92vh] flex flex-col p-0 overflow-hidden bg-white shadow-2xl rounded-2xl border-0">
+          <DialogHeader className="p-6 pb-4 border-b border-gray-100 bg-gray-50/50">
+            <DialogTitle className="text-2xl font-extrabold text-[#2c1a4d]">
+              {currentArticle ? "Edit Article" : "Write New Article"}
+            </DialogTitle>
+            <DialogDescription className="text-gray-500 font-medium text-sm">
+              {currentArticle 
+                ? "Update your article content, category, cover image and status." 
+                : "Fill in the details below to write and publish a new article."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto p-6 md:p-8">
+            <ArticleForm 
+              article={currentArticle} 
+              onSubmit={handleSubmit} 
+              onCancel={() => setIsSheetOpen(false)}
+              isLoading={isLoading}
+            />
           </div>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -44,8 +44,9 @@ interface FormStore {
   clearStatus: () => void;
 }
 
-const API_URL = 'https://academy-backend-8gl3.onrender.com/api/forms';
-// const API_URL = 'http://localhost:5000/api/forms';
+import { API_ENDPOINTS } from '@/config/api';
+
+const API_URL = API_ENDPOINTS.forms;
 
 export const useFormStore = create<FormStore>((set, get) => ({
   forms: [],

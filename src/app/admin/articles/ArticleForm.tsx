@@ -1,13 +1,30 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Article } from "@/store/article";
 import { useCategoryStore } from "@/store/category";
-import { Image as ImageIcon, X, Loader2, Save } from "lucide-react";
+import { ArticleContentRenderer } from "@/components/ArticleContentRenderer";
+import {
+  Image as ImageIcon,
+  X,
+  Loader2,
+  Save,
+  Bold,
+  Italic,
+  Heading1,
+  Heading2,
+  Heading3,
+  List,
+  Quote,
+  Code,
+  Link2,
+  Eye,
+  Edit3,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ArticleFormProps {
@@ -19,6 +36,8 @@ interface ArticleFormProps {
 
 export function ArticleForm({ article, onSubmit, onCancel, isLoading }: ArticleFormProps) {
   const { categories, getPublicCategories } = useCategoryStore();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [activeTab, setActiveTab] = useState<"edit" | "preview">("edit");
 
   const [formData, setFormData] = useState({
     title: "",
@@ -52,6 +71,34 @@ export function ArticleForm({ article, onSubmit, onCancel, isLoading }: ArticleF
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const applyFormatting = (startTag: string, endTag: string = "", placeholder: string = "نص") => {
+    const textarea = textareaRef.current;
+    if (!textarea) {
+      setFormData((prev) => ({ ...prev, content: prev.content + `${startTag}${placeholder}${endTag}` }));
+      return;
+    }
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selected = formData.content.substring(start, end) || placeholder;
+    const replacement = `${startTag}${selected}${endTag}`;
+
+    const newContent =
+      formData.content.substring(0, start) +
+      replacement +
+      formData.content.substring(end);
+
+    setFormData((prev) => ({ ...prev, content: newContent }));
+
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(
+        start + startTag.length,
+        start + startTag.length + selected.length
+      );
+    }, 0);
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -115,17 +162,144 @@ export function ArticleForm({ article, onSubmit, onCancel, isLoading }: ArticleF
           />
         </div>
 
+        {/* Content Section with Formatting Toolbar & Preview */}
         <div className="space-y-2">
-          <Label htmlFor="content">Full Content</Label>
-          <Textarea
-            id="content"
-            name="content"
-            placeholder="Write your article content here..."
-            value={formData.content}
-            onChange={handleChange}
-            required
-            className="bg-white border-gray-200 focus:border-[#8b3d6f] focus:ring-1 focus:ring-[#8b3d6f] min-h-[300px]"
-          />
+          <div className="flex items-center justify-between">
+            <Label htmlFor="content">Full Content</Label>
+            <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
+              <button
+                type="button"
+                onClick={() => setActiveTab("edit")}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-md transition-all",
+                  activeTab === "edit"
+                    ? "bg-white text-[#8b3d6f] shadow-sm"
+                    : "text-gray-500 hover:text-gray-800"
+                )}
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                Write
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("preview")}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-md transition-all",
+                  activeTab === "preview"
+                    ? "bg-white text-[#8b3d6f] shadow-sm"
+                    : "text-gray-500 hover:text-gray-800"
+                )}
+              >
+                <Eye className="w-3.5 h-3.5" />
+                Preview
+              </button>
+            </div>
+          </div>
+
+          {activeTab === "edit" ? (
+            <div className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
+              {/* Toolbar */}
+              <div className="flex flex-wrap items-center gap-1 p-2 bg-gray-50 border-b border-gray-200">
+                <button
+                  type="button"
+                  title="Heading 1"
+                  onClick={() => applyFormatting("<h1>", "</h1>", "العنوان الرئيسي H1")}
+                  className="px-2 py-1 hover:bg-gray-200 rounded text-xs font-extrabold text-gray-700 transition-colors"
+                >
+                  H1
+                </button>
+                <button
+                  type="button"
+                  title="Heading 2"
+                  onClick={() => applyFormatting("<h2>", "</h2>", "العنوان الفرعي H2")}
+                  className="px-2 py-1 hover:bg-gray-200 rounded text-xs font-bold text-gray-700 transition-colors"
+                >
+                  H2
+                </button>
+                <button
+                  type="button"
+                  title="Heading 3"
+                  onClick={() => applyFormatting("<h3>", "</h3>", "العنوان الفرعي H3")}
+                  className="px-2 py-1 hover:bg-gray-200 rounded text-xs font-bold text-gray-700 transition-colors"
+                >
+                  H3
+                </button>
+                <div className="h-4 w-px bg-gray-300 mx-1" />
+                <button
+                  type="button"
+                  title="Bold"
+                  onClick={() => applyFormatting("<b>", "</b>", "نص عريض")}
+                  className="p-1.5 hover:bg-gray-200 rounded text-gray-700 transition-colors"
+                >
+                  <Bold className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  title="Italic"
+                  onClick={() => applyFormatting("<i>", "</i>", "نص مائل")}
+                  className="p-1.5 hover:bg-gray-200 rounded text-gray-700 transition-colors"
+                >
+                  <Italic className="w-4 h-4" />
+                </button>
+                <div className="h-4 w-px bg-gray-300 mx-1" />
+                <button
+                  type="button"
+                  title="Quote"
+                  onClick={() => applyFormatting("<blockquote>", "</blockquote>", "اقتباس")}
+                  className="p-1.5 hover:bg-gray-200 rounded text-gray-700 transition-colors"
+                >
+                  <Quote className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  title="List"
+                  onClick={() => applyFormatting("<ul>\n  <li>", "</li>\n</ul>", "عنصر قائمة")}
+                  className="p-1.5 hover:bg-gray-200 rounded text-gray-700 transition-colors"
+                >
+                  <List className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  title="Code"
+                  onClick={() => applyFormatting("<code>", "</code>", "كود")}
+                  className="p-1.5 hover:bg-gray-200 rounded text-gray-700 transition-colors"
+                >
+                  <Code className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  title="Link"
+                  onClick={() => applyFormatting('<a href="https://example.com">', "</a>", "نص الرابط")}
+                  className="p-1.5 hover:bg-gray-200 rounded text-gray-700 transition-colors"
+                >
+                  <Link2 className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Textarea */}
+              <Textarea
+                ref={textareaRef}
+                id="content"
+                name="content"
+                placeholder="اكتب محتوى المقال هنا... يمكنك استخدام أزرار التنسيق أعلاه (H1, H2, H3, Bold, إلخ)"
+                value={formData.content}
+                onChange={handleChange}
+                required
+                dir="auto"
+                className="bg-white border-0 focus-visible:ring-0 focus-visible:ring-offset-0 min-h-[300px] p-4 text-base leading-relaxed"
+              />
+            </div>
+          ) : (
+            <div className="border border-gray-200 rounded-lg p-6 bg-gray-50 min-h-[300px] max-h-[500px] overflow-y-auto">
+              {formData.content ? (
+                <ArticleContentRenderer content={formData.content} />
+              ) : (
+                <p className="text-gray-400 text-sm italic text-center py-12">
+                  No content written yet. Switch to "Write" tab to start composing.
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -27,7 +27,7 @@ export function GoogleSignInButton() {
 
     const initializeGoogleSignIn = () => {
       if (typeof window !== "undefined" && (window as any).google) {
-        const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+        const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "587715674648-c34phh31nd0m5odsh84i7os3bkr5cj53.apps.googleusercontent.com";
         
         (window as any).google.accounts.id.initialize({
           client_id: clientId,

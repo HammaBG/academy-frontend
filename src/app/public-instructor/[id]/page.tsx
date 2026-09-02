@@ -7,6 +7,7 @@ import { useCourseStore } from "@/store/course";
 import { Loader2, AlertCircle, BookOpen, PlayCircle, ArrowRight, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { API_ENDPOINTS } from "@/config/api";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 
@@ -27,8 +28,7 @@ export default function PublicInstructorPage() {
       setIsLoading(true);
       setError(null);
       try {
-        const res = await fetch(`https://academy-backend-8gl3.onrender.com/api/auth/instructors/${id}`);
-        // const res = await fetch(`http://localhost:5000/api/auth/instructors/${id}`);
+        const res = await fetch(`${API_ENDPOINTS.auth}/instructors/${id}`);
         const data = await res.json();
         if (!res.ok) {
           throw new Error(data.error || "Instructor not found");

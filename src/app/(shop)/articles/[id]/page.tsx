@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useArticleStore } from "@/store/article";
 import { ArrowLeft, Clock, Calendar, User, Share2, Loader2, Newspaper } from "lucide-react";
+import { ArticleContentRenderer } from "@/components/ArticleContentRenderer";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { FaFacebook, FaTwitter, FaWhatsapp } from "react-icons/fa";
@@ -147,14 +148,8 @@ export default function ArticleDetailPage() {
           </div>
         )}
 
-        {/* Content Paragraphs */}
-        <div className="prose dark:prose-invert prose-lg max-w-none text-right font-medium leading-[1.8] text-text-primary">
-          {currentArticle.content.split("\n").map((paragraph, index) => (
-            <p key={index} className="mb-6 whitespace-pre-wrap">
-              {paragraph}
-            </p>
-          ))}
-        </div>
+        {/* Content Area */}
+        <ArticleContentRenderer content={currentArticle.content} />
 
         {/* Sharing & Social Bar */}
         <div className="mt-20 pt-10 border-t border-border/40 flex flex-col sm:flex-row items-center justify-between gap-6">

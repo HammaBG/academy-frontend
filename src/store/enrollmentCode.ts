@@ -41,8 +41,9 @@ interface EnrollmentCodeStore {
   clearStatus: () => void;
 }
 
-const API_URL = 'https://academy-backend-8gl3.onrender.com/api/enrollment-codes';
-// const API_URL = 'http://localhost:5000/api/enrollment-codes';
+import { API_ENDPOINTS } from '@/config/api';
+
+const API_URL = API_ENDPOINTS.enrollmentCodes;
 
 
 export const useEnrollmentCodeStore = create<EnrollmentCodeStore>((set, get) => ({

@@ -114,10 +114,11 @@ interface CourseActions {
     toggleVideoProgress: (courseId: string, videoSectionTitle: string, token: string) => Promise<void>;
 }
 
+import { API_ENDPOINTS } from '@/config/api';
+
 export type CourseStore = CourseData & CourseActions;
 
-const API_URL = 'https://academy-backend-8gl3.onrender.com/api/courses';
-// const API_URL = 'http://localhost:5000/api/courses';
+const API_URL = API_ENDPOINTS.courses;
 
 export const useCourseStore = create<CourseStore>()(
     persist(
