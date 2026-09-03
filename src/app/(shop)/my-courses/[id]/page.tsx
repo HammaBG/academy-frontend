@@ -4,10 +4,11 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useCourseStore } from "@/store/course";
 import { useAuthStore } from "@/store/auth";
-import { Loader2, AlertCircle, PlayCircle, BookOpen, Clock, ArrowRight, ArrowLeft, MessageSquare, Send, CornerDownLeft, User as UserIcon } from "lucide-react";
+import { Loader2, AlertCircle, PlayCircle, BookOpen, Clock, ArrowRight, ArrowLeft, MessageSquare, Send, CornerDownLeft, User as UserIcon, Award } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { CoursePlayer } from "@/components/CoursePlayer";
+import { CertificateModal } from "@/components/CertificateModal";
 
 export default function MyCourseDetailsPage() {
   const { id } = useParams();
@@ -22,6 +23,7 @@ export default function MyCourseDetailsPage() {
   const [showReplyForm, setShowReplyForm] = useState<Record<string, boolean>>({});
   const [isSubmittingQuestion, setIsSubmittingQuestion] = useState(false);
   const [submittingReplyId, setSubmittingReplyId] = useState<string | null>(null);
+  const [isCertModalOpen, setIsCertModalOpen] = useState(false);
 
   useEffect(() => {
     if (id && token) {
@@ -135,7 +137,7 @@ export default function MyCourseDetailsPage() {
 
         {/* Core LMS Split Screen Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mb-16">
-          
+
           {/* LEFT COLUMN: Player, Controls & Discussions */}
           <div className="lg:col-span-7 space-y-6 flex flex-col">
             {/* Video Box Container */}
@@ -221,7 +223,7 @@ export default function MyCourseDetailsPage() {
             {/* Q&A SECTION (DISCUSSIONS) */}
             {currentSection && (
               <div className="bg-surface border border-border/40 rounded-[32px] p-6 md:p-8 space-y-8 shadow-sm">
-                
+
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-border/40 pb-4">
                   <div className="flex items-center gap-3">
@@ -270,10 +272,10 @@ export default function MyCourseDetailsPage() {
                       const qId = q.id || q._id || qIdx.toString();
                       const replies = q.question_replies || [];
                       const isInstructor = user?.role === "instructor" || user?.role === "admin";
-                      
+
                       return (
                         <div key={qId} className="border border-border/40 p-5 rounded-[2rem] bg-background/30 space-y-4 hover:border-brand-primary/30 transition-all">
-                          
+
                           {/* Question Author info */}
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex items-center gap-3">
@@ -398,12 +400,38 @@ export default function MyCourseDetailsPage() {
                   <span className="text-brand-primary">{progress}%</span>
                 </div>
                 <div className="w-full h-2 bg-background border border-border/40 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-brand-primary transition-all duration-500 rounded-full" 
+                  <div
+                    className="h-full bg-brand-primary transition-all duration-500 rounded-full"
                     style={{ width: `${progress}%` }}
                   />
                 </div>
               </div>
+
+              {/* Certificate Download Banner (Visible when course is 100% complete) */}
+              {(progress === 100 || (completedVideos.length >= sections.length && sections.length > 0)) && (
+                <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/15 via-emerald-500/10 to-brand-primary/10 border border-emerald-500/30 space-y-3 animate-in fade-in zoom-in duration-300">
+                  <div className="flex items-center gap-3 text-emerald-500">
+                    <div className="w-9 h-9 rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0 border border-emerald-500/30">
+                      <Award className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-black text-emerald-500">مبارك! أكملت الكورس بنجاح</h4>
+                      <p className="text-[11px] font-bold text-text-secondary">شهادة الإكمال المعتمدة جاهزة للتحميل</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      setIsCertModalOpen(true);
+                    }}
+                    className="w-full py-2.5 px-4 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-xs rounded-xl shadow-md shadow-emerald-500/20 transition-all flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 cursor-pointer"
+                  >
+                    <Award className="w-4 h-4" />
+                    <span>تحميل شهادة الإكمال</span>
+                  </button>
+                </div>
+              )}
 
               <div className="flex flex-wrap items-center gap-4 pt-3 border-t border-border/40">
                 <div className="flex items-center gap-2 text-text-secondary">
@@ -446,7 +474,7 @@ export default function MyCourseDetailsPage() {
                     >
                       <div className="flex items-center gap-3">
                         {/* Clickable check-circle status */}
-                        <div 
+                        <div
                           onClick={async (e) => {
                             e.stopPropagation();
                             if (token) {
@@ -459,8 +487,8 @@ export default function MyCourseDetailsPage() {
                           }}
                           className={cn(
                             "w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-colors cursor-pointer",
-                            isCompleted 
-                              ? "bg-emerald-500 border-emerald-500 text-white" 
+                            isCompleted
+                              ? "bg-emerald-500 border-emerald-500 text-white"
                               : "border-border hover:border-brand-primary bg-background"
                           )}
                         >
@@ -498,6 +526,14 @@ export default function MyCourseDetailsPage() {
 
         </div>
       </div>
+
+      {/* Certificate Modal */}
+      <CertificateModal
+        isOpen={isCertModalOpen}
+        onClose={() => setIsCertModalOpen(false)}
+        studentName={user ? `${user.first_name || ""} ${user.last_name || ""}`.trim() || user.email : "طالب الأكاديمية"}
+        courseTitle={currentCourse.name}
+      />
     </div>
   );
 }

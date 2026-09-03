@@ -101,10 +101,16 @@ function EnrolledCourseCard({ course }: { course: any }) {
                         <span className="text-xs font-bold">{course.course_data?.length || 0} دروس</span>
                     </div>
 
-                    <span className="px-5 py-2.5 bg-brand-primary hover:bg-brand-primary/90 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-brand-primary/10 flex items-center gap-1.5 active:scale-95">
-                        <PlayCircle className="w-4 h-4" />
-                        <span>شاهد الدورة</span>
-                    </span>
+                    {(course.progress === 100 || (course.completedVideos && course.course_data && course.completedVideos.length >= course.course_data.length && course.course_data.length > 0)) ? (
+                        <span className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-extrabold rounded-xl transition-all shadow-sm flex items-center gap-1.5 active:scale-95">
+                            <span>شهادة الإكمال</span>
+                        </span>
+                    ) : (
+                        <span className="px-5 py-2.5 bg-brand-primary hover:bg-brand-primary/90 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-brand-primary/10 flex items-center gap-1.5 active:scale-95">
+                            <PlayCircle className="w-4 h-4" />
+                            <span>شاهد الدورة</span>
+                        </span>
+                    )}
                 </div>
             </div>
         </Link>
@@ -150,11 +156,11 @@ export default function MyCoursesPage() {
                         )}
                     </h1>
                     <p className="text-text-secondary max-w-2xl mx-auto font-medium text-sm sm:text-base">
-                        {isAdmin 
+                        {isAdmin
                             ? "بصفتك مديراً للنظام، يمكنك تصفح ومشاهدة محتويات جميع الكورسات المتاحة في المنصة."
                             : isInstructor
-                            ? "هنا تجد جميع الكورسات التي قمت بإنشائها أو الإشراف على تقديمها للطلاب."
-                            : "استمر في رحلة التعلم الخاصة بك. الوصول سريع ومباشر إلى جميع دوراتك المسجلة."
+                                ? "هنا تجد جميع الكورسات التي قمت بإنشائها أو الإشراف على تقديمها للطلاب."
+                                : "استمر في رحلة التعلم الخاصة بك. الوصول سريع ومباشر إلى جميع دوراتك المسجلة."
                         }
                     </p>
                 </div>
