@@ -344,10 +344,10 @@ export function Navbar() {
               {/* Separator */}
               <div className="hidden sm:block h-6 w-px bg-border"></div>
 
-              {/* Theme Toggle Button */}
+              {/* Theme Toggle Button (Desktop & Tablet) */}
               <button
                 onClick={toggleTheme}
-                className="text-text-secondary hover:text-text-primary hover:bg-surface/80 p-2 rounded-full transition-all duration-300 flex items-center justify-center"
+                className="hidden sm:flex text-text-secondary hover:text-text-primary hover:bg-surface/80 p-2 rounded-full transition-all duration-300 items-center justify-center"
                 aria-label="تبديل المظهر"
               >
                 {!mounted ? (
@@ -721,24 +721,49 @@ export function Navbar() {
                 </Link>
               );
             })}
-            <div className="pt-4 border-t border-border/40">
-              <div className="grid grid-cols-2 gap-3">
-                <Link
-                  href="/login"
-                  className="text-center text-sm font-semibold text-text-primary border border-border hover:bg-surface px-4 py-2.5 rounded-lg transition-colors"
-                  onClick={handleCloseMobileMenu}
-                >
-                  دخول
-                </Link>
-                <Link
-                  href="/signup"
-                  className="text-center text-sm font-bold text-white bg-brand-primary hover:bg-brand-primary/95 px-4 py-2.5 rounded-lg transition-colors"
-                  onClick={handleCloseMobileMenu}
-                >
-                  تسجيل
-                </Link>
-              </div>
+            {/* Theme Toggle in Mobile Dropmenu */}
+            <div className="pt-3 border-t border-border/40">
+              <button
+                onClick={toggleTheme}
+                className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl bg-background/60 hover:bg-surface text-text-primary border border-border/40 transition-colors font-bold text-sm cursor-pointer"
+              >
+                <div className="flex items-center gap-2.5">
+                  {!mounted ? (
+                    <div className="w-5 h-5" />
+                  ) : theme === "dark" ? (
+                    <Sun className="w-5 h-5 text-yellow-400 fill-yellow-400/20" />
+                  ) : (
+                    <Moon className="w-5 h-5 text-text-primary fill-text-primary/10" />
+                  )}
+                  <span>{theme === "dark" ? "الوضع الليلي (مفعّل)" : "الوضع النهاري (مفعّل)"}</span>
+                </div>
+                <span className="text-xs text-text-secondary bg-surface px-2.5 py-1 rounded-lg border border-border/40">
+                  تبديل
+                </span>
+              </button>
             </div>
+
+            {/* Guest Login/Signup (Only visible when NOT authenticated) */}
+            {!isAuthenticated && (
+              <div className="pt-3 border-t border-border/40">
+                <div className="grid grid-cols-2 gap-3">
+                  <Link
+                    href="/login"
+                    className="text-center text-sm font-semibold text-text-primary border border-border hover:bg-surface px-4 py-2.5 rounded-lg transition-colors"
+                    onClick={handleCloseMobileMenu}
+                  >
+                    دخول
+                  </Link>
+                  <Link
+                    href="/signup"
+                    className="text-center text-sm font-bold text-white bg-brand-primary hover:bg-brand-primary/95 px-4 py-2.5 rounded-lg transition-colors"
+                    onClick={handleCloseMobileMenu}
+                  >
+                    تسجيل
+                  </Link>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </nav>
