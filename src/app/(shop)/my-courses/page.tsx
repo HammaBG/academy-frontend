@@ -9,13 +9,14 @@ import { cn } from "@/lib/utils";
 import { Loader } from "@/components/ui/Loader";
 
 function EnrolledCourseCard({ course }: { course: any }) {
+    const courseId = course.id || course._id;
     const categoryColor = course.category_color || "#F95353";
     const ratingValue = course.ratings ? course.ratings.toFixed(1) : "4.8";
     const categoryName = course.categories || "دورة مسجلة";
 
     return (
         <Link
-            href={`/my-courses/${course.id}`}
+            href={`/my-courses/${courseId}`}
             className="group flex flex-col bg-surface backdrop-blur-md rounded-3xl overflow-hidden border border-border/40 hover:border-brand-primary/60 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-2xl shadow-md text-right select-none"
         >
             {/* Top Image Container */}
@@ -179,9 +180,10 @@ export default function MyCoursesPage() {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {displayCourses.map((course) => (
-                            <EnrolledCourseCard key={course.id} course={course} />
-                        ))}
+                        {displayCourses.map((course, idx) => {
+                            const courseKey = course.id || course._id || idx;
+                            return <EnrolledCourseCard key={courseKey} course={course} />;
+                        })}
                     </div>
                 )}
 

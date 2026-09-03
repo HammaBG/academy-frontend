@@ -4,7 +4,9 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useCourseStore } from "@/store/course";
 import { useAuthStore } from "@/store/auth";
-import { Loader2, AlertCircle, PlayCircle, BookOpen, Clock, ArrowRight, ArrowLeft, MessageSquare, Send, CornerDownLeft, User as UserIcon, Award } from "lucide-react";
+import { useNotificationStore } from "@/store/notification";
+import { useNoteStore, formatVideoTime } from "@/store/note";
+import { Loader2, AlertCircle, PlayCircle, BookOpen, Clock, ArrowRight, ArrowLeft, MessageSquare, Send, CornerDownLeft, User as UserIcon, Award, StickyNote, Trash2, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { CoursePlayer } from "@/components/CoursePlayer";
@@ -14,6 +16,9 @@ export default function MyCourseDetailsPage() {
   const { id } = useParams();
   const { token, user } = useAuthStore();
   const { currentCourse, isLoading, error, getCourseContent, clearCurrentCourse, addQuestion, addAnswer, toggleVideoProgress } = useCourseStore();
+  const { addNotification } = useNotificationStore();
+  const { addNote, deleteNote, getLessonNotes } = useNoteStore();
+
   const completedVideos = currentCourse?.completedVideos || [];
   const progress = currentCourse?.progress || 0;
 
@@ -24,6 +29,12 @@ export default function MyCourseDetailsPage() {
   const [isSubmittingQuestion, setIsSubmittingQuestion] = useState(false);
   const [submittingReplyId, setSubmittingReplyId] = useState<string | null>(null);
   const [isCertModalOpen, setIsCertModalOpen] = useState(false);
+
+  // Smart Lesson Notes States
+  const [noteText, setNoteText] = useState("");
+  const [noteMinutes, setNoteMinutes] = useState<number>(0);
+  const [noteSeconds, setNoteSeconds] = useState<number>(0);
+  const [seekTime, setSeekTime] = useState<{ time: number; trigger: number } | null>(null);
 
   useEffect(() => {
     if (id && token) {
@@ -91,6 +102,13 @@ export default function MyCourseDetailsPage() {
     setIsSubmittingQuestion(true);
     try {
       await addQuestion(questionText, currentCourse.id, contentId, token);
+      addNotification({
+        userId: user?.id || "all",
+        title: "تم نشر سؤالك في النقاش 💬",
+        message: `تم نشر سؤالك حول درس: ${currentSection?.video_section || currentSection?.title || "الدرس"}`,
+        type: "qa_reply",
+        link: `/my-courses/${id}`,
+      });
       setQuestionText("");
     } catch (err) {
       console.error(err);
@@ -110,6 +128,13 @@ export default function MyCourseDetailsPage() {
     setSubmittingReplyId(questionId);
     try {
       await addAnswer(replyText, currentCourse.id, contentId, questionId, token);
+      addNotification({
+        userId: user?.id || "all",
+        title: "تم إرسال ردك بنجاح 💬",
+        message: "تم إضافة ردك إلى منتدى النقاش الخاص بالدرس.",
+        type: "qa_reply",
+        link: `/my-courses/${id}`,
+      });
       setReplyTexts(prev => ({ ...prev, [questionId]: "" }));
       setShowReplyForm(prev => ({ ...prev, [questionId]: false }));
     } catch (err) {
@@ -143,7 +168,7 @@ export default function MyCourseDetailsPage() {
             {/* Video Box Container */}
             <div className="relative aspect-video rounded-[32px] overflow-hidden border border-border/40 bg-surface shadow-2xl">
               {currentSection?.video_url ? (
-                <CoursePlayer videoUrl={currentSection.video_url} />
+                <CoursePlayer videoUrl={currentSection.video_url} seekTime={seekTime} />
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center text-text-secondary/30 p-8">
                   <PlayCircle className="w-16 h-16 mb-4" />
@@ -219,6 +244,129 @@ export default function MyCourseDetailsPage() {
                 )}
               </div>
             )}
+
+            {/* SMART LESSON NOTES SECTION WITH TIMESTAMPS */}
+            {currentSection && (() => {
+              const currentSectionId = currentSection?.id || currentSection?._id || currentSection?.title || activeIdx.toString();
+              const lessonNotes = getLessonNotes(user?.id || "guest", id as string, currentSectionId);
+
+              return (
+                <div className="bg-surface border border-border/40 rounded-[32px] p-6 space-y-6 shadow-sm">
+                  {/* Section Header */}
+                  <div className="flex items-center justify-between border-b border-border/40 pb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-brand-primary/10 border border-brand-primary/20 flex items-center justify-center text-brand-primary">
+                        <StickyNote className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-black text-text-primary">ملاحظاتي الدراسية والتوقيتات</h3>
+                        <p className="text-xs font-semibold text-text-secondary">دون ملاحظاتك عند دقيقة معينة، وانقر على التوقيت للقفز فوراً بالفيديو</p>
+                      </div>
+                    </div>
+                    <span className="px-3 py-1 bg-brand-primary/10 text-brand-primary text-xs font-black rounded-full">
+                      {lessonNotes.length} ملاحظة
+                    </span>
+                  </div>
+
+                  {/* Form: Write new note */}
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      if (!noteText.trim()) return;
+                      const totalSecs = noteMinutes * 60 + noteSeconds;
+                      addNote({
+                        userId: user?.id || "guest",
+                        courseId: id as string,
+                        sectionId: currentSectionId,
+                        timestampSeconds: totalSecs,
+                        timeFormatted: formatVideoTime(totalSecs),
+                        text: noteText.trim(),
+                      });
+                      setNoteText("");
+                    }}
+                    className="space-y-3 bg-background/50 border border-border/40 p-4 rounded-2xl"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-bold text-text-secondary shrink-0">التوقيت بالفيديو:</span>
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="number"
+                          min="0"
+                          max="180"
+                          value={noteMinutes}
+                          onChange={(e) => setNoteMinutes(Math.max(0, parseInt(e.target.value) || 0))}
+                          className="w-16 p-2 bg-surface border border-border/40 rounded-xl text-center text-xs font-bold text-text-primary"
+                          placeholder="دقيقة"
+                        />
+                        <span className="font-bold text-text-secondary">:</span>
+                        <input
+                          type="number"
+                          min="0"
+                          max="59"
+                          value={noteSeconds}
+                          onChange={(e) => setNoteSeconds(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)))}
+                          className="w-16 p-2 bg-surface border border-border/40 rounded-xl text-center text-xs font-bold text-text-primary"
+                          placeholder="ثانية"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <textarea
+                        value={noteText}
+                        onChange={(e) => setNoteText(e.target.value)}
+                        placeholder="اكتب ملاحظتك التوضيحية حول هذا الدرس..."
+                        rows={2}
+                        className="flex-1 p-3 bg-surface border border-border/40 focus:border-brand-primary rounded-2xl text-xs font-bold text-text-primary resize-none outline-none"
+                      />
+                      <button
+                        type="submit"
+                        disabled={!noteText.trim()}
+                        className="px-5 bg-brand-primary hover:bg-brand-primary/95 text-white font-extrabold text-xs rounded-2xl transition-all disabled:opacity-40 cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-brand-primary/10"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>حفظ الملاحظة</span>
+                      </button>
+                    </div>
+                  </form>
+
+                  {/* Saved Notes List */}
+                  <div className="space-y-3">
+                    {lessonNotes.length === 0 ? (
+                      <p className="text-center text-xs font-bold text-text-secondary/50 py-4">
+                        لا توجد ملاحظات مدوّنة بعد لهذا الدرس.
+                      </p>
+                    ) : (
+                      lessonNotes.map((note) => (
+                        <div
+                          key={note.id}
+                          className="p-3.5 bg-background/80 border border-border/40 hover:border-brand-primary/40 rounded-2xl flex items-center justify-between gap-3 transition-all group"
+                        >
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                            <button
+                              onClick={() => setSeekTime({ time: note.timestampSeconds, trigger: Date.now() })}
+                              className="px-3 py-1.5 bg-brand-primary/15 hover:bg-brand-primary hover:text-white text-brand-primary rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shrink-0 cursor-pointer shadow-xs"
+                              title="اضغط للقفز إلى هذه الدقيقة بالفيديو"
+                            >
+                              <Clock className="w-3.5 h-3.5" />
+                              <span>[{note.timeFormatted}]</span>
+                            </button>
+                            <p className="text-xs font-bold text-text-primary truncate">{note.text}</p>
+                          </div>
+                          <button
+                            onClick={() => deleteNote(note.id)}
+                            className="p-1.5 text-text-secondary hover:text-red-500 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                            title="حذف الملاحظة"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Q&A SECTION (DISCUSSIONS) */}
             {currentSection && (

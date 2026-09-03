@@ -10,6 +10,7 @@ import { useTheme } from "@/components/providers/ThemeProvider";
 import logo from "../../public/ossosacademy.jpg";
 import { API_ENDPOINTS } from "@/config/api";
 import { Search, X, BookOpen, User as UserIcon, Sun, Moon, Ticket } from "lucide-react";
+import { NotificationBell } from "@/components/NotificationBell";
 
 interface SearchCourseResultProps {
   course: Course;
@@ -300,9 +301,8 @@ export function Navbar() {
                       <Link
                         key={link.name}
                         href={link.href}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold text-white bg-brand-primary hover:bg-brand-primary/90 transition-all duration-300 shadow-sm hover:shadow-brand-primary/20 hover:scale-[1.03] active:scale-95 ${
-                          link.active ? "ring-2 ring-brand-primary/40 ring-offset-2 ring-offset-background" : ""
-                        }`}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold text-white bg-brand-primary hover:bg-brand-primary/90 transition-all duration-300 shadow-sm hover:shadow-brand-primary/20 hover:scale-[1.03] active:scale-95 ${link.active ? "ring-2 ring-brand-primary/40 ring-offset-2 ring-offset-background" : ""
+                          }`}
                       >
                         <Ticket className="w-4 h-4" />
                         <span>{link.name}</span>
@@ -313,11 +313,10 @@ export function Navbar() {
                     <Link
                       key={link.name}
                       href={link.href}
-                      className={`flex items-center text-[15px] font-semibold tracking-wide transition-all duration-300 relative py-2 ${
-                        link.active
-                          ? "text-brand-primary font-bold"
-                          : "text-text-secondary hover:text-text-primary"
-                      }`}
+                      className={`flex items-center text-[15px] font-semibold tracking-wide transition-all duration-300 relative py-2 ${link.active
+                        ? "text-brand-primary font-bold"
+                        : "text-text-secondary hover:text-text-primary"
+                        }`}
                     >
                       {link.name}
                       {link.active && (
@@ -397,6 +396,9 @@ export function Navbar() {
 
                   {/* Separator */}
                   <div className="hidden md:block h-6 w-px bg-border"></div>
+
+                  {/* Notification Bell */}
+                  {isAuthenticated && <NotificationBell />}
 
                   {/* Cart Toggle */}
                   <div ref={cartDropdownRef} className="relative hidden sm:block">
@@ -696,9 +698,8 @@ export function Navbar() {
                   <Link
                     key={link.name}
                     href={link.href}
-                    className={`flex items-center justify-between px-4 py-2.5 rounded-full text-base font-bold text-white bg-brand-primary hover:bg-brand-primary/95 transition-all shadow-sm ${
-                      link.active ? "ring-2 ring-brand-primary/40 ring-offset-1 ring-offset-background" : ""
-                    }`}
+                    className={`flex items-center justify-between px-4 py-2.5 rounded-full text-base font-bold text-white bg-brand-primary hover:bg-brand-primary/95 transition-all shadow-sm ${link.active ? "ring-2 ring-brand-primary/40 ring-offset-1 ring-offset-background" : ""
+                      }`}
                     onClick={handleCloseMobileMenu}
                   >
                     <span>{link.name}</span>
@@ -710,11 +711,10 @@ export function Navbar() {
                 <Link
                   key={link.name}
                   href={link.href}
-                  className={`block px-4 py-2.5 rounded-lg text-base font-semibold transition-colors ${
-                    link.active
-                      ? "text-brand-primary bg-brand-primary/5 font-bold"
-                      : "text-text-secondary hover:text-text-primary hover:bg-surface"
-                  }`}
+                  className={`block px-4 py-2.5 rounded-lg text-base font-semibold transition-colors ${link.active
+                    ? "text-brand-primary bg-brand-primary/5 font-bold"
+                    : "text-text-secondary hover:text-text-primary hover:bg-surface"
+                    }`}
                   onClick={handleCloseMobileMenu}
                 >
                   {link.name}
