@@ -51,17 +51,17 @@ export default function CourseDetailsPage() {
   }
 
   return (
-    <div className="bg-background min-h-screen text-text-primary relative overflow-x-hidden pt-20" dir="rtl">
-      <div className="relative z-10 max-w-7xl mx-auto px-4 py-12 md:py-16">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+    <div className="bg-background min-h-screen text-text-primary relative overflow-x-hidden pt-2" dir="rtl">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 pt-3 pb-16 md:pt-6 md:pb-20">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
           {/* Main Content */}
           <div className="lg:col-span-8 lg:order-1">
             <CourseDetailsContent course={currentCourse!} />
           </div>
 
-          {/* Sidebar */}
-          <div className="lg:col-span-4 lg:order-2">
-            <div className="sticky top-28">
+          {/* Desktop Sidebar */}
+          <div className="hidden lg:block lg:col-span-4 lg:order-2">
+            <div className="sticky top-24">
               <CourseSidebar course={currentCourse!} />
             </div>
           </div>

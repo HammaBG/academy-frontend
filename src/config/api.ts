@@ -13,4 +13,5 @@ export const API_ENDPOINTS = {
   forms: `${API_BASE_URL}/forms`,
   enrollmentCodes: `${API_BASE_URL}/enrollment-codes`,
   wishlist: `${API_BASE_URL}/wishlist`,
+  notes: `${API_BASE_URL}/notes`,
 };

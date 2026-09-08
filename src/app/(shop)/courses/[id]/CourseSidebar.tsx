@@ -9,7 +9,7 @@ import {
   Trophy,
   Share2,
   Heart,
-  BookOpen,
+  Globe,
   Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -84,7 +84,7 @@ export function CourseSidebar({ course }: CourseSidebarProps) {
     : 0;
 
   return (
-    <div className="bg-surface backdrop-blur-xl rounded-[32px] p-8 border border-border/40 shadow-xl space-y-8 animate-in fade-in slide-in-from-left-4 duration-500 text-right" dir="rtl">
+    <div className="bg-surface/90 backdrop-blur-xl rounded-[28px] sm:rounded-[32px] p-6 sm:p-8 border border-border/50 shadow-xl space-y-6 sm:space-y-7 animate-in fade-in slide-in-from-left-4 duration-500 text-right" dir="rtl">
       {/* Price Section */}
       <div className="space-y-2">
         <div className="flex items-center gap-3">
@@ -93,13 +93,13 @@ export function CourseSidebar({ course }: CourseSidebarProps) {
             <span className="text-lg text-text-secondary/60 line-through font-bold">{course.estimated_price} د.ت</span>
           )}
           {discount > 0 && (
-            <span className="bg-brand-primary/15 text-brand-primary text-[10px] font-extrabold px-2.5 py-1 rounded-lg uppercase tracking-wider border border-brand-primary/20">
+            <span className="bg-brand-primary/15 text-brand-primary text-xs font-black px-2.5 py-1 rounded-lg uppercase tracking-wider border border-brand-primary/20 animate-pulse">
               خصم {discount}%
             </span>
           )}
         </div>
         <p className="text-emerald-500 text-xs font-black uppercase tracking-widest flex items-center gap-1.5">
-          <Zap className="w-3.5 h-3.5 fill-current" />
+          <Zap className="w-3.5 h-3.5 fill-current animate-bounce" />
           عرض متاح للتسجيل الفوري
         </p>
       </div>
@@ -109,10 +109,10 @@ export function CourseSidebar({ course }: CourseSidebarProps) {
         <Button
           onClick={handleToggleCart}
           className={cn(
-            "w-full h-14 font-extrabold text-base rounded-2xl transition-all duration-300 shadow-lg flex items-center justify-center gap-2.5",
+            "w-full h-14 font-black text-base rounded-2xl transition-all duration-300 shadow-lg flex items-center justify-center gap-2.5 hover:scale-[1.01] active:scale-[0.99]",
             courseInCart
-              ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20"
-              : "bg-brand-primary hover:bg-brand-primary/95 text-white shadow-brand-primary/20"
+              ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/25"
+              : "bg-brand-primary hover:bg-brand-primary/95 text-white shadow-brand-primary/25"
           )}
         >
           <ShoppingBag className="w-5 h-5" />
@@ -120,22 +120,22 @@ export function CourseSidebar({ course }: CourseSidebarProps) {
         </Button>
       </div>
 
-      <p className="text-center text-text-secondary text-[11px] font-bold uppercase tracking-widest">
-        وصول سريع ومباشر بعد التسجيل
+      <p className="text-center text-text-secondary text-xs font-bold">
+        ⚡ وصول فوري ومباشر لكافة الدروس بعد الاشتراك
       </p>
 
       {/* Highlights */}
-      <div className="space-y-6 pt-4 border-t border-border/40">
-        <h4 className="text-xs font-black text-text-primary uppercase tracking-widest">تشمل هذه الدورة:</h4>
-        <div className="space-y-4">
+      <div className="space-y-5 pt-4 border-t border-border/40">
+        <h4 className="text-xs font-black text-text-primary uppercase tracking-wider">تشمل هذه الدورة:</h4>
+        <div className="space-y-3.5">
           {[
-            { icon: InfinityIcon, text: "وصول مدى الحياة", color: "text-purple-500" },
-            { icon: Monitor, text: "وصول على الهواتف والشاشات", color: "text-blue-500" },
-            { icon: Trophy, text: "شهادة إتمام معتمدة", color: "text-amber-500" },
-            { icon: BookOpen, text: `${course.course_data?.length || 0} موارد قابلة للتحميل`, color: "text-emerald-500" },
+            { icon: Globe, text: "دورة 100% أونلاين", color: "text-emerald-500", bg: "bg-emerald-500/10" },
+            { icon: InfinityIcon, text: "وصول غير محدود مدى الحياة", color: "text-purple-500", bg: "bg-purple-500/10" },
+            { icon: Monitor, text: "مشاهدة على الهواتف والشاشات", color: "text-blue-500", bg: "bg-blue-500/10" },
+            { icon: Trophy, text: "شهادة إتمام معتمدة بعد الانتهاء", color: "text-amber-500", bg: "bg-amber-500/10" },
           ].map((item, i) => (
-            <div key={i} className="flex items-center gap-4 group">
-              <div className={`w-9 h-9 rounded-xl bg-surface flex items-center justify-center border border-border/40 ${item.color} group-hover:scale-110 transition-transform shadow-sm`}>
+            <div key={i} className="flex items-center gap-3.5 group">
+              <div className={`w-9 h-9 rounded-xl ${item.bg} flex items-center justify-center border border-border/30 ${item.color} group-hover:scale-110 transition-transform shadow-xs shrink-0`}>
                 <item.icon className="w-4.5 h-4.5" />
               </div>
               <span className="text-sm font-bold text-text-secondary group-hover:text-text-primary transition-colors">{item.text}</span>
@@ -145,11 +145,11 @@ export function CourseSidebar({ course }: CourseSidebarProps) {
       </div>
 
       {/* Share / Wishlist Buttons */}
-      <div className="flex gap-4">
+      <div className="flex gap-3 pt-2">
         <Button
           onClick={handleShare}
           variant="outline"
-          className="flex-1 h-12 rounded-xl bg-surface hover:bg-surface/80 border-border/40 text-text-primary font-bold gap-2 text-xs"
+          className="flex-1 h-11 rounded-xl bg-surface hover:bg-surface/80 border-border/50 text-text-primary font-bold gap-2 text-xs hover:border-brand-primary/40 transition-colors"
         >
           <Share2 className="w-4 h-4 text-brand-primary" /> مشاركة
         </Button>
@@ -159,8 +159,8 @@ export function CourseSidebar({ course }: CourseSidebarProps) {
           disabled={isLoading}
           variant="outline"
           className={cn(
-            "flex-1 h-12 rounded-xl bg-surface hover:bg-surface/80 border-border/40 font-bold gap-2 text-xs transition-colors",
-            isFavorited ? "text-red-500 border-red-500/30" : "text-text-primary"
+            "flex-1 h-11 rounded-xl bg-surface hover:bg-surface/80 border-border/50 font-bold gap-2 text-xs transition-colors",
+            isFavorited ? "text-red-500 border-red-500/30" : "text-text-primary hover:border-red-500/30"
           )}
         >
           {isLoading ? (

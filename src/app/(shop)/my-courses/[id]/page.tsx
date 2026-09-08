@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useCourseStore } from "@/store/course";
 import { useAuthStore } from "@/store/auth";
 import { useNotificationStore } from "@/store/notification";
 import { useNoteStore, formatVideoTime } from "@/store/note";
-import { Loader2, AlertCircle, PlayCircle, BookOpen, Clock, ArrowRight, ArrowLeft, MessageSquare, Send, CornerDownLeft, User as UserIcon, Award, StickyNote, Trash2, Plus } from "lucide-react";
+import { Loader2, AlertCircle, PlayCircle, BookOpen, Clock, ArrowRight, ArrowLeft, MessageSquare, Send, CornerDownLeft, User as UserIcon, Award, StickyNote, Trash2, Plus, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { CoursePlayer } from "@/components/CoursePlayer";
@@ -14,10 +14,11 @@ import { CertificateModal } from "@/components/CertificateModal";
 
 export default function MyCourseDetailsPage() {
   const { id } = useParams();
+  const searchParams = useSearchParams();
   const { token, user } = useAuthStore();
   const { currentCourse, isLoading, error, getCourseContent, clearCurrentCourse, addQuestion, addAnswer, toggleVideoProgress } = useCourseStore();
   const { addNotification } = useNotificationStore();
-  const { addNote, deleteNote, getLessonNotes } = useNoteStore();
+  const { addNote, deleteNote, getLessonNotes, fetchUserNotes } = useNoteStore();
 
   const completedVideos = currentCourse?.completedVideos || [];
   const progress = currentCourse?.progress || 0;
@@ -39,9 +40,41 @@ export default function MyCourseDetailsPage() {
   useEffect(() => {
     if (id && token) {
       getCourseContent(id as string, token);
+      fetchUserNotes(token);
     }
     return () => clearCurrentCourse();
-  }, [id, token, getCourseContent, clearCurrentCourse]);
+  }, [id, token, getCourseContent, clearCurrentCourse, fetchUserNotes]);
+
+  // Handle URL query parameters for section and timestamp seek
+  useEffect(() => {
+    if (currentCourse?.course_data && currentCourse.course_data.length > 0) {
+      const sectionParam = searchParams.get("section");
+      const tParam = searchParams.get("t");
+
+      if (sectionParam) {
+        const foundIdx = currentCourse.course_data.findIndex(
+          (s: any, idx: number) =>
+            (s.id && s.id === sectionParam) ||
+            (s._id && s._id === sectionParam) ||
+            (s.title && s.title === sectionParam) ||
+            idx.toString() === sectionParam
+        );
+
+        if (foundIdx !== -1) {
+          setActiveIdx(foundIdx);
+        }
+      }
+
+      if (tParam) {
+        const targetSeconds = parseInt(tParam, 10);
+        if (!isNaN(targetSeconds) && targetSeconds >= 0) {
+          setTimeout(() => {
+            setSeekTime({ time: targetSeconds, trigger: Date.now() });
+          }, 600);
+        }
+      }
+    }
+  }, [currentCourse, searchParams]);
 
   if (isLoading && !currentCourse) {
     return (
@@ -146,9 +179,6 @@ export default function MyCourseDetailsPage() {
 
   return (
     <div className="min-h-screen bg-background text-text-primary relative overflow-x-hidden pt-24 text-right" dir="rtl">
-      {/* Background ambient glows */}
-      <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-brand-primary/5 blur-[120px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-[-10%] left-[-10%] w-[30%] h-[30%] bg-brand-primary/5 blur-[120px] rounded-full pointer-events-none" />
 
       <div className="relative z-10 max-w-[1400px] mx-auto px-4">
         {/* Back Link */}
@@ -270,18 +300,22 @@ export default function MyCourseDetailsPage() {
 
                   {/* Form: Write new note */}
                   <form
-                    onSubmit={(e) => {
+                    onSubmit={async (e) => {
                       e.preventDefault();
                       if (!noteText.trim()) return;
                       const totalSecs = noteMinutes * 60 + noteSeconds;
-                      addNote({
+                      await addNote({
                         userId: user?.id || "guest",
                         courseId: id as string,
+                        courseName: currentCourse.name || "دورة تعليمية",
                         sectionId: currentSectionId,
+                        sectionTitle: currentSection.title || currentSection.video_section || "درس",
+                        videoUrl: currentSection.video_url || "",
+                        thumbnailUrl: currentCourse.thumbnail?.url || "",
                         timestampSeconds: totalSecs,
                         timeFormatted: formatVideoTime(totalSecs),
                         text: noteText.trim(),
-                      });
+                      }, token);
                       setNoteText("");
                     }}
                     className="space-y-3 bg-background/50 border border-border/40 p-4 rounded-2xl"
@@ -298,6 +332,7 @@ export default function MyCourseDetailsPage() {
                           className="w-16 p-2 bg-surface border border-border/40 rounded-xl text-center text-xs font-bold text-text-primary"
                           placeholder="دقيقة"
                         />
+                        <p className="text-xs font-bold text-text-secondary">دقيقة:</p>
                         <span className="font-bold text-text-secondary">:</span>
                         <input
                           type="number"
@@ -308,6 +343,7 @@ export default function MyCourseDetailsPage() {
                           className="w-16 p-2 bg-surface border border-border/40 rounded-xl text-center text-xs font-bold text-text-primary"
                           placeholder="ثانية"
                         />
+                        <p className="text-xs font-bold text-text-secondary">ثانية</p>
                       </div>
                     </div>
 
@@ -354,7 +390,7 @@ export default function MyCourseDetailsPage() {
                             <p className="text-xs font-bold text-text-primary truncate">{note.text}</p>
                           </div>
                           <button
-                            onClick={() => deleteNote(note.id)}
+                            onClick={() => deleteNote(note.id, token)}
                             className="p-1.5 text-text-secondary hover:text-red-500 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                             title="حذف الملاحظة"
                           >
