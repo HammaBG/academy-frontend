@@ -181,3 +181,18 @@
     font-family: var(--font-cairo), var(--font-montserrat), sans-serif;
   }
 }
+
+/* Toast Sonner Styles */
+[data-sonner-toaster] {
+  font-family: var(--font-montserrat-arabic), var(--font-cairo), sans-serif !important;
+}
+
+[data-sonner-toaster][dir="rtl"] [data-sonner-toast] {
+  direction: rtl;
+  text-align: right;
+}
+
+[data-sonner-toaster][dir="rtl"] [data-close-button] {
+  left: 0.75rem !important;
+  right: auto !important;
+}

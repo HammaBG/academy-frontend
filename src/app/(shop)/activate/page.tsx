@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export default function ActivateCodePage() {
   const router = useRouter();
@@ -52,15 +53,23 @@ export default function ActivateCodePage() {
     e.preventDefault();
     setValidationError(null);
 
-    if (!code.trim()) {
-      setValidationError("يرجى إدخال كود التفعيل.");
+    const cleanCode = code.trim();
+    if (!cleanCode) {
+      const msg = "يرجى إدخال كود التفعيل أولاً";
+      setValidationError(msg);
+      toast.warning(msg);
       return;
     }
 
     try {
-      await useCode(code.trim(), token || "");
-    } catch (err) {
-      // Error is captured by store state
+      await useCode(cleanCode, token || "");
+      toast.success("تم تفعيل كود الاشتراك بنجاح!", {
+        description: "تمت إضافة الكورسات المخصصة إلى حسابك مدى الحياة.",
+      });
+    } catch (err: any) {
+      toast.error("تعذر تفعيل كود الاشتراك", {
+        description: err.message || storeError || "الكود غير صالح، أو منتهي الصلاحية، أو تم استخدامه مسبقاً.",
+      });
     }
   };
 
@@ -146,14 +155,6 @@ export default function ActivateCodePage() {
             <p className="text-text-secondary text-sm leading-relaxed">
               أدخل الكود التفعيلي المكون من حروف وأرقام للاشتراك الفوري والوصول مدى الحياة للكورسات المخصصة لك.
             </p>
-
-            {(validationError || storeError) && (
-              <div className="bg-[#F95353]/10 border border-[#F95353]/20 p-4 rounded-2xl flex items-start gap-2.5 text-xs text-[#F95353] leading-relaxed">
-                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                <span>{validationError || storeError}</span>
-              </div>
-            )}
-
             <div className="space-y-2">
               <label htmlFor="code" className="text-xs font-bold text-text-secondary">
                 رمز كود التفعيل

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuthStore } from "@/store/auth";
 import { GoogleSignInButton } from "@/components/GoogleSignInButton";
+import { toast } from "sonner";
 
 export default function LoginPage() {
   const { user, isAuthenticated, isAuthLoading, error, login, clearError } = useAuthStore();
@@ -28,6 +29,16 @@ export default function LoginPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     await login(email, password);
+    const authState = useAuthStore.getState();
+    if (authState.error) {
+      toast.error("تعذر تسجيل الدخول", {
+        description: authState.error,
+      });
+    } else if (authState.isAuthenticated) {
+      toast.success("تم تسجيل الدخول بنجاح", {
+        description: "مرحباً بك في أكاديمية أسس!",
+      });
+    }
   };
 
   useEffect(() => {
@@ -59,12 +70,6 @@ export default function LoginPage() {
 
           <h2 className="text-3xl font-black mb-2 text-text-primary text-center">تسجيل الدخول</h2>
           <p className="text-text-secondary mb-8 text-center text-sm font-semibold">أدخل بياناتك للوصول إلى حسابك</p>
-
-          {error && (
-            <div className="w-full p-3 mb-6 rounded-xl border text-sm text-center bg-red-500/10 border-red-500/30 text-red-400 font-semibold">
-              {error}
-            </div>
-          )}
 
           <form onSubmit={handleSubmit} className="w-full space-y-5" dir="rtl">
             <div className="space-y-1.5 text-right">

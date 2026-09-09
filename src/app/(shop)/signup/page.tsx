@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuthStore } from "@/store/auth";
 import { GoogleSignInButton } from "@/components/GoogleSignInButton";
+import { toast } from "sonner";
 
 export default function SignupPage() {
   const { isAuthenticated, isAuthLoading, error, signup, clearError } = useAuthStore();
@@ -15,7 +16,6 @@ export default function SignupPage() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
-  const [successMsg, setSuccessMsg] = useState("");
 
   useEffect(() => {
     clearError();
@@ -43,12 +43,17 @@ export default function SignupPage() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setSuccessMsg("");
     clearError();
     await signup(email, password, firstName, lastName, phone);
-    const currentError = useAuthStore.getState().error;
-    if (!currentError) {
-      setSuccessMsg("تم التسجيل بنجاح! يرجى تسجيل الدخول.");
+    const authState = useAuthStore.getState();
+    if (authState.error) {
+      toast.error("تعذر إنشاء الحساب", {
+        description: authState.error,
+      });
+    } else {
+      toast.success("تم إنشاء الحساب بنجاح!", {
+        description: "مرحباً بك في أكاديمية أسس، جاري نقلك...",
+      });
     }
   };
 
@@ -81,16 +86,6 @@ export default function SignupPage() {
 
           <h2 className="text-3xl font-black mb-2 text-text-primary text-center">إنشاء حساب جديد</h2>
           <p className="text-text-secondary mb-8 text-center text-sm font-semibold">سجل الآن للبدء في استخدام منصتنا</p>
-
-          {(error || successMsg) && (
-            <div
-              className={`w-full p-3 mb-6 rounded-xl border text-sm text-center font-semibold ${error ? "bg-red-500/10 border-red-500/30 text-red-400" : "bg-green-500/10 border-green-500/30 text-green-400"
-                }`}
-            >
-              {error || successMsg}
-            </div>
-          )}
-
           <form onSubmit={handleSubmit} className="w-full space-y-4" dir="rtl">
             <div className="flex gap-4 flex-col sm:flex-row">
               <div className="space-y-1.5 w-full text-right">
