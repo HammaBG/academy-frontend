@@ -69,7 +69,7 @@ export function CourseCard({ course }: CourseCardProps) {
 
   return (
     <Link
-      href={`/courses/${course.id}`}
+      href={`/courses/${course.url || course.id}`}
       className="group flex flex-col bg-surface backdrop-blur-md rounded-3xl overflow-hidden border-2 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-2xl shadow-md text-right select-none"
       style={{ borderColor: categoryColor }}
     >

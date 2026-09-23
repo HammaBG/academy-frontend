@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { CoursePlayer } from "@/components/CoursePlayer";
 import { CertificateModal } from "@/components/CertificateModal";
+import { CourseChatRoom } from "@/components/Chat/CourseChatRoom";
 
 export default function MyCourseDetailsPage() {
   const { id } = useParams();
@@ -36,6 +37,18 @@ export default function MyCourseDetailsPage() {
   const [noteMinutes, setNoteMinutes] = useState<number>(0);
   const [noteSeconds, setNoteSeconds] = useState<number>(0);
   const [seekTime, setSeekTime] = useState<{ time: number; trigger: number } | null>(null);
+
+  // View Mode: 'lesson' | 'chat'
+  const [viewMode, setViewMode] = useState<"lesson" | "chat">("lesson");
+
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    if (tabParam === "chat") {
+      setViewMode("chat");
+    } else if (tabParam === "lesson") {
+      setViewMode("lesson");
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (id && token) {
@@ -140,7 +153,7 @@ export default function MyCourseDetailsPage() {
         title: "تم نشر سؤالك في النقاش 💬",
         message: `تم نشر سؤالك حول درس: ${currentSection?.video_section || currentSection?.title || "الدرس"}`,
         type: "qa_reply",
-        link: `/my-courses/${id}`,
+        link: `/my-courses/${currentCourse.url || id}`,
       });
       setQuestionText("");
     } catch (err) {
@@ -166,7 +179,7 @@ export default function MyCourseDetailsPage() {
         title: "تم إرسال ردك بنجاح 💬",
         message: "تم إضافة ردك إلى منتدى النقاش الخاص بالدرس.",
         type: "qa_reply",
-        link: `/my-courses/${id}`,
+        link: `/my-courses/${currentCourse.url || id}`,
       });
       setReplyTexts(prev => ({ ...prev, [questionId]: "" }));
       setShowReplyForm(prev => ({ ...prev, [questionId]: false }));
@@ -181,31 +194,71 @@ export default function MyCourseDetailsPage() {
     <div className="min-h-screen bg-background text-text-primary relative overflow-x-hidden pt-24 text-right" dir="rtl">
 
       <div className="relative z-10 max-w-[1400px] mx-auto px-4">
-        {/* Back Link */}
-        <Link
-          href="/my-courses"
-          className="inline-flex items-center gap-2 text-text-secondary hover:text-brand-primary font-bold text-sm mb-6 transition-colors"
-        >
-          <span>العودة إلى دوراتي</span>
-          <ArrowLeft className="w-4 h-4 rotate-180" />
-        </Link>
+        {/* Top Header Row with Navigation and View Mode Switcher */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <Link
+            href="/my-courses"
+            className="inline-flex items-center gap-2 text-text-secondary hover:text-brand-primary font-bold text-sm transition-colors"
+          >
+            <span>العودة إلى دوراتي</span>
+            <ArrowLeft className="w-4 h-4 rotate-180" />
+          </Link>
+
+          {/* Mode Switcher Tabs */}
+          <div className="flex items-center bg-surface border border-border/50 p-1.5 rounded-2xl shadow-sm gap-1 self-start sm:self-auto">
+            <button
+              onClick={() => setViewMode("lesson")}
+              className={cn(
+                "flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all",
+                viewMode === "lesson"
+                  ? "bg-brand-primary text-white shadow-md shadow-brand-primary/20"
+                  : "text-text-secondary hover:text-text-primary hover:bg-surface-secondary/40"
+              )}
+            >
+              <PlayCircle className="w-4 h-4" />
+              <span>فيديو الدرس والملاحظات</span>
+            </button>
+
+            <button
+              onClick={() => setViewMode("chat")}
+              className={cn(
+                "flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all relative",
+                viewMode === "chat"
+                  ? "bg-brand-primary text-white shadow-md shadow-brand-primary/20"
+                  : "text-text-secondary hover:text-text-primary hover:bg-surface-secondary/40"
+              )}
+            >
+              <MessageSquare className="w-4 h-4" />
+              <span>محادثة الدورة المباشرة</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            </button>
+          </div>
+        </div>
 
         {/* Core LMS Split Screen Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mb-16">
 
-          {/* LEFT COLUMN: Player, Controls & Discussions */}
+          {/* LEFT COLUMN: Player / Chat Room */}
           <div className="lg:col-span-7 space-y-6 flex flex-col">
-            {/* Video Box Container */}
-            <div className="relative aspect-video rounded-[32px] overflow-hidden border border-border/40 bg-surface shadow-2xl">
-              {currentSection?.video_url ? (
-                <CoursePlayer videoUrl={currentSection.video_url} seekTime={seekTime} />
-              ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center text-text-secondary/30 p-8">
-                  <PlayCircle className="w-16 h-16 mb-4" />
-                  <p className="text-sm font-bold">لا يوجد فيديو متاح لهذا الدرس</p>
+            {viewMode === "chat" ? (
+              <CourseChatRoom
+                courseId={currentCourse.id || (id as string)}
+                courseName={currentCourse.name}
+                instructorId={typeof currentCourse.creator === "string" ? currentCourse.creator : currentCourse.creator?.id}
+              />
+            ) : (
+              <>
+                {/* Video Box Container */}
+                <div className="relative aspect-video rounded-[32px] overflow-hidden border border-border/40 bg-surface shadow-2xl">
+                  {currentSection?.video_url ? (
+                    <CoursePlayer videoUrl={currentSection.video_url} seekTime={seekTime} />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center text-text-secondary/30 p-8">
+                      <PlayCircle className="w-16 h-16 mb-4" />
+                      <p className="text-sm font-bold">لا يوجد فيديو متاح لهذا الدرس</p>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
 
             {/* Navigation Buttons under the Video Player */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
@@ -565,6 +618,8 @@ export default function MyCourseDetailsPage() {
                 </div>
 
               </div>
+            )}
+              </>
             )}
           </div>
 

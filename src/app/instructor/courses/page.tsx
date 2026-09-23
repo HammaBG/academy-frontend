@@ -97,79 +97,82 @@ export default function InstructorCoursesPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {!isLoading && filteredCourses.map((course) => (
-              <TableRow key={course.id} className="hover:bg-gray-50/50 transition-colors border-b border-gray-50">
-                <TableCell>
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-lg border border-gray-100 bg-gray-50 overflow-hidden shrink-0 flex items-center justify-center">
-                      {course.thumbnail?.url ? (
-                        <img src={course.thumbnail.url} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <BookOpen className="w-5 h-5 text-gray-300" />
-                      )}
+            {!isLoading && filteredCourses.map((course) => {
+              const courseId = course.id || (course as any)._id;
+              return (
+                <TableRow key={courseId} className="hover:bg-gray-50/50 transition-colors border-b border-gray-50">
+                  <TableCell>
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-lg border border-gray-100 bg-gray-50 overflow-hidden shrink-0 flex items-center justify-center">
+                        {course.thumbnail?.url ? (
+                          <img src={course.thumbnail.url} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <BookOpen className="w-5 h-5 text-gray-300" />
+                        )}
+                      </div>
+                      <div className="flex flex-col max-w-[300px] md:max-w-[400px]">
+                        <span className="font-bold text-[#0a3d3f] text-[15px] truncate">{course.name}</span>
+                        <span className="text-[11px] text-gray-400 line-clamp-1">{course.short_description ?? "No description provided"}</span>
+                      </div>
                     </div>
-                    <div className="flex flex-col max-w-[300px] md:max-w-[400px]">
-                      <span className="font-bold text-[#0a3d3f] text-[15px] truncate">{course.name}</span>
-                      <span className="text-[11px] text-gray-400 line-clamp-1">{course.short_description ?? "No description provided"}</span>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col">
+                      <span className="font-bold text-[#0a3d3f]">${course.price}</span>
+                      {course.estimated_price ? (
+                         <span className="text-[10px] text-gray-400 line-through">${course.estimated_price}</span>
+                      ) : null}
                     </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex flex-col">
-                    <span className="font-bold text-[#0a3d3f]">${course.price}</span>
-                    {course.estimated_price ? (
-                       <span className="text-[10px] text-gray-400 line-through">${course.estimated_price}</span>
-                    ) : null}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <span className="px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 font-bold text-[11px] uppercase">
-                    {course.level}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <span className="font-bold text-[#0a3d3f]">{course.purchased ?? 0}</span>
-                </TableCell>
-                <TableCell>
-                  <span className={`px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest ${
-                    course.status 
-                      ? 'bg-green-50 text-green-600 border border-green-100' 
-                      : 'bg-orange-50 text-orange-600 border border-orange-100'
-                  }`}>
-                    {course.status ? 'Published' : 'Draft'}
-                  </span>
-                </TableCell>
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger render={
-                      <Button variant="ghost" className="h-9 w-9 p-0 hover:bg-gray-100 text-gray-400">
-                        <MoreHorizontal className="h-5 w-5" />
-                      </Button>
-                    } />
-                    <DropdownMenuContent align="end" className="w-56 font-bold shadow-xl border-gray-100 p-2">
-                      <DropdownMenuGroup>
-                        <DropdownMenuLabel className="text-gray-400 uppercase text-[10px] py-2 px-3 tracking-widest">Course Actions</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem 
-                          onClick={() => handleEdit(course.id)}
-                          className="gap-3 py-2.5 px-3 hover:bg-gray-50 transition-colors cursor-pointer rounded-md"
-                        >
-                          <Edit className="w-4 h-4 text-blue-600" />
-                          <span>Edit Course</span>
-                        </DropdownMenuItem>
-                        
-                        <Link href={`/courses/${course.id}`} target="_blank">
-                          <DropdownMenuItem className="gap-3 py-2.5 px-3 hover:bg-gray-50 transition-colors cursor-pointer rounded-md">
-                            <ExternalLink className="w-4 h-4 text-purple-600" />
-                            <span>Preview Online</span>
+                  </TableCell>
+                  <TableCell>
+                    <span className="px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 font-bold text-[11px] uppercase">
+                      {course.level}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <span className="font-bold text-[#0a3d3f]">{course.purchased ?? 0}</span>
+                  </TableCell>
+                  <TableCell>
+                    <span className={`px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest ${
+                      course.status 
+                        ? 'bg-green-50 text-green-600 border border-green-100' 
+                        : 'bg-orange-50 text-orange-600 border border-orange-100'
+                    }`}>
+                      {course.status ? 'Published' : 'Draft'}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger render={
+                        <Button variant="ghost" className="h-9 w-9 p-0 hover:bg-gray-100 text-gray-400">
+                          <MoreHorizontal className="h-5 w-5" />
+                        </Button>
+                      } />
+                      <DropdownMenuContent align="end" className="w-56 font-bold shadow-xl border-gray-100 p-2">
+                        <DropdownMenuGroup>
+                          <DropdownMenuLabel className="text-gray-400 uppercase text-[10px] py-2 px-3 tracking-widest">Course Actions</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            onClick={() => handleEdit(courseId)}
+                            className="gap-3 py-2.5 px-3 hover:bg-gray-50 transition-colors cursor-pointer rounded-md"
+                          >
+                            <Edit className="w-4 h-4 text-blue-600" />
+                            <span>Edit Course</span>
                           </DropdownMenuItem>
-                        </Link>
-                      </DropdownMenuGroup>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
+                          
+                          <Link href={`/courses/${course.url || courseId}`} target="_blank">
+                            <DropdownMenuItem className="gap-3 py-2.5 px-3 hover:bg-gray-50 transition-colors cursor-pointer rounded-md">
+                              <ExternalLink className="w-4 h-4 text-purple-600" />
+                              <span>Preview Online</span>
+                            </DropdownMenuItem>
+                          </Link>
+                        </DropdownMenuGroup>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
         

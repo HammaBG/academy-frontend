@@ -14,10 +14,23 @@ import {
 } from "@/components/ui/sidebar"
 import { Home, LayoutDashboard, Users, BookOpen, Settings, LogOut, Newspaper, Layers, ClipboardList, Ticket } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useAuthStore } from "@/store/auth"
+import { useChatStore } from "@/store/chat"
 
 export function AdminSidebar() {
+  const router = useRouter()
   const { user, logout } = useAuthStore()
+
+  const handleLogout = () => {
+    try {
+      useChatStore.getState().disconnectSocket()
+    } catch (e) {
+      console.error(e)
+    }
+    logout()
+    router.push("/")
+  }
 
   const items = [
     { title: "Dashboard", url: "/admin/dashboard", icon: LayoutDashboard },
@@ -65,7 +78,7 @@ export function AdminSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter className="p-4 bg-gray-50 border-t border-gray-200">
-        <SidebarMenuButton onClick={logout} className="flex gap-4 text-red-600 hover:bg-red-50 hover:text-red-700 font-bold items-center cursor-pointer py-4 transition-colors">
+        <SidebarMenuButton onClick={handleLogout} className="flex gap-4 text-red-600 hover:bg-red-50 hover:text-red-700 font-bold items-center cursor-pointer py-4 transition-colors">
           <LogOut className="h-5 w-5" />
           <span className="text-[14px] uppercase">Logout</span>
         </SidebarMenuButton>

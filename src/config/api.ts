@@ -5,6 +5,10 @@ export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   (process.env.NODE_ENV === "development" ? LOCAL_API_URL : PROD_API_URL);
 
+export const SOCKET_URL =
+  process.env.NEXT_PUBLIC_SOCKET_URL ||
+  (process.env.NODE_ENV === "development" ? "http://localhost:5000" : "https://academy-backend-8gl3.onrender.com");
+
 export const API_ENDPOINTS = {
   auth: `${API_BASE_URL}/auth`,
   courses: `${API_BASE_URL}/courses`,
@@ -14,4 +18,5 @@ export const API_ENDPOINTS = {
   enrollmentCodes: `${API_BASE_URL}/enrollment-codes`,
   wishlist: `${API_BASE_URL}/wishlist`,
   notes: `${API_BASE_URL}/notes`,
+  chat: `${API_BASE_URL}/chat`,
 };

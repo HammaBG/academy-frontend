@@ -2,8 +2,9 @@
 
 import { useState, useRef, useEffect, useMemo, ChangeEvent } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuthStore, type User } from "@/store/auth";
+import { useChatStore } from "@/store/chat";
 import { useCartStore, type CartItem as ICartItem } from "@/store/cart";
 import { useCourseStore, type Course } from "@/store/course";
 import { useTheme } from "@/components/providers/ThemeProvider";
@@ -112,10 +113,15 @@ interface SearchResults {
 }
 
 export function Navbar() {
+  const router = useRouter();
   const { user, isAuthenticated, logout, instructors, getInstructors } = useAuthStore();
   const { items, removeFromCart, itemCount } = useCartStore();
   const { courses, getPublicCourses } = useCourseStore();
   const { theme, setTheme } = useTheme();
+
+  const userRole = user?.role || (user as any)?.user_metadata?.role;
+  const isAdmin = userRole === "admin";
+  const isInstructor = userRole === "instructor";
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
@@ -260,8 +266,15 @@ export function Navbar() {
   };
 
   const handleLogout = () => {
+    try {
+      useChatStore.getState().disconnectSocket();
+    } catch (e) {
+      console.error("Failed to disconnect chat socket:", e);
+    }
     logout();
     setIsProfileDropdownOpen(false);
+    setIsMobileMenuOpen(false);
+    router.push("/");
   };
 
   const toggleTheme = () => {
@@ -490,7 +503,19 @@ export function Navbar() {
                   {isProfileDropdownOpen && (
                     <div className="absolute top-[3.2rem] left-0 w-56 bg-surface border border-border shadow-xl rounded-xl z-50 py-2 font-bold transform origin-top transition-all duration-300 overflow-hidden">
                       <div className="px-4 py-3 border-b border-border/60 text-center">
-                        <span className="text-text-primary text-[15px]">{user?.first_name || "المستخدم"}</span>
+                        <span className="text-text-primary text-[15px] font-bold block">
+                          {user?.first_name ? `${user.first_name} ${user.last_name || ""}` : "المستخدم"}
+                        </span>
+                        {isInstructor && (
+                          <span className="inline-flex items-center gap-1 mt-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-purple-500/10 text-purple-600 border border-purple-500/20">
+                            مدرب معتمد (Instructor)
+                          </span>
+                        )}
+                        {isAdmin && (
+                          <span className="inline-flex items-center gap-1 mt-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-blue-500/10 text-blue-600 border border-blue-500/20">
+                            🛡️ مدير المنصة (Admin)
+                          </span>
+                        )}
                       </div>
 
                       <div className="py-2 flex flex-col items-stretch text-sm text-text-secondary">
@@ -578,7 +603,7 @@ export function Navbar() {
                           المفضلة
                         </Link>
 
-                        {user?.role === "admin" && (
+                        {isAdmin && (
                           <Link
                             href="/admin/dashboard"
                             className="flex items-center gap-3 px-5 py-2.5 text-blue-600 hover:bg-background/60 transition-colors"
@@ -603,7 +628,7 @@ export function Navbar() {
                           </Link>
                         )}
 
-                        {user?.role === "instructor" && (
+                        {isInstructor && (
                           <Link
                             href="/instructor/dashboard"
                             className="flex items-center gap-3 px-5 py-2.5 text-purple-600 hover:bg-background/60 transition-colors"

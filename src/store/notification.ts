@@ -6,8 +6,15 @@ export interface AppNotification {
   userId: string;
   title: string;
   message: string;
-  type: "qa_reply" | "course_activation" | "certificate" | "system";
+  type: "qa_reply" | "course_activation" | "certificate" | "system" | "chat_message";
   link?: string;
+  sender?: {
+    id: string;
+    name: string;
+    role: string;
+    roleLabel?: string;
+  };
+  courseName?: string;
   isRead: boolean;
   createdAt: string;
 }

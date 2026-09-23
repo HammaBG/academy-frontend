@@ -6,6 +6,7 @@ import { useAuthStore } from "@/store/auth";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { AdminSidebar } from "@/components/admin/AdminSidebar"
 import { Loader } from "@/components/ui/Loader";
+import { NotificationBell } from "@/components/NotificationBell";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [isHydrated, setIsHydrated] = useState(false);
@@ -44,8 +45,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
          {/* Main Content Pane */}
          <main className="flex-1 overflow-auto flex flex-col items-stretch bg-gray-50">
             {/* Admin Header */}
-            <header className="h-16 w-full flex items-center px-4 bg-white border-b border-gray-200 shrink-0 sticky top-0 z-10 shadow-sm">
+            <header className="h-16 w-full flex items-center justify-between px-6 bg-white border-b border-gray-200 shrink-0 sticky top-0 z-10 shadow-sm">
                <SidebarTrigger className="text-[#8b3d6f] scale-125" />
+               <div className="flex items-center gap-4">
+                 <NotificationBell />
+               </div>
             </header>
             
             {/* Dashboard Content */}

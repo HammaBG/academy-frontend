@@ -21,14 +21,14 @@ import { Loader } from "@/components/ui/Loader";
 import { toast } from "sonner";
 
 function EnrolledCourseCard({ course }: { course: any }) {
-    const courseId = course.id || course._id;
+    const courseSlugOrId = course.url || course.id || course._id;
     const categoryColor = course.category_color || "#F95353";
     const ratingValue = course.ratings ? course.ratings.toFixed(1) : "4.8";
     const categoryName = course.categories || "دورة مسجلة";
 
     return (
         <Link
-            href={`/my-courses/${courseId}`}
+            href={`/my-courses/${courseSlugOrId}`}
             className="group flex flex-col bg-surface backdrop-blur-md rounded-3xl overflow-hidden border border-border/40 hover:border-brand-primary/60 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-2xl shadow-md text-right select-none"
         >
             {/* Top Image Container */}
@@ -135,8 +135,9 @@ export default function MyCoursesPage() {
     const { enrolledCourses, courses, isLoading, error, getEnrolledCourses, getAllCourses, getInstructorCourses } = useCourseStore();
     const { notes, fetchUserNotes, deleteNote, getUserNotes } = useNoteStore();
 
-    const isAdmin = user?.role === "admin";
-    const isInstructor = user?.role === "instructor";
+    const userRole = user?.role || (user as any)?.user_metadata?.role;
+    const isAdmin = userRole === "admin";
+    const isInstructor = userRole === "instructor";
 
     useEffect(() => {
         if (token) {
@@ -187,6 +188,17 @@ export default function MyCoursesPage() {
                                 : "استمر في رحلة التعلم الخاصة بك. الوصول سريع ومباشر إلى جميع دوراتك ومقاطعك المحفوظة."
                         }
                     </p>
+                    {isInstructor && (
+                        <div className="pt-2 flex justify-center">
+                            <Link
+                                href="/instructor/dashboard"
+                                className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-primary/10 hover:bg-brand-primary/20 text-brand-primary border border-brand-primary/30 rounded-xl text-xs font-bold transition-all shadow-sm"
+                            >
+                                <span>الذهاب إلى لوحة تحكم المدرب والتحليلات</span>
+                                <ArrowUpRight className="w-3.5 h-3.5 rotate-180" />
+                            </Link>
+                        </div>
+                    )}
                 </div>
 
                 {/* Error Banner */}

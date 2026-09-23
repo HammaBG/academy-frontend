@@ -79,19 +79,40 @@ export default function InstructorDashboardPage() {
     <div className="space-y-8 max-w-7xl mx-auto pb-20">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-           <h1 className="text-3xl font-extrabold text-[#0a3d3f]">Welcome back, {user?.first_name}! 👋</h1>
-           <p className="text-gray-500 font-medium mt-2">Here&apos;s an overview of your courses and student engagement.</p>
+           <div className="flex items-center gap-2 mb-2 flex-wrap">
+             <span className="px-3.5 py-1 rounded-full text-xs font-black bg-[#0d7377]/10 text-[#0d7377] border border-[#0d7377]/20 inline-flex items-center gap-1.5 shadow-xs">
+               <span className="w-2 h-2 rounded-full bg-[#0d7377] animate-pulse" />
+               مدرب معتمد (Instructor Account)
+             </span>
+             {user?.title && (
+               <span className="px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200">
+                 {user.title}
+               </span>
+             )}
+           </div>
+           <h1 className="text-3xl font-extrabold text-[#0a3d3f]">Welcome back, {user?.first_name ? `${user.first_name} ${user.last_name || ''}` : 'Instructor'}! 👋</h1>
+           <p className="text-gray-500 font-medium mt-1">Here&apos;s an overview of your courses, student engagement, and teaching performance.</p>
         </div>
-        {!isEditingProfile && (
-           <Button 
-             onClick={() => setIsEditingProfile(true)}
-             variant="outline"
-             className="border-[#0d7377] text-[#0d7377] hover:bg-[#0d7377]/5 font-bold gap-2 self-start md:self-auto"
-           >
-             <Edit className="w-4 h-4" />
-             Edit Professional Profile
-           </Button>
-        )}
+        <div className="flex items-center gap-3 self-start md:self-auto flex-wrap">
+          <Link href="/instructor/courses">
+            <Button
+              className="bg-[#0d7377] hover:bg-[#0a3d3f] text-white font-bold gap-2 shadow-sm"
+            >
+              <BookOpen className="w-4 h-4" />
+              Manage Courses
+            </Button>
+          </Link>
+          {!isEditingProfile && (
+             <Button 
+               onClick={() => setIsEditingProfile(true)}
+               variant="outline"
+               className="border-[#0d7377] text-[#0d7377] hover:bg-[#0d7377]/5 font-bold gap-2"
+             >
+               <Edit className="w-4 h-4" />
+               Edit Professional Profile
+             </Button>
+          )}
+        </div>
       </div>
 
       {isEditingProfile && (

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { createSafeStorage } from '@/lib/storage';
 import { authenticatedFetch } from '@/lib/api';
+import { useChatStore } from './chat';
 
 export interface User {
   id: string;
@@ -111,8 +112,17 @@ export const useAuthStore = create<AuthStore>()(
 
           const token = data.data?.session?.access_token;
           if (token) {
+            let initialUser = data.data?.user;
+            if (initialUser?.user_metadata) {
+              initialUser = { ...initialUser, ...initialUser.user_metadata };
+            }
+            if (initialUser && !initialUser.role && initialUser.user_metadata?.role) {
+              initialUser.role = initialUser.user_metadata.role;
+            }
+
             set({
               token,
+              user: initialUser || get().user,
               isAuthenticated: true,
               isAuthLoading: false
             });
@@ -142,8 +152,17 @@ export const useAuthStore = create<AuthStore>()(
 
           const token = data.access_token || data.data?.session?.access_token;
           if (token) {
+            let initialUser = data.user || data.data?.user;
+            if (initialUser?.user_metadata) {
+              initialUser = { ...initialUser, ...initialUser.user_metadata };
+            }
+            if (initialUser && !initialUser.role && initialUser.user_metadata?.role) {
+              initialUser.role = initialUser.user_metadata.role;
+            }
+
             set({
               token,
+              user: initialUser || get().user,
               isAuthenticated: true,
               isAuthLoading: false
             });
@@ -158,6 +177,11 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       logout: () => {
+        try {
+          useChatStore.getState().disconnectSocket();
+        } catch (e) {
+          console.error("Failed to disconnect chat socket on logout:", e);
+        }
         set({
           user: null,
           token: null,
@@ -188,6 +212,9 @@ export const useAuthStore = create<AuthStore>()(
           let fetchedUser = data.user || data;
           if (fetchedUser.user_metadata) {
             fetchedUser = { ...fetchedUser, ...fetchedUser.user_metadata };
+          }
+          if (fetchedUser && !fetchedUser.role && fetchedUser.user_metadata?.role) {
+            fetchedUser.role = fetchedUser.user_metadata.role;
           }
 
           set({ user: fetchedUser, isAuthenticated: true, isAuthLoading: false });

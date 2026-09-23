@@ -14,7 +14,8 @@ export default function CourseDetailsPage() {
 
   useEffect(() => {
     if (id) {
-      getPublicCourseById(id as string);
+      const decodedParam = decodeURIComponent(id as string);
+      getPublicCourseById(decodedParam);
     }
     return () => clearCurrentCourse();
   }, [id, getPublicCourseById, clearCurrentCourse]);

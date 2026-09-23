@@ -47,6 +47,7 @@ export function CourseForm({ course, onSubmit, onCancel, isLoading }: CourseForm
     demo_url: "",
     status: false,
     ready: false,
+    url: "",
     benefits: [{ title: "" }],
     prerequisites: [{ title: "" }],
     course_data: [],
@@ -179,6 +180,18 @@ export function CourseForm({ course, onSubmit, onCancel, isLoading }: CourseForm
                  <div className="space-y-2">
                    <Label className="text-[#2c1a4d] font-bold">Course Title</Label>
                    <Input name="name" value={formData.name} onChange={handleChange} placeholder="e.g. Master React in 30 Days" required />
+                 </div>
+                 <div className="space-y-2">
+                   <Label className="text-[#2c1a4d] font-bold">Custom URL Slug (Optional)</Label>
+                   <Input
+                     name="url"
+                     value={formData.url || ""}
+                     onChange={handleChange}
+                     placeholder="e.g. master-react-in-30-days"
+                   />
+                   <p className="text-[11px] text-gray-400 font-mono">
+                     Link: /courses/{formData.url || "auto-generated-slug"}
+                   </p>
                  </div>
                  <div className="space-y-2">
                    <Label className="text-[#2c1a4d] font-bold">Short Description</Label>

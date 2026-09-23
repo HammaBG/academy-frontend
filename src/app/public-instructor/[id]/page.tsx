@@ -167,7 +167,7 @@ export default function PublicInstructorPage() {
               {instructorCourses.map((course) => (
                 <Link
                   key={course.id}
-                  href={`/courses/${course.id}`}
+                  href={`/courses/${course.url || course.id}`}
                   className="group flex flex-col bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-zinc-100"
                 >
                   <div className="relative aspect-[4/5] overflow-hidden">

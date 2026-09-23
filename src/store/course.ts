@@ -120,6 +120,13 @@ export type CourseStore = CourseData & CourseActions;
 
 const API_URL = API_ENDPOINTS.courses;
 
+const normalizeCourse = (c: any): Course => ({
+    ...c,
+    id: c.id || c._id?.toString() || c._id || '',
+});
+
+const normalizeCourses = (raw: any[]): Course[] => (raw || []).map(normalizeCourse);
+
 export const useCourseStore = create<CourseStore>()(
     persist(
         (set, get) => ({
@@ -174,7 +181,7 @@ export const useCourseStore = create<CourseStore>()(
                         throw new Error(data.error || 'Failed to fetch courses');
                     }
 
-                    set({ courses: data.courses || [], isLoading: false });
+                    set({ courses: normalizeCourses(data.courses), isLoading: false });
                 } catch (err: any) {
                     set({ error: err.message, isLoading: false });
                 }
@@ -196,7 +203,7 @@ export const useCourseStore = create<CourseStore>()(
                         throw new Error(data.error || 'Failed to fetch instructor courses');
                     }
 
-                    set({ courses: data.courses || [], isLoading: false });
+                    set({ courses: normalizeCourses(data.courses), isLoading: false });
                 } catch (err: any) {
                     set({ error: err.message, isLoading: false });
                 }
@@ -217,7 +224,7 @@ export const useCourseStore = create<CourseStore>()(
                         throw new Error(data.error || 'Failed to fetch courses');
                     }
 
-                    set({ courses: data.courses || [], isLoading: false });
+                    set({ courses: normalizeCourses(data.courses), isLoading: false });
                 } catch (err: any) {
                     set({ error: err.message, isLoading: false });
                 }
@@ -239,7 +246,7 @@ export const useCourseStore = create<CourseStore>()(
                         throw new Error(data.error || 'Failed to fetch enrolled courses');
                     }
 
-                    set({ enrolledCourses: data.courses || [], isLoading: false });
+                    set({ enrolledCourses: normalizeCourses(data.courses), isLoading: false });
                 } catch (err: any) {
                     set({ error: err.message, isLoading: false });
                 }
@@ -311,6 +318,9 @@ export const useCourseStore = create<CourseStore>()(
             },
 
             updateCourse: async (id, courseData, token) => {
+                if (!id) {
+                    throw new Error('Course ID is required');
+                }
                 set({ isLoading: true, error: null });
                 try {
                     const res = await authenticatedFetch(`${API_URL}/edit-course/${id}`, {
@@ -328,13 +338,17 @@ export const useCourseStore = create<CourseStore>()(
                     }
 
                     await get().getAllCourses(token);
-                    set({ currentCourse: data.course, isLoading: false });
+                    set({ currentCourse: data.course ? normalizeCourse(data.course) : null, isLoading: false });
                 } catch (err: any) {
                     set({ error: err.message, isLoading: false });
+                    throw err;
                 }
             },
 
             assignCourseToUser: async (courseId, userId, token) => {
+                if (!courseId) {
+                    throw new Error('Course ID is required');
+                }
                 set({ isLoading: true, error: null });
                 try {
                     const res = await authenticatedFetch(`${API_URL}/assign-course`, {
@@ -354,10 +368,14 @@ export const useCourseStore = create<CourseStore>()(
                     set({ isLoading: false });
                 } catch (err: any) {
                     set({ error: err.message, isLoading: false });
+                    throw err;
                 }
             },
 
             deleteCourse: async (id, token) => {
+                if (!id) {
+                    throw new Error('Course ID is required');
+                }
                 set({ isLoading: true, error: null });
                 try {
                     const res = await authenticatedFetch(`${API_URL}/delete-course/${id}`, {

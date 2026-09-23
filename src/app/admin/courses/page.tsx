@@ -115,10 +115,11 @@ export default function CoursesPage() {
   }, []);
 
   const handleAssign = async () => {
-    if (!token || !assignTarget || !selectedInstructorId) return;
+    const courseId = assignTarget?.id || (assignTarget as any)?._id;
+    if (!token || !courseId || !selectedInstructorId) return;
     setIsAssigning(true);
     try {
-      await updateCourse(assignTarget.id, { creator: selectedInstructorId }, token);
+      await updateCourse(courseId, { creator: selectedInstructorId }, token);
       await getAllCourses(token);
       setAssignDialogOpen(false);
       setAssignTarget(null);
@@ -137,10 +138,11 @@ export default function CoursesPage() {
   }, []);
 
   const handleAssignUser = async () => {
-    if (!token || !assignUserTarget || !selectedUserId) return;
+    const courseId = assignUserTarget?.id || (assignUserTarget as any)?._id;
+    if (!token || !courseId || !selectedUserId) return;
     setIsAssigningUser(true);
     try {
-      await assignCourseToUser(assignUserTarget.id, selectedUserId, token);
+      await assignCourseToUser(courseId, selectedUserId, token);
       await getAllCourses(token);
       setAssignUserDialogOpen(false);
       setAssignUserTarget(null);
@@ -218,112 +220,115 @@ export default function CoursesPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {!isLoading && filteredCourses.map((course) => (
-              <TableRow key={course.id} className="hover:bg-gray-50/50 transition-colors border-b border-gray-50">
-                <TableCell>
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-lg border border-gray-100 bg-gray-50 overflow-hidden shrink-0 flex items-center justify-center">
-                      {course.thumbnail?.url ? (
-                        <img src={course.thumbnail.url} alt="" className="w-full h-full object-cover" />
+            {!isLoading && filteredCourses.map((course) => {
+              const courseId = course.id || (course as any)._id;
+              return (
+                <TableRow key={courseId} className="hover:bg-gray-50/50 transition-colors border-b border-gray-50">
+                  <TableCell>
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-lg border border-gray-100 bg-gray-50 overflow-hidden shrink-0 flex items-center justify-center">
+                        {course.thumbnail?.url ? (
+                          <img src={course.thumbnail.url} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <BookOpen className="w-5 h-5 text-gray-300" />
+                        )}
+                      </div>
+                      <div className="flex flex-col max-w-[250px] md:max-w-[350px]">
+                        <span className="font-bold text-[#2c1a4d] text-[15px] truncate">{course.name}</span>
+                        <span className="text-[11px] text-gray-400 line-clamp-1">{course.short_description || "No description provided"}</span>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      {course.creator && typeof course.creator !== 'string' && course.creator.avatar_url ? (
+                        <img src={course.creator.avatar_url} alt="" className="w-7 h-7 rounded-full object-cover border border-gray-200" />
                       ) : (
-                        <BookOpen className="w-5 h-5 text-gray-300" />
+                        <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-400">
+                          {getCreatorName(course)[0] ?? "?"}
+                        </div>
+                      )}
+                      <span className="text-sm font-semibold text-[#2c1a4d]">{getCreatorName(course)}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col">
+                      <span className="font-bold text-[#2c1a4d]">{course.price} TND</span>
+                      {course.estimated_price && (
+                        <span className="text-[10px] text-gray-400 line-through">{course.estimated_price} TND</span>
                       )}
                     </div>
-                    <div className="flex flex-col max-w-[250px] md:max-w-[350px]">
-                      <span className="font-bold text-[#2c1a4d] text-[15px] truncate">{course.name}</span>
-                      <span className="text-[11px] text-gray-400 line-clamp-1">{course.short_description || "No description provided"}</span>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    {course.creator && typeof course.creator !== 'string' && course.creator.avatar_url ? (
-                      <img src={course.creator.avatar_url} alt="" className="w-7 h-7 rounded-full object-cover border border-gray-200" />
-                    ) : (
-                      <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-400">
-                        {getCreatorName(course)[0] ?? "?"}
-                      </div>
-                    )}
-                    <span className="text-sm font-semibold text-[#2c1a4d]">{getCreatorName(course)}</span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex flex-col">
-                    <span className="font-bold text-[#2c1a4d]">{course.price} TND</span>
-                    {course.estimated_price && (
-                      <span className="text-[10px] text-gray-400 line-through">{course.estimated_price} TND</span>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <span className="px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 font-bold text-[11px] uppercase">
-                    {course.level}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <span className={`px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest ${course.status
-                    ? 'bg-green-50 text-green-600 border border-green-100'
-                    : 'bg-orange-50 text-orange-600 border border-orange-100'
-                    }`}>
-                    {course.status ? 'Published' : 'Draft'}
-                  </span>
-                </TableCell>
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger render={
-                      <Button variant="ghost" className="h-9 w-9 p-0 hover:bg-gray-100 text-gray-400">
-                        <MoreHorizontal className="h-5 w-5" />
-                      </Button>
-                    } />
-                    <DropdownMenuContent align="end" className="w-56 font-bold shadow-xl border-gray-100 p-2">
-                      <DropdownMenuGroup>
-                        <DropdownMenuLabel className="text-gray-400 uppercase text-[10px] py-2 px-3 tracking-widest">Course Actions</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => handleEdit(course.id)}
-                          className="gap-3 py-2.5 px-3 hover:bg-gray-50 transition-colors cursor-pointer rounded-md"
-                        >
-                          <Edit className="w-4 h-4 text-blue-600" />
-                          <span>Edit Course</span>
-                        </DropdownMenuItem>
-
-                        <DropdownMenuItem
-                          onClick={() => openAssignDialog(course)}
-                          className="gap-3 py-2.5 px-3 hover:bg-gray-50 transition-colors cursor-pointer rounded-md"
-                        >
-                          <UserPlus className="w-4 h-4 text-teal-600" />
-                          <span>Assign Instructor</span>
-                        </DropdownMenuItem>
-
-                        <DropdownMenuItem
-                          onClick={() => openAssignUserDialog(course)}
-                          className="gap-3 py-2.5 px-3 hover:bg-gray-50 transition-colors cursor-pointer rounded-md"
-                        >
-                          <Users className="w-4 h-4 text-indigo-600" />
-                          <span>Assign to User</span>
-                        </DropdownMenuItem>
-
-                        <Link href={`/courses/${course.id}`} target="_blank">
-                          <DropdownMenuItem className="gap-3 py-2.5 px-3 hover:bg-gray-50 transition-colors cursor-pointer rounded-md">
-                            <ExternalLink className="w-4 h-4 text-purple-600" />
-                            <span>Preview Online</span>
+                  </TableCell>
+                  <TableCell>
+                    <span className="px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 font-bold text-[11px] uppercase">
+                      {course.level}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <span className={`px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest ${course.status
+                      ? 'bg-green-50 text-green-600 border border-green-100'
+                      : 'bg-orange-50 text-orange-600 border border-orange-100'
+                      }`}>
+                      {course.status ? 'Published' : 'Draft'}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger render={
+                        <Button variant="ghost" className="h-9 w-9 p-0 hover:bg-gray-100 text-gray-400">
+                          <MoreHorizontal className="h-5 w-5" />
+                        </Button>
+                      } />
+                      <DropdownMenuContent align="end" className="w-56 font-bold shadow-xl border-gray-100 p-2">
+                        <DropdownMenuGroup>
+                          <DropdownMenuLabel className="text-gray-400 uppercase text-[10px] py-2 px-3 tracking-widest">Course Actions</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => handleEdit(courseId)}
+                            className="gap-3 py-2.5 px-3 hover:bg-gray-50 transition-colors cursor-pointer rounded-md"
+                          >
+                            <Edit className="w-4 h-4 text-blue-600" />
+                            <span>Edit Course</span>
                           </DropdownMenuItem>
-                        </Link>
 
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => handleDelete(course.id)}
-                          className="gap-3 py-2.5 px-3 hover:bg-red-50 text-red-600 focus:text-red-700 transition-colors cursor-pointer rounded-md mt-1"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                          <span>Delete Permanent</span>
-                        </DropdownMenuItem>
-                      </DropdownMenuGroup>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
+                          <DropdownMenuItem
+                            onClick={() => openAssignDialog(course)}
+                            className="gap-3 py-2.5 px-3 hover:bg-gray-50 transition-colors cursor-pointer rounded-md"
+                          >
+                            <UserPlus className="w-4 h-4 text-teal-600" />
+                            <span>Assign Instructor</span>
+                          </DropdownMenuItem>
+
+                          <DropdownMenuItem
+                            onClick={() => openAssignUserDialog(course)}
+                            className="gap-3 py-2.5 px-3 hover:bg-gray-50 transition-colors cursor-pointer rounded-md"
+                          >
+                            <Users className="w-4 h-4 text-indigo-600" />
+                            <span>Assign to User</span>
+                          </DropdownMenuItem>
+
+                          <Link href={`/courses/${course.url || courseId}`} target="_blank">
+                            <DropdownMenuItem className="gap-3 py-2.5 px-3 hover:bg-gray-50 transition-colors cursor-pointer rounded-md">
+                              <ExternalLink className="w-4 h-4 text-purple-600" />
+                              <span>Preview Online</span>
+                            </DropdownMenuItem>
+                          </Link>
+
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => handleDelete(courseId)}
+                            className="gap-3 py-2.5 px-3 hover:bg-red-50 text-red-600 focus:text-red-700 transition-colors cursor-pointer rounded-md mt-1"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            <span>Delete Permanent</span>
+                          </DropdownMenuItem>
+                        </DropdownMenuGroup>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
 

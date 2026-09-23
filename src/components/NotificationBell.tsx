@@ -39,6 +39,7 @@ export function NotificationBell() {
     markAsRead,
     markAllAsRead,
     deleteNotification,
+    clearAll,
   } = useNotificationStore();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -66,6 +67,8 @@ export function NotificationBell() {
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
+      case "chat_message":
+        return <MessageSquare className="w-4 h-4 text-brand-primary" />;
       case "qa_reply":
         return <MessageSquare className="w-4 h-4 text-blue-500" />;
       case "certificate":
@@ -112,15 +115,27 @@ export function NotificationBell() {
               )}
             </div>
 
-            {unreadCount > 0 && (
-              <button
-                onClick={markAllAsRead}
-                className="text-[11px] font-bold text-text-secondary hover:text-brand-primary flex items-center gap-1 transition-colors cursor-pointer"
-              >
-                <CheckCheck className="w-3.5 h-3.5" />
-                <span>قراءة الكل</span>
-              </button>
-            )}
+            <div className="flex items-center gap-2.5">
+              {unreadCount > 0 && (
+                <button
+                  onClick={markAllAsRead}
+                  className="text-[11px] font-bold text-text-secondary hover:text-brand-primary flex items-center gap-1 transition-colors cursor-pointer"
+                >
+                  <CheckCheck className="w-3.5 h-3.5" />
+                  <span>قراءة الكل</span>
+                </button>
+              )}
+              {notifications.length > 0 && (
+                <button
+                  onClick={clearAll}
+                  className="text-[11px] font-bold text-text-secondary hover:text-red-500 flex items-center gap-1 transition-colors cursor-pointer"
+                  title="مسح كافة الإشعارات"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>مسح</span>
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Filter Tabs */}

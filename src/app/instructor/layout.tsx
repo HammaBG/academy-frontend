@@ -25,13 +25,16 @@ export default function InstructorLayout({ children }: { children: React.ReactNo
     };
   }, []);
 
+  const role = user?.role || (user as any)?.user_metadata?.role;
+  const isInstructor = role === 'instructor' || role === 'admin';
+
   useEffect(() => {
-    if (isHydrated && !isAuthLoading && (!isAuthenticated || user?.role !== 'instructor')) {
+    if (isHydrated && !isAuthLoading && (!isAuthenticated || !isInstructor)) {
       router.push("/");
     }
-  }, [isHydrated, user, isAuthenticated, isAuthLoading, router]);
+  }, [isHydrated, user, isAuthenticated, isAuthLoading, isInstructor, router]);
 
-  if (!isHydrated || isAuthLoading || !isAuthenticated || user?.role !== 'instructor') {
+  if (!isHydrated || isAuthLoading || !isAuthenticated || !isInstructor) {
     return <Loader fullscreen size="lg" />;
   }
 

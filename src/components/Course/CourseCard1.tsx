@@ -68,7 +68,7 @@ export function CourseCard({ course }: CourseCardProps) {
 
     return (
         <Link
-            href={`/courses/${course.id}`}
+            href={`/courses/${course.url || course.id}`}
             className="group relative flex flex-col justify-between p-6 aspect-[4/5] rounded-[32px] overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl shadow-lg select-none text-right"
             style={{
                 background: `linear-gradient(135deg, ${categoryColor}, ${categoryColor}bb)`,
