@@ -122,7 +122,7 @@ export function CoursePlayer({ videoUrl, seekTime }: CoursePlayerProps) {
     }
 
     // 1. Mux Player
-    if (muxPlaybackId && muxPlayerRef.current) {
+    if (activeMuxPlaybackId && muxPlayerRef.current) {
       try {
         muxPlayerRef.current.currentTime = targetSeconds;
       } catch (err) {
