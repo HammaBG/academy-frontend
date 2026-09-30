@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
+import MuxPlayer from "@mux/mux-player-react";
 import { API_ENDPOINTS } from "@/config/api";
 
 interface CoursePlayerProps {
@@ -11,16 +12,57 @@ interface CoursePlayerProps {
 export function CoursePlayer({ videoUrl, seekTime }: CoursePlayerProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const muxPlayerRef = useRef<any>(null);
   const playerApiRef = useRef<any>(null);
 
   const [videoData, setVideoData] = useState({
     otp: "",
     playbackInfo: "",
   });
+  const [resolvedMuxId, setResolvedMuxId] = useState<string | null>(null);
+
+  // Extract Mux playback ID if present (e.g. stream.mux.com/ID.m3u8, mux:ID, or raw Mux ID)
+  const getMuxPlaybackId = (url: string): string | null => {
+    if (!url) return null;
+    const trimmed = url.trim();
+    if (trimmed.startsWith("mux:")) {
+      return trimmed.replace(/^mux:/, "").trim();
+    }
+    const streamMatch = trimmed.match(/stream\.mux\.com\/([a-zA-Z0-9]+)(\.m3u8)?/);
+    if (streamMatch) {
+      return streamMatch[1];
+    }
+    // Standard Mux playback IDs or Asset IDs are alphanumeric (typically 20-50 chars)
+    if (/^[a-zA-Z0-9]{15,64}$/.test(trimmed) && !trimmed.match(/^[0-9a-fA-F]{32}$/)) {
+      return trimmed;
+    }
+    return null;
+  };
+
+  const detectedMuxId = getMuxPlaybackId(videoUrl);
+  const activeMuxPlaybackId = resolvedMuxId || detectedMuxId;
+
+  // Resolve with backend if needed (in case videoUrl was an asset_id or upload_id)
+  useEffect(() => {
+    if (!videoUrl) return;
+    const trimmed = videoUrl.trim();
+    // If it looks like a Mux asset/upload/playback ID
+    if (/^[a-zA-Z0-9]{15,64}$/.test(trimmed) && !trimmed.match(/^[0-9a-fA-F]{32}$/)) {
+      fetch(`${API_ENDPOINTS.courses}/mux/playback/${trimmed}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data?.data?.playbackId) {
+            setResolvedMuxId(data.data.playbackId);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [videoUrl]);
 
   // Check if the videoUrl is a direct file/stream link (Cloudinary, mp4, webm, etc.)
   const isDirectUrl = Boolean(
-    videoUrl &&
+    !activeMuxPlaybackId &&
+      videoUrl &&
       (videoUrl.startsWith("http://") ||
         videoUrl.startsWith("https://") ||
         videoUrl.startsWith("blob:") ||
@@ -31,9 +73,9 @@ export function CoursePlayer({ videoUrl, seekTime }: CoursePlayerProps) {
         videoUrl.includes("/video/upload/"))
   );
 
-  // If not a direct URL, it is a VdoCipher videoId, so fetch OTP
+  // If not Mux and not a direct URL, it is a VdoCipher videoId, so fetch OTP
   useEffect(() => {
-    if (!videoUrl || isDirectUrl) return;
+    if (!videoUrl || isDirectUrl || activeMuxPlaybackId) return;
 
     // Dynamically load official VdoCipher API script only when needed
     if (!document.getElementById("vdocipher-api-script")) {
@@ -79,7 +121,17 @@ export function CoursePlayer({ videoUrl, seekTime }: CoursePlayerProps) {
       return;
     }
 
-    // 1. Direct Video Element (Cloudinary / mp4)
+    // 1. Mux Player
+    if (muxPlaybackId && muxPlayerRef.current) {
+      try {
+        muxPlayerRef.current.currentTime = targetSeconds;
+      } catch (err) {
+        console.error("Error seeking Mux video:", err);
+      }
+      return;
+    }
+
+    // 2. Direct Video Element (Cloudinary / mp4)
     if (isDirectUrl && videoRef.current) {
       try {
         videoRef.current.currentTime = targetSeconds;
@@ -89,7 +141,7 @@ export function CoursePlayer({ videoUrl, seekTime }: CoursePlayerProps) {
       return;
     }
 
-    // 2. VdoCipher Iframe Player
+    // 3. VdoCipher Iframe Player
     try {
       const vdoPlayer = playerApiRef.current || (typeof window !== "undefined" && (window as any).VdoPlayer?.getInstance(iframeRef.current));
       
@@ -109,7 +161,23 @@ export function CoursePlayer({ videoUrl, seekTime }: CoursePlayerProps) {
     } catch (err) {
       console.error("Error seeking video:", err);
     }
-  }, [seekTime, isDirectUrl]);
+  }, [seekTime, isDirectUrl, activeMuxPlaybackId]);
+
+  // Mux Video Player
+  if (activeMuxPlaybackId) {
+    return (
+      <div className="absolute inset-0 w-full h-full bg-black flex items-center justify-center overflow-hidden">
+        <MuxPlayer
+          ref={muxPlayerRef}
+          playbackId={activeMuxPlaybackId}
+          streamType="on-demand"
+          autoPlay
+          accentColor="#8b3d6f"
+          className="w-full h-full object-contain"
+        />
+      </div>
+    );
+  }
 
   // Cloudinary / Direct Video Player
   if (isDirectUrl) {

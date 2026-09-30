@@ -20,9 +20,15 @@ import {
   Save,
   Loader2,
   X,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Upload,
+  Check,
+  AlertCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import * as UpChunk from "@mux/upchunk";
+import { API_ENDPOINTS } from "@/config/api";
 
 interface CourseFormProps {
   course?: Course | null;
@@ -139,6 +145,177 @@ export function CourseForm({ course, onSubmit, onCancel, isLoading }: CourseForm
   const removeSection = (index: number) => {
     const newData = (formData.course_data || []).filter((_, i) => i !== index);
     setFormData({ ...formData, course_data: newData });
+  };
+
+  const [uploadProgress, setUploadProgress] = useState<{ [key: number]: number }>({});
+  const [uploadingSection, setUploadingSection] = useState<{ [key: number]: boolean }>({});
+  const [uploadingDemo, setUploadingDemo] = useState(false);
+  const [demoProgress, setDemoProgress] = useState(0);
+
+  const handleUploadDemoToMux = async (file: File) => {
+    if (!token) {
+      toast.error("You must be logged in to upload video");
+      return;
+    }
+
+    try {
+      setUploadingDemo(true);
+      setDemoProgress(0);
+
+      const res = await fetch(`${API_ENDPOINTS.courses}/mux/upload-url`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const json = await res.json();
+      if (!res.ok || !json.data?.url) {
+        throw new Error(json.message || "Failed to create Mux upload link");
+      }
+
+      const { url: uploadUrl, id: uploadId } = json.data;
+
+      const upload = UpChunk.createUpload({
+        endpoint: uploadUrl,
+        file,
+        chunkSize: 5120,
+      });
+
+      upload.on("progress", (progressDetail: any) => {
+        setDemoProgress(Math.round(progressDetail.detail));
+      });
+
+      upload.on("error", () => {
+        toast.error("Demo video upload failed.");
+        setUploadingDemo(false);
+      });
+
+      upload.on("success", async () => {
+        toast.success("Upload finished! Processing demo video on Mux...");
+        setDemoProgress(100);
+
+        let attempts = 0;
+        const checkInterval = setInterval(async () => {
+          attempts++;
+          try {
+            const checkRes = await fetch(`${API_ENDPOINTS.courses}/mux/asset/${uploadId}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            const checkData = await checkRes.json();
+            const playbackId = checkData?.data?.playbackId;
+
+            if (playbackId) {
+              clearInterval(checkInterval);
+              setFormData((prev) => ({ ...prev, demo_url: playbackId }));
+              setUploadingDemo(false);
+              toast.success("Demo video ready to stream with Mux!");
+            } else if (attempts >= 30) {
+              clearInterval(checkInterval);
+              setUploadingDemo(false);
+            }
+          } catch (e) {
+            console.error("Error polling demo asset:", e);
+          }
+        }, 2500);
+      });
+    } catch (err: any) {
+      toast.error(err.message || "Failed to start demo upload");
+      setUploadingDemo(false);
+    }
+  };
+
+  const handleUploadVideoToMux = async (file: File, sectionIdx: number) => {
+    if (!token) {
+      toast.error("You must be logged in to upload video");
+      return;
+    }
+
+    try {
+      setUploadingSection((prev) => ({ ...prev, [sectionIdx]: true }));
+      setUploadProgress((prev) => ({ ...prev, [sectionIdx]: 0 }));
+
+      // 1. Request Direct Upload URL from Backend
+      const res = await fetch(`${API_ENDPOINTS.courses}/mux/upload-url`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const json = await res.json();
+      if (!res.ok || !json.data?.url) {
+        throw new Error(json.message || "Failed to create Mux upload link");
+      }
+
+      const { url: uploadUrl, id: uploadId } = json.data;
+
+      // 2. Upload video in chunks via UpChunk directly to Mux
+      const upload = UpChunk.createUpload({
+        endpoint: uploadUrl,
+        file,
+        chunkSize: 5120, // 5MB chunks
+      });
+
+      upload.on("progress", (progressDetail: any) => {
+        const percent = Math.round(progressDetail.detail);
+        setUploadProgress((prev) => ({ ...prev, [sectionIdx]: percent }));
+      });
+
+      upload.on("error", (err: any) => {
+        console.error("Mux UpChunk error:", err);
+        toast.error("Video upload failed. Please try again.");
+        setUploadingSection((prev) => ({ ...prev, [sectionIdx]: false }));
+      });
+
+      upload.on("success", async () => {
+        toast.success("Upload finished! Processing video on Mux...");
+        setUploadProgress((prev) => ({ ...prev, [sectionIdx]: 100 }));
+
+        // 3. Poll for Mux asset readiness & playback ID
+        let attempts = 0;
+        const maxAttempts = 30; // ~60 seconds max
+        const checkInterval = setInterval(async () => {
+          attempts++;
+          try {
+            const checkRes = await fetch(`${API_ENDPOINTS.courses}/mux/asset/${uploadId}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            const checkData = await checkRes.json();
+            const playbackId = checkData?.data?.playbackId;
+            const assetStatus = checkData?.data?.assetStatus;
+            const duration = checkData?.data?.duration;
+
+            if (playbackId) {
+              clearInterval(checkInterval);
+              updateSection(sectionIdx, {
+                video_url: playbackId,
+                video_length: duration ? Math.round(duration) : undefined,
+                video_player: "mux",
+              });
+              setUploadingSection((prev) => ({ ...prev, [sectionIdx]: false }));
+              toast.success("Video ready to stream with Mux!");
+            } else if (assetStatus === "errored" || attempts >= maxAttempts) {
+              clearInterval(checkInterval);
+              setUploadingSection((prev) => ({ ...prev, [sectionIdx]: false }));
+              if (assetStatus === "errored") {
+                toast.error("Mux encountered an error processing this video.");
+              } else {
+                toast.info("Video is still encoding on Mux. Playback will be available shortly.");
+              }
+            }
+          } catch (e) {
+            console.error("Error polling Mux asset:", e);
+          }
+        }, 2500);
+      });
+    } catch (err: any) {
+      console.error("Mux upload handler error:", err);
+      toast.error(err.message || "Failed to start upload");
+      setUploadingSection((prev) => ({ ...prev, [sectionIdx]: false }));
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -328,12 +505,69 @@ export function CourseForm({ course, onSubmit, onCancel, isLoading }: CourseForm
                             <Input value={section.title} onChange={(e) => updateSection(idx, { title: e.target.value })} placeholder="e.g. Introduction to React" />
                          </div>
                          <div className="space-y-2">
-                            <Label className="text-[#2c1a4d] font-bold text-xs uppercase tracking-wider">Video URL / Provider ID</Label>
-                            <div className="flex gap-2">
-                               <div className="bg-gray-100 p-2 rounded-lg flex items-center justify-center">
-                                  <Video className="w-5 h-5 text-[#8b3d6f]" />
+                            <div className="flex items-center justify-between">
+                              <Label className="text-[#2c1a4d] font-bold text-xs uppercase tracking-wider">Lesson Video (Mux Stream)</Label>
+                              {section.video_url && (
+                                <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full flex items-center gap-1 border border-emerald-200">
+                                  <Check className="w-3 h-3" /> Ready
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Direct Upload to Mux Button & Drag Zone */}
+                            <div className="relative border-2 border-dashed border-gray-200 hover:border-[#8b3d6f] transition-all rounded-xl p-3 bg-gray-50/60 flex flex-col items-center justify-center text-center gap-2 group cursor-pointer">
+                              <input
+                                type="file"
+                                accept="video/*"
+                                disabled={uploadingSection[idx]}
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) handleUploadVideoToMux(file, idx);
+                                }}
+                                className="absolute inset-0 opacity-0 cursor-pointer disabled:cursor-not-allowed z-10"
+                              />
+
+                              {uploadingSection[idx] ? (
+                                <div className="w-full space-y-2 py-1">
+                                  <div className="flex items-center justify-between text-xs font-bold text-[#8b3d6f]">
+                                    <span className="flex items-center gap-1.5">
+                                      <Loader2 className="w-3.5 h-3.5 animate-spin" /> Uploading to Mux...
+                                    </span>
+                                    <span>{uploadProgress[idx] || 0}%</span>
+                                  </div>
+                                  <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+                                    <div
+                                      className="bg-[#8b3d6f] h-full transition-all duration-300 rounded-full"
+                                      style={{ width: `${uploadProgress[idx] || 0}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-2 py-1">
+                                  <div className="w-8 h-8 rounded-lg bg-purple-50 text-[#8b3d6f] flex items-center justify-center group-hover:scale-110 transition-transform">
+                                    <Upload className="w-4 h-4" />
+                                  </div>
+                                  <div className="text-left">
+                                    <p className="text-xs font-bold text-[#2c1a4d]">
+                                      {section.video_url ? "Replace Video (Upload to Mux)" : "Upload Video to Mux"}
+                                    </p>
+                                    <p className="text-[10px] text-gray-400">Click or drop MP4, MOV, WEBM</p>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Or paste direct Mux Playback ID / Video URL */}
+                            <div className="flex items-center gap-2 pt-1">
+                               <div className="bg-gray-100 p-2 rounded-lg flex items-center justify-center shrink-0">
+                                  <Video className="w-4 h-4 text-[#8b3d6f]" />
                                </div>
-                               <Input value={section.video_url} onChange={(e) => updateSection(idx, { video_url: e.target.value })} placeholder="YouTube, Vimeo or VdoCipher ID" />
+                               <Input 
+                                 value={section.video_url} 
+                                 onChange={(e) => updateSection(idx, { video_url: e.target.value })} 
+                                 placeholder="Or paste Mux Playback ID / video URL" 
+                                 className="text-xs h-9"
+                               />
                             </div>
                          </div>
                       </div>
@@ -381,8 +615,70 @@ export function CourseForm({ course, onSubmit, onCancel, isLoading }: CourseForm
                  </div>
                  <div className="space-y-6">
                     <div className="space-y-2">
-                      <Label className="text-[#2c1a4d] font-bold">Demo Video URL</Label>
-                      <Input name="demo_url" value={formData.demo_url} onChange={handleChange} placeholder="Public preview URL" />
+                      <div className="flex items-center justify-between">
+                        <Label className="text-[#2c1a4d] font-bold text-xs uppercase tracking-wider">Demo / Teaser Video</Label>
+                        {formData.demo_url && (
+                          <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full flex items-center gap-1 border border-emerald-200">
+                            <Check className="w-3 h-3" /> Ready
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Mux Upload Zone for Demo Video */}
+                      <div className="relative border-2 border-dashed border-gray-200 hover:border-[#8b3d6f] transition-all rounded-xl p-3 bg-gray-50/60 flex flex-col items-center justify-center text-center gap-2 group cursor-pointer">
+                        <input
+                          type="file"
+                          accept="video/*"
+                          disabled={uploadingDemo}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleUploadDemoToMux(file);
+                          }}
+                          className="absolute inset-0 opacity-0 cursor-pointer disabled:cursor-not-allowed z-10"
+                        />
+
+                        {uploadingDemo ? (
+                          <div className="w-full space-y-2 py-1">
+                            <div className="flex items-center justify-between text-xs font-bold text-[#8b3d6f]">
+                              <span className="flex items-center gap-1.5">
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" /> Uploading to Mux...
+                              </span>
+                              <span>{demoProgress}%</span>
+                            </div>
+                            <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+                              <div
+                                className="bg-[#8b3d6f] h-full transition-all duration-300 rounded-full"
+                                style={{ width: `${demoProgress}%` }}
+                              />
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 py-1">
+                            <div className="w-8 h-8 rounded-lg bg-purple-50 text-[#8b3d6f] flex items-center justify-center group-hover:scale-110 transition-transform">
+                              <Upload className="w-4 h-4" />
+                            </div>
+                            <div className="text-left">
+                              <p className="text-xs font-bold text-[#2c1a4d]">
+                                {formData.demo_url ? "Replace Demo Video (Upload to Mux)" : "Upload Demo Video to Mux"}
+                              </p>
+                              <p className="text-[10px] text-gray-400">Click or drop MP4, MOV, WEBM</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-2 pt-1">
+                        <div className="bg-gray-100 p-2 rounded-lg flex items-center justify-center shrink-0">
+                          <Video className="w-4 h-4 text-[#8b3d6f]" />
+                        </div>
+                        <Input 
+                          name="demo_url" 
+                          value={formData.demo_url || ""} 
+                          onChange={handleChange} 
+                          placeholder="Or paste Mux Playback ID / video URL" 
+                          className="text-xs h-9"
+                        />
+                      </div>
                     </div>
                     <div className="flex gap-8 pt-6">
                        <label className="flex items-center gap-3 cursor-pointer">

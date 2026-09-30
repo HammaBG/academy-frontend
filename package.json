@@ -18,6 +18,8 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.3.0",
+    "@mux/mux-player-react": "^3.13.4",
+    "@mux/upchunk": "^3.5.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "html2canvas": "^1.4.1",
