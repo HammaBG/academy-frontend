@@ -285,8 +285,8 @@ export default function AdminTicketsPage() {
 
                   <TableCell onClick={(e) => e.stopPropagation()}>
                     <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button className="cursor-pointer">{getStatusBadge(ticket.status)}</button>
+                      <DropdownMenuTrigger className="cursor-pointer">
+                        {getStatusBadge(ticket.status)}
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="start">
                         <DropdownMenuItem onClick={() => handleStatusChange(ticket._id, "pending")}>Pending</DropdownMenuItem>
