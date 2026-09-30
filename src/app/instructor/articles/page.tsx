@@ -47,7 +47,7 @@ import { toast } from "sonner";
 export default function InstructorArticlesPage() {
   const { token, user } = useAuthStore();
   const { articles, isLoading, error, getAllArticles, createArticle, updateArticle, deleteArticle } = useArticleStore();
-  
+
   const [searchTerm, setSearchTerm] = useState("");
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [currentArticle, setCurrentArticle] = useState<Article | null>(null);
@@ -67,7 +67,7 @@ export default function InstructorArticlesPage() {
     return true;
   });
 
-  const filteredArticles = myArticles.filter(article => 
+  const filteredArticles = myArticles.filter(article =>
     article.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -83,7 +83,7 @@ export default function InstructorArticlesPage() {
 
   const handleSubmit = async (formData: FormData) => {
     if (!token) return;
-    
+
     try {
       if (currentArticle) {
         await updateArticle(currentArticle.id, formData, token);
@@ -126,7 +126,7 @@ export default function InstructorArticlesPage() {
             Write, publish and manage educational articles and posts for your students.
           </p>
         </div>
-        <Button 
+        <Button
           onClick={handleCreate}
           className="bg-[#0d7377] hover:bg-[#095255] text-white font-bold gap-2 shadow-sm cursor-pointer"
         >
@@ -146,8 +146,8 @@ export default function InstructorArticlesPage() {
         <div className="p-4 border-b border-gray-100 flex items-center gap-4">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <Input 
-              placeholder="Search by title..." 
+            <Input
+              placeholder="Search by title..."
               className="pl-10 bg-gray-50 border-gray-200 focus:bg-white transition-all text-xs"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -186,9 +186,9 @@ export default function InstructorArticlesPage() {
                 </TableCell>
                 <TableCell>
                   {article.category_name || article.category?.name ? (
-                    <span 
+                    <span
                       className="px-2.5 py-1 rounded-full text-[11px] font-bold border"
-                      style={{ 
+                      style={{
                         backgroundColor: (article.category_color || article.category?.color || '#0d7377') + '15',
                         color: article.category_color || article.category?.color || '#0d7377',
                         borderColor: (article.category_color || article.category?.color || '#0d7377') + '30',
@@ -201,20 +201,19 @@ export default function InstructorArticlesPage() {
                   )}
                 </TableCell>
                 <TableCell>
-                  <span className={`px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest ${
-                    article.status === 'published' 
-                      ? 'bg-green-50 text-green-600 border border-green-100' 
+                  <span className={`px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest ${article.status === 'published'
+                      ? 'bg-green-50 text-green-600 border border-green-100'
                       : 'bg-orange-50 text-orange-600 border border-orange-100'
-                  }`}>
+                    }`}>
                     {article.status}
                   </span>
                 </TableCell>
                 <TableCell className="text-gray-500 font-medium text-xs">
-                   {article.created_at ? new Date(article.created_at).toLocaleDateString() : 'N/A'}
+                  {article.created_at ? new Date(article.created_at).toLocaleDateString() : 'N/A'}
                 </TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
+                    <DropdownMenuTrigger>
                       <Button variant="ghost" className="h-9 w-9 p-0 hover:bg-gray-100 text-gray-400 cursor-pointer">
                         <MoreHorizontal className="h-5 w-5" />
                       </Button>
@@ -223,14 +222,14 @@ export default function InstructorArticlesPage() {
                       <DropdownMenuGroup>
                         <DropdownMenuLabel className="text-gray-400 uppercase text-[10px] py-2 px-3 tracking-widest">Article Actions</DropdownMenuLabel>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem 
+                        <DropdownMenuItem
                           onClick={() => handleEdit(article)}
                           className="gap-3 py-2.5 px-3 hover:bg-gray-50 transition-colors cursor-pointer rounded-md"
                         >
                           <Edit className="w-4 h-4 text-blue-600" />
                           <span>Edit Article</span>
                         </DropdownMenuItem>
-                        
+
                         <Link href={`/articles/${article.url || article.id}`} target="_blank">
                           <DropdownMenuItem className="gap-3 py-2.5 px-3 hover:bg-gray-50 transition-colors cursor-pointer rounded-md">
                             <ExternalLink className="w-4 h-4 text-purple-600" />
@@ -239,7 +238,7 @@ export default function InstructorArticlesPage() {
                         </Link>
 
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem 
+                        <DropdownMenuItem
                           onClick={() => handleDelete(article.id)}
                           className="gap-3 py-2.5 px-3 hover:bg-red-50 text-red-600 focus:text-red-700 transition-colors cursor-pointer rounded-md mt-1"
                         >
@@ -254,7 +253,7 @@ export default function InstructorArticlesPage() {
             ))}
           </TableBody>
         </Table>
-        
+
         {!isLoading && filteredArticles.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <Newspaper className="w-12 h-12 text-gray-300 mb-4 opacity-40" />
@@ -278,15 +277,15 @@ export default function InstructorArticlesPage() {
               {currentArticle ? "Edit Article" : "Write New Article"}
             </DialogTitle>
             <DialogDescription className="text-gray-500 font-medium text-xs">
-              {currentArticle 
-                ? "Update your article content, category, cover image and status." 
+              {currentArticle
+                ? "Update your article content, category, cover image and status."
                 : "Fill in the details below to write and publish a new article for your students."}
             </DialogDescription>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto p-6 md:p-8">
-            <ArticleForm 
-              article={currentArticle} 
-              onSubmit={handleSubmit} 
+            <ArticleForm
+              article={currentArticle}
+              onSubmit={handleSubmit}
               onCancel={() => setIsSheetOpen(false)}
               isLoading={isLoading}
             />
