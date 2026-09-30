@@ -12,7 +12,7 @@ import {
   SidebarHeader,
   SidebarFooter,
 } from "@/components/ui/sidebar"
-import { Home, LayoutDashboard, BookOpen, LogOut } from "lucide-react"
+import { Home, LayoutDashboard, BookOpen, LogOut, Newspaper } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useAuthStore } from "@/store/auth"
@@ -35,6 +35,7 @@ export function InstructorSidebar() {
   const items = [
     { title: "Dashboard", url: "/instructor/dashboard", icon: LayoutDashboard },
     { title: "My Courses", url: "/instructor/courses", icon: BookOpen },
+    { title: "Articles", url: "/instructor/articles", icon: Newspaper },
   ]
 
   return (

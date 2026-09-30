@@ -50,6 +50,7 @@ export function ArticleForm({ article, onSubmit, onCancel, isLoading }: ArticleF
 
   const [formData, setFormData] = useState({
     title: "",
+    url: "",
     excerpt: "",
     content: "",
     status: "draft" as "draft" | "published",
@@ -68,6 +69,7 @@ export function ArticleForm({ article, onSubmit, onCancel, isLoading }: ArticleF
     if (article) {
       setFormData({
         title: article.title || "",
+        url: article.url || "",
         excerpt: article.excerpt || "",
         content: article.content || "",
         status: article.status || "draft",
@@ -126,6 +128,9 @@ export function ArticleForm({ article, onSubmit, onCancel, isLoading }: ArticleF
     e.preventDefault();
     const data = new FormData();
     data.append("title", formData.title);
+    if (formData.url) {
+      data.append("url", formData.url);
+    }
     data.append("excerpt", formData.excerpt);
     data.append("content", formData.content);
     data.append("status", formData.status);
@@ -157,6 +162,21 @@ export function ArticleForm({ article, onSubmit, onCancel, isLoading }: ArticleF
             required
             className="bg-white border-gray-200 focus:border-[#8b3d6f] focus:ring-1 focus:ring-[#8b3d6f]"
           />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="url">Custom URL Slug (Optional)</Label>
+          <Input
+            id="url"
+            name="url"
+            placeholder="e.g. how-to-start or كيف-تبدأ (leave blank to auto-generate from title)"
+            value={formData.url}
+            onChange={handleChange}
+            className="bg-white border-gray-200 focus:border-[#8b3d6f] focus:ring-1 focus:ring-[#8b3d6f] text-sm"
+          />
+          <p className="text-xs text-gray-500">
+            Leave blank and the system will automatically create a clean slug from the article title.
+          </p>
         </div>
 
         <div className="space-y-2">

@@ -16,10 +16,20 @@ export default function ArticleDetailPage() {
   useEffect(() => {
     setMounted(true);
     if (id) {
-      getPublicArticleById(id as string);
+      const decodedParam = decodeURIComponent(id as string);
+      getPublicArticleById(decodedParam);
     }
     return () => clearCurrentArticle();
   }, [id, getPublicArticleById, clearCurrentArticle]);
+
+  // If user visits via old MongoDB ID, automatically update browser address bar to clean slug URL
+  useEffect(() => {
+    if (currentArticle?.url && id && id !== currentArticle.url) {
+      if (typeof window !== "undefined") {
+        window.history.replaceState(null, "", `/articles/${encodeURIComponent(currentArticle.url)}`);
+      }
+    }
+  }, [currentArticle, id]);
 
   const handleShareFacebook = () => {
     if (typeof window !== "undefined") {

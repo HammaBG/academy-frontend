@@ -46,7 +46,7 @@ function ArticleCard({ article }: ArticleCardProps) {
 
   return (
     <Link
-      href={`/articles/${article.id}`}
+      href={`/articles/${article.url || article.id}`}
       className="group flex flex-col bg-surface backdrop-blur-md rounded-3xl overflow-hidden border border-border/40 hover:border-brand-primary/60 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-2xl shadow-md"
     >
       <div className="relative h-60 w-full overflow-hidden bg-background">

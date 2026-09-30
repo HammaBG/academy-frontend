@@ -41,10 +41,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ArticleForm } from "./ArticleForm";
+import { ArticleForm } from "@/app/admin/articles/ArticleForm";
+import { toast } from "sonner";
 
-export default function ArticlesPage() {
-  const { token } = useAuthStore();
+export default function InstructorArticlesPage() {
+  const { token, user } = useAuthStore();
   const { articles, isLoading, error, getAllArticles, createArticle, updateArticle, deleteArticle } = useArticleStore();
   
   const [searchTerm, setSearchTerm] = useState("");
@@ -57,7 +58,16 @@ export default function ArticlesPage() {
     }
   }, [token, getAllArticles]);
 
-  const filteredArticles = (articles || []).filter(article => 
+  // Filter articles for this instructor if they are an instructor (admins can see all)
+  const isOnlyInstructor = user?.role === 'instructor';
+  const myArticles = (articles || []).filter(article => {
+    if (isOnlyInstructor && article.author_id) {
+      return article.author_id === user?.id;
+    }
+    return true;
+  });
+
+  const filteredArticles = myArticles.filter(article => 
     article.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -77,32 +87,48 @@ export default function ArticlesPage() {
     try {
       if (currentArticle) {
         await updateArticle(currentArticle.id, formData, token);
+        toast.success("تم تحديث المقال بنجاح");
       } else {
         await createArticle(formData, token);
+        toast.success("تم إنشاء المقال بنجاح");
       }
       setIsSheetOpen(false);
-    } catch (err) {
+      // Refresh articles list
+      getAllArticles(token);
+    } catch (err: any) {
       console.error("Submit error:", err);
+      toast.error(err.message || "حدث خطأ أثناء حفظ المقال");
     }
   };
 
   const handleDelete = async (id: string) => {
     if (!token) return;
-    if (window.confirm("Are you sure you want to delete this article?")) {
-      await deleteArticle(id, token);
+    if (window.confirm("هل أنت متأكد من حذف هذا المقال نهائياً؟")) {
+      try {
+        await deleteArticle(id, token);
+        toast.success("تم حذف المقال بنجاح");
+        getAllArticles(token);
+      } catch (err: any) {
+        toast.error(err.message || "فشل حذف المقال");
+      }
     }
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-6 max-w-7xl mx-auto text-left" dir="ltr">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-200 pb-5">
         <div>
-          <h1 className="text-3xl font-extrabold text-[#2c1a4d]">Article Management</h1>
-          <p className="text-gray-500 font-medium mt-1">Write, publish and manage your academy blog posts.</p>
+          <h1 className="text-3xl font-extrabold text-[#0d7377] flex items-center gap-3">
+            <Newspaper className="w-8 h-8 text-[#0d7377]" />
+            <span>My Articles</span>
+          </h1>
+          <p className="text-gray-500 font-medium mt-1">
+            Write, publish and manage educational articles and posts for your students.
+          </p>
         </div>
         <Button 
           onClick={handleCreate}
-          className="bg-[#8b3d6f] hover:bg-[#7c3663] text-white font-bold gap-2"
+          className="bg-[#0d7377] hover:bg-[#095255] text-white font-bold gap-2 shadow-sm cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           Write New Article
@@ -116,28 +142,28 @@ export default function ArticlesPage() {
         </div>
       )}
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden min-h-[400px]">
+      <div className="bg-white rounded-xl shadow-xs border border-gray-200 overflow-hidden min-h-[400px]">
         <div className="p-4 border-b border-gray-100 flex items-center gap-4">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Input 
               placeholder="Search by title..." 
-              className="pl-10 bg-gray-50 border-gray-200 focus:bg-white transition-all"
+              className="pl-10 bg-gray-50 border-gray-200 focus:bg-white transition-all text-xs"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          {isLoading && <Loader2 className="w-5 h-5 text-[#8b3d6f] animate-spin" />}
+          {isLoading && <Loader2 className="w-5 h-5 text-[#0d7377] animate-spin" />}
         </div>
 
         <Table>
-          <TableHeader className="bg-gray-100/50">
+          <TableHeader className="bg-gray-50/70">
             <TableRow>
-              <TableHead className="font-bold text-[#2c1a4d]">Article</TableHead>
-              <TableHead className="font-bold text-[#2c1a4d]">Category</TableHead>
-              <TableHead className="font-bold text-[#2c1a4d]">Status</TableHead>
-              <TableHead className="font-bold text-[#2c1a4d]">Created At</TableHead>
-              <TableHead className="font-bold text-[#2c1a4d] text-right">Action</TableHead>
+              <TableHead className="font-bold text-xs text-[#2c1a4d]">Article</TableHead>
+              <TableHead className="font-bold text-xs text-[#2c1a4d]">Category</TableHead>
+              <TableHead className="font-bold text-xs text-[#2c1a4d]">Status</TableHead>
+              <TableHead className="font-bold text-xs text-[#2c1a4d]">Created At</TableHead>
+              <TableHead className="font-bold text-xs text-[#2c1a4d] text-right">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -153,7 +179,7 @@ export default function ArticlesPage() {
                       )}
                     </div>
                     <div className="flex flex-col max-w-[300px] md:max-w-[400px]">
-                      <span className="font-bold text-[#2c1a4d] text-[15px] truncate">{article.title}</span>
+                      <span className="font-bold text-gray-900 text-sm truncate">{article.title}</span>
                       <span className="text-[11px] text-gray-400 line-clamp-1">{article.excerpt || "No summary provided"}</span>
                     </div>
                   </div>
@@ -163,9 +189,9 @@ export default function ArticlesPage() {
                     <span 
                       className="px-2.5 py-1 rounded-full text-[11px] font-bold border"
                       style={{ 
-                        backgroundColor: (article.category_color || article.category?.color || '#8b3d6f') + '15',
-                        color: article.category_color || article.category?.color || '#8b3d6f',
-                        borderColor: (article.category_color || article.category?.color || '#8b3d6f') + '30',
+                        backgroundColor: (article.category_color || article.category?.color || '#0d7377') + '15',
+                        color: article.category_color || article.category?.color || '#0d7377',
+                        borderColor: (article.category_color || article.category?.color || '#0d7377') + '30',
                       }}
                     >
                       {article.category_name || article.category?.name}
@@ -183,16 +209,16 @@ export default function ArticlesPage() {
                     {article.status}
                   </span>
                 </TableCell>
-                <TableCell className="text-gray-500 font-bold text-[13px]">
+                <TableCell className="text-gray-500 font-medium text-xs">
                    {article.created_at ? new Date(article.created_at).toLocaleDateString() : 'N/A'}
                 </TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>
-                    <DropdownMenuTrigger render={
-                      <Button variant="ghost" className="h-9 w-9 p-0 hover:bg-gray-100 text-gray-400">
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-9 w-9 p-0 hover:bg-gray-100 text-gray-400 cursor-pointer">
                         <MoreHorizontal className="h-5 w-5" />
                       </Button>
-                    } />
+                    </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-56 font-bold shadow-xl border-gray-100 p-2">
                       <DropdownMenuGroup>
                         <DropdownMenuLabel className="text-gray-400 uppercase text-[10px] py-2 px-3 tracking-widest">Article Actions</DropdownMenuLabel>
@@ -222,7 +248,6 @@ export default function ArticlesPage() {
                         </DropdownMenuItem>
                       </DropdownMenuGroup>
                     </DropdownMenuContent>
-
                   </DropdownMenu>
                 </TableCell>
               </TableRow>
@@ -232,16 +257,16 @@ export default function ArticlesPage() {
         
         {!isLoading && filteredArticles.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <Newspaper className="w-12 h-12 text-gray-100 mb-4" />
-            <p className="text-gray-400 font-bold text-lg">No articles found</p>
-            <p className="text-gray-300 text-sm">Create your first article to see it here</p>
+            <Newspaper className="w-12 h-12 text-gray-300 mb-4 opacity-40" />
+            <p className="text-gray-500 font-bold text-base">No articles found</p>
+            <p className="text-gray-400 text-xs mt-1">Start writing your first article to share knowledge with your students</p>
           </div>
         )}
 
         {isLoading && articles.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-40">
-            <Loader2 className="w-12 h-12 text-[#8b3d6f] animate-spin mb-4" />
-            <p className="text-[#8b3d6f] font-bold animate-pulse">Loading articles...</p>
+          <div className="flex flex-col items-center justify-center py-32">
+            <Loader2 className="w-10 h-10 text-[#0d7377] animate-spin mb-3" />
+            <p className="text-[#0d7377] font-bold text-xs animate-pulse">Loading your articles...</p>
           </div>
         )}
       </div>
@@ -249,13 +274,13 @@ export default function ArticlesPage() {
       <Dialog open={isSheetOpen} onOpenChange={setIsSheetOpen}>
         <DialogContent className="sm:max-w-5xl w-[95vw] max-h-[92vh] flex flex-col p-0 overflow-hidden bg-white shadow-2xl rounded-2xl border-0">
           <DialogHeader className="p-6 pb-4 border-b border-gray-100 bg-gray-50/50">
-            <DialogTitle className="text-2xl font-extrabold text-[#2c1a4d]">
+            <DialogTitle className="text-2xl font-extrabold text-[#0d7377]">
               {currentArticle ? "Edit Article" : "Write New Article"}
             </DialogTitle>
-            <DialogDescription className="text-gray-500 font-medium text-sm">
+            <DialogDescription className="text-gray-500 font-medium text-xs">
               {currentArticle 
                 ? "Update your article content, category, cover image and status." 
-                : "Fill in the details below to write and publish a new article."}
+                : "Fill in the details below to write and publish a new article for your students."}
             </DialogDescription>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto p-6 md:p-8">

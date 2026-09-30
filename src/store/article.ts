@@ -5,6 +5,7 @@ import { authenticatedFetch } from '@/lib/api';
 // Article TypeScript Interface based on your backend controller
 export interface Article {
     id: string;
+    url?: string;
     title: string;
     content: string;
     status: 'draft' | 'published';
@@ -13,6 +14,8 @@ export interface Article {
     category_id?: string;
     category_name?: string;
     category_color?: string;
+    author_id?: string;
+    author_name?: string;
     category?: {
         id?: string;
         name?: string;
