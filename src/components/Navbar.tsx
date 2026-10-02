@@ -372,6 +372,92 @@ export function Navbar() {
                 )}
               </button>
 
+              {/* Cart Toggle (Always visible: authenticated or guest) */}
+              <div ref={cartDropdownRef} className="relative flex items-center">
+                <button
+                  onClick={handleToggleCart}
+                  className="relative text-text-secondary hover:text-text-primary hover:bg-surface/80 p-2 rounded-full transition-all duration-300 flex items-center justify-center cursor-pointer"
+                  aria-label="سلة التسوق"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                    />
+                  </svg>
+                  {itemCount() > 0 && (
+                    <span className="absolute -top-1 -right-1 w-4 h-4 flex items-center justify-center bg-brand-primary text-white text-[9px] font-bold rounded-full shadow-sm animate-pulse">
+                      {itemCount()}
+                    </span>
+                  )}
+                </button>
+
+                {/* Cart Dropdown Menu */}
+                {isCartDropdownOpen && (
+                  <div className="absolute top-[3rem] left-0 w-80 bg-surface border border-border shadow-2xl rounded-xl z-50 overflow-hidden font-bold transform origin-top transition-all duration-300">
+                    {items.length === 0 ? (
+                      <div className="px-6 py-8 text-center">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-10 w-10 text-text-secondary/40 mx-auto mb-3"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth={1.5}
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                          />
+                        </svg>
+                        <p className="text-text-secondary text-sm">سلة التسوق فارغة</p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="max-h-72 overflow-y-auto divide-y divide-border/60">
+                          {items.slice(0, 4).map((item) => (
+                            <CartItem key={item.course.id} item={item} onRemove={removeFromCart} />
+                          ))}
+                        </div>
+                        {items.length > 4 && (
+                          <p className="text-center text-text-secondary/60 text-xs py-2 border-t border-border/40">
+                            +{items.length - 4} عناصر أخرى
+                          </p>
+                        )}
+                      </>
+                    )}
+
+                    {/* Go to cart */}
+                    <Link
+                      href="/cart"
+                      onClick={handleCloseCart}
+                      className="flex items-center justify-center gap-2 px-4 py-3 bg-brand-primary text-white text-sm font-extrabold hover:bg-brand-primary/95 transition-colors"
+                    >
+                      <span>مشاهدة سلة التسوق</span>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4 rotate-180"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2.5}
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </Link>
+                  </div>
+                )}
+              </div>
+
               {/* Separator */}
               <div className="hidden sm:block h-6 w-px bg-border"></div>
 
@@ -412,92 +498,6 @@ export function Navbar() {
 
                   {/* Notification Bell */}
                   {isAuthenticated && <NotificationBell />}
-
-                  {/* Cart Toggle */}
-                  <div ref={cartDropdownRef} className="relative hidden sm:block">
-                    <button
-                      onClick={handleToggleCart}
-                      className="relative text-text-secondary hover:text-text-primary hover:bg-surface/80 p-2 rounded-full transition-all duration-300 flex items-center justify-center"
-                      aria-label="سلة التسوق"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-                        />
-                      </svg>
-                      {itemCount() > 0 && (
-                        <span className="absolute -top-1 -right-1 w-4 h-4 flex items-center justify-center bg-brand-primary text-white text-[9px] font-bold rounded-full shadow-sm">
-                          {itemCount()}
-                        </span>
-                      )}
-                    </button>
-
-                    {/* Cart Dropdown Menu */}
-                    {isCartDropdownOpen && (
-                      <div className="absolute top-[3rem] left-0 w-80 bg-surface border border-border shadow-2xl rounded-xl z-50 overflow-hidden font-bold transform origin-top transition-all duration-300">
-                        {items.length === 0 ? (
-                          <div className="px-6 py-8 text-center">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-10 w-10 text-text-secondary/40 mx-auto mb-3"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                              strokeWidth={1.5}
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-                              />
-                            </svg>
-                            <p className="text-text-secondary text-sm">سلة التسوق فارغة</p>
-                          </div>
-                        ) : (
-                          <>
-                            <div className="max-h-72 overflow-y-auto divide-y divide-border/60">
-                              {items.slice(0, 4).map((item) => (
-                                <CartItem key={item.course.id} item={item} onRemove={removeFromCart} />
-                              ))}
-                            </div>
-                            {items.length > 4 && (
-                              <p className="text-center text-text-secondary/60 text-xs py-2 border-t border-border/40">
-                                +{items.length - 4} عناصر أخرى
-                              </p>
-                            )}
-                          </>
-                        )}
-
-                        {/* Go to cart */}
-                        <Link
-                          href="/cart"
-                          onClick={handleCloseCart}
-                          className="flex items-center justify-center gap-2 px-4 py-3 bg-brand-primary text-white text-sm font-extrabold hover:bg-brand-primary/95 transition-colors"
-                        >
-                          <span>مشاهدة سلة التسوق</span>
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-4 w-4 rotate-180"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth={2.5}
-                          >
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                          </svg>
-                        </Link>
-                      </div>
-                    )}
-                  </div>
 
                   {/* Profile Dropdown Menu */}
                   {isProfileDropdownOpen && (
@@ -788,6 +788,40 @@ export function Navbar() {
                   تبديل
                 </span>
               </button>
+            </div>
+
+            {/* Cart Link in Mobile Dropmenu */}
+            <div className="pt-2">
+              <Link
+                href="/cart"
+                onClick={handleCloseMobileMenu}
+                className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl bg-background/60 hover:bg-surface text-text-primary border border-border/40 transition-colors font-bold text-sm cursor-pointer"
+              >
+                <div className="flex items-center gap-2.5">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-5 h-5 text-text-secondary"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                    />
+                  </svg>
+                  <span>سلة التسوق</span>
+                </div>
+                {itemCount() > 0 ? (
+                  <span className="text-xs bg-brand-primary text-white font-bold px-2 py-0.5 rounded-full shadow-sm">
+                    {itemCount()} {itemCount() === 1 ? "دورة" : "دورات"}
+                  </span>
+                ) : (
+                  <span className="text-xs text-text-secondary">فارغة</span>
+                )}
+              </Link>
             </div>
 
             {/* Guest Login/Signup (Only visible when NOT authenticated) */}

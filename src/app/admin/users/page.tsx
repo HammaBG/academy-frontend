@@ -46,7 +46,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuthStore } from "@/store/auth";
 
 export default function UsersPage() {
-  const { users, isDataLoading, getAllUsers, updateUser, error } = useAuthStore();
+  const { users, isDataLoading, getAllUsers, updateUser, deleteUser, error } = useAuthStore();
   const [searchTerm, setSearchTerm] = useState("");
 
   // Instructor Promotion States
@@ -55,6 +55,11 @@ export default function UsersPage() {
   const [instructorTitle, setInstructorTitle] = useState("");
   const [instructorAvatar, setInstructorAvatar] = useState("");
   const [isPromoting, setIsPromoting] = useState(false);
+
+  // User Deletion States
+  const [selectedUserToDelete, setSelectedUserToDelete] = useState<any>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     getAllUsers();
@@ -94,10 +99,26 @@ export default function UsersPage() {
     }
   };
 
-  const filteredUsers = (users || []).filter(user =>
-    (user.first_name + " " + user.last_name).toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleDelete = async () => {
+    if (!selectedUserToDelete) return;
+    try {
+      setIsDeleting(true);
+      await deleteUser(selectedUserToDelete.id);
+      toast.success(`User ${selectedUserToDelete.first_name || ""} ${selectedUserToDelete.last_name || ""} deleted successfully`);
+      setDeleteDialogOpen(false);
+      setSelectedUserToDelete(null);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete user");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const filteredUsers = (users || []).filter(user => {
+    const fullName = `${user.first_name || (user as any).user_metadata?.first_name || ""} ${user.last_name || (user as any).user_metadata?.last_name || ""}`;
+    const email = user.email || "";
+    return fullName.toLowerCase().includes(searchTerm.toLowerCase()) || email.toLowerCase().includes(searchTerm.toLowerCase());
+  });
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -143,75 +164,91 @@ export default function UsersPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {!isDataLoading && filteredUsers.map((user) => (
-              <TableRow key={user.id} className="hover:bg-gray-50/80 transition-colors border-b border-gray-50">
-                <TableCell>
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-9 w-9 border border-gray-200 shadow-sm">
-                      <AvatarFallback className="bg-[#8b3d6f] text-white font-bold text-xs uppercase">
-                        {user.first_name ? user.first_name[0] : ""}
-                        {user.last_name ? user.last_name[0] : ""}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex flex-col">
-                      <span className="font-bold text-[#2c1a4d] text-[15px]">{user.first_name} {user.last_name}</span>
-                      <span className="text-[10px] text-gray-400 font-mono tracking-tighter uppercase">{user.id.substring(0, 8)}</span>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell className="text-gray-600 font-bold text-[14px]">
-                  <div className="flex items-center gap-2">
-                    <Mail className="w-3.5 h-3.5 text-[#8b3d6f]/60" />
-                    {user.email}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <span className={`px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest ${user.role === 'admin' ? 'bg-blue-50 text-blue-600 border border-blue-100' :
-                      user.role === 'instructor' ? 'bg-purple-50 text-purple-600 border border-purple-100' :
-                        'bg-gray-50 text-gray-400 border border-gray-100'
-                      }`}>
-                      {user.role || 'user'}
-                    </span>
-                  </div>
-                </TableCell>
-                <TableCell className="">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger render={
-                      <Button variant="ghost" className="h-9 w-9 p-0 hover:bg-gray-100 text-gray-400">
-                        <MoreHorizontal className="h-5 w-5" />
-                      </Button>
-                    } />
-                    <DropdownMenuContent align="end" className="w-56 font-bold shadow-xl border-gray-100 p-2">
-                      <DropdownMenuGroup>
-                        <DropdownMenuLabel className="text-gray-400 uppercase text-[10px] py-2 px-3 tracking-widest">User Actions</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="gap-3 py-2.5 px-3 hover:bg-gray-50 transition-colors cursor-pointer rounded-md">
-                          <Edit className="w-4 h-4 text-blue-600" />
-                          <span>Edit Details</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setSelectedUserToPromote(user);
-                            setPromoteDialogOpen(true);
-                          }}
-                          className="gap-3 py-2.5 px-3 hover:bg-gray-50 transition-colors cursor-pointer rounded-md"
-                        >
-                          <Shield className="w-4 h-4 text-purple-600" />
-                          <span>Promote to Instructor</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="gap-3 py-2.5 px-3 hover:bg-red-50 text-red-600 focus:text-red-700 transition-colors cursor-pointer rounded-md mt-1">
-                          <Trash2 className="w-4 h-4" />
-                          <span>Delete User</span>
-                        </DropdownMenuItem>
-                      </DropdownMenuGroup>
-                    </DropdownMenuContent>
+            {!isDataLoading && filteredUsers.map((user) => {
+              const firstName = user.first_name || (user as any).user_metadata?.first_name || "";
+              const lastName = user.last_name || (user as any).user_metadata?.last_name || "";
+              const role = user.role || (user as any).user_metadata?.role || "user";
+              const avatarUrl = user.avatar_url || (user as any).user_metadata?.avatar_url || "";
 
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
+              return (
+                <TableRow key={user.id} className="hover:bg-gray-50/80 transition-colors border-b border-gray-50">
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-9 w-9 border border-gray-200 shadow-sm overflow-hidden">
+                        {avatarUrl ? (
+                          <img src={avatarUrl} alt={firstName} className="w-full h-full object-cover" />
+                        ) : (
+                          <AvatarFallback className="bg-[#8b3d6f] text-white font-bold text-xs uppercase">
+                            {firstName ? firstName[0] : ""}
+                            {lastName ? lastName[0] : ""}
+                          </AvatarFallback>
+                        )}
+                      </Avatar>
+                      <div className="flex flex-col">
+                        <span className="font-bold text-[#2c1a4d] text-[15px]">
+                          {firstName} {lastName}
+                        </span>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-gray-600 font-bold text-[14px]">
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-3.5 h-3.5 text-[#8b3d6f]/60" />
+                      {user.email}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <span className={`px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest ${
+                        role === 'admin'
+                          ? 'bg-blue-50 text-blue-600 border border-blue-100'
+                          : role === 'instructor'
+                          ? 'bg-purple-50 text-purple-600 border border-purple-100'
+                          : 'bg-gray-50 text-gray-400 border border-gray-100'
+                      }`}>
+                        {role}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger render={
+                        <Button variant="ghost" className="h-9 w-9 p-0 hover:bg-gray-100 text-gray-400">
+                          <MoreHorizontal className="h-5 w-5" />
+                        </Button>
+                      } />
+                      <DropdownMenuContent align="end" className="w-56 font-bold shadow-xl border-gray-100 p-2">
+                        <DropdownMenuGroup>
+                          <DropdownMenuLabel className="text-gray-400 uppercase text-[10px] py-2 px-3 tracking-widest">User Actions</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setSelectedUserToPromote(user);
+                              setPromoteDialogOpen(true);
+                            }}
+                            className="gap-3 py-2.5 px-3 hover:bg-gray-50 transition-colors cursor-pointer rounded-md"
+                          >
+                            <Shield className="w-4 h-4 text-purple-600" />
+                            <span>Promote to Instructor</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setSelectedUserToDelete(user);
+                              setDeleteDialogOpen(true);
+                            }}
+                            className="gap-3 py-2.5 px-3 hover:bg-red-50 text-red-600 focus:text-red-700 transition-colors cursor-pointer rounded-md mt-1"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            <span>Delete User</span>
+                          </DropdownMenuItem>
+                        </DropdownMenuGroup>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
 
@@ -296,6 +333,55 @@ export default function UsersPage() {
                 </>
               ) : (
                 "Confirm Promotion"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete User Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-red-600 font-black text-xl flex items-center gap-2">
+              <Trash2 className="w-5 h-5 text-red-600" />
+              Delete User
+            </DialogTitle>
+            <DialogDescription className="text-gray-500 font-medium">
+              Are you sure you want to permanently delete user{" "}
+              <strong className="text-gray-800">
+                {selectedUserToDelete?.first_name || (selectedUserToDelete as any)?.user_metadata?.first_name || ""}{" "}
+                {selectedUserToDelete?.last_name || (selectedUserToDelete as any)?.user_metadata?.last_name || ""}
+              </strong>{" "}
+              ({selectedUserToDelete?.email})? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="sm:justify-between border-t border-gray-100 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setDeleteDialogOpen(false);
+                setSelectedUserToDelete(null);
+              }}
+              className="font-bold border-gray-200"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700 text-white font-bold min-w-[120px]"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete User"
               )}
             </Button>
           </DialogFooter>

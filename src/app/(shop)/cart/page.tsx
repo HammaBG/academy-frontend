@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useCartStore } from "@/store/cart";
 import { useAuthStore } from "@/store/auth";
 import { useFormStore } from "@/store/form";
@@ -40,6 +40,16 @@ export default function CartPage() {
     useCode,
     clearStatus: clearCodeStatus
   } = useEnrollmentCodeStore();
+
+  // Clear success/error status only when leaving the page.
+  // (The effect that cleared status when items.length > 0 was removed:
+  //  it wiped the success state before the cart was reset.)
+  useEffect(() => {
+    return () => {
+      clearFormStatus();
+      clearCodeStatus();
+    };
+  }, [clearFormStatus, clearCodeStatus]);
 
   // Tab state: 'cod' | 'code'
   const [method, setMethod] = useState<'cod' | 'code'>('cod');
@@ -99,7 +109,12 @@ export default function CartPage() {
       });
 
       await Promise.all(submitPromises);
-      clearCart();
+
+      // Reset the cart only if the store didn't record an error.
+      // getState() reads the latest value (not the stale one from this render).
+      if (!useFormStore.getState().error) {
+        clearCart();
+      }
     } catch (err) {
       // Error is already captured by form store
     }
@@ -122,12 +137,17 @@ export default function CartPage() {
 
     try {
       await useCode(enrollmentCode.trim(), token || "");
-      clearCart();
+
+      if (!useEnrollmentCodeStore.getState().error) {
+        clearCart();
+      }
     } catch (err) {
       // Error is already captured by enrollmentCode store
     }
   };
 
+  // Success screen is checked BEFORE the cart/empty-cart UI,
+  // so it stays visible even after clearCart() empties the items.
   if (isSuccess) {
     return (
       <div className="min-h-screen bg-background text-text-primary flex items-center justify-center px-4 py-20" dir="rtl">
@@ -143,12 +163,27 @@ export default function CartPage() {
                 : "تهانينا! لقد تم تفعيل الكورسات بنجاح وإضافتها إلى حسابك التعليمي."}
             </p>
           </div>
-          <div className="pt-4">
+          <div className="pt-4 space-y-3">
             <Link
               href={method === 'cod' ? "/" : "/my-courses"}
+              onClick={() => {
+                clearFormStatus();
+                clearCodeStatus();
+              }}
               className="inline-block w-full py-3.5 bg-brand-primary text-white rounded-xl font-extrabold hover:bg-brand-primary/90 transition-all text-center shadow-lg shadow-brand-primary/15"
             >
               {method === 'cod' ? "العودة للرئيسية" : "اذهب إلى دوراتي"}
+            </Link>
+
+            <Link
+              href="/courses"
+              onClick={() => {
+                clearFormStatus();
+                clearCodeStatus();
+              }}
+              className="inline-block w-full py-3 bg-surface hover:bg-surface/80 text-text-primary border border-border/60 rounded-xl font-bold transition-all text-center text-sm"
+            >
+              استكشاف المزيد من الدورات
             </Link>
           </div>
         </div>

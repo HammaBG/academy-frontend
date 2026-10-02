@@ -37,6 +37,7 @@ interface AuthActions {
   getInstructors: () => Promise<void>;
   updateProfile: (data: { title?: string; avatar_url?: string; bio?: string; linkedin_url?: string }, token: string) => Promise<void>;
   updateUser: (id: string, data: Partial<User>) => Promise<void>;
+  deleteUser: (id: string) => Promise<void>;
   forgotPassword: (email: string) => Promise<void>;
   resetPassword: (password: string, token: string) => Promise<void>;
   googleLogin: (credential: string) => Promise<void>;
@@ -322,6 +323,35 @@ export const useAuthStore = create<AuthStore>()(
           }
 
           await get().getAllUsers();
+        } catch (err: any) {
+          set({ error: err.message, isDataLoading: false });
+          throw err;
+        }
+      },
+
+      deleteUser: async (id) => {
+        const { token } = get();
+        if (!token) return;
+
+        set({ isDataLoading: true, error: null });
+        try {
+          const res = await authenticatedFetch(`${API_URL}/users/${id}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          });
+
+          const data = await res.json();
+          if (!res.ok) {
+            throw new Error(data.message || data.error || 'Failed to delete user');
+          }
+
+          set((state) => ({
+            users: state.users.filter((u) => u.id !== id),
+            isDataLoading: false,
+          }));
         } catch (err: any) {
           set({ error: err.message, isDataLoading: false });
           throw err;
