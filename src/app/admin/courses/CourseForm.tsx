@@ -23,7 +23,8 @@ import {
   Image as ImageIcon,
   Upload,
   Check,
-  AlertCircle
+  AlertCircle,
+  ChevronDown
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -120,37 +121,157 @@ export function CourseForm({ course, onSubmit, onCancel, isLoading }: CourseForm
     setFormData({ ...formData, [type]: newList });
   };
 
-  // Syllabus Helpers
-  const addSection = () => {
-    const newSection: ICourseData = {
-      title: "",
-      description: "",
-      video_url: "",
-      video_section: "Untitled Section",
-      video_length: 0,
-      video_thumbnail: {},
-      video_player: "",
-      links: [],
-      suggestion: "",
-    };
-    setFormData({ ...formData, course_data: [...(formData.course_data || []), newSection] });
-  };
+  interface SectionGroup {
+    section_title: string;
+    lessons: ICourseData[];
+  }
 
-  const updateSection = (index: number, data: Partial<ICourseData>) => {
-    const newData = [...(formData.course_data || [])];
-    newData[index] = { ...newData[index], ...data };
-    setFormData({ ...formData, course_data: newData });
-  };
+  const [sectionGroups, setSectionGroups] = useState<SectionGroup[]>([]);
+  const [collapsedSections, setCollapsedSections] = useState<{ [secIdx: number]: boolean }>({});
 
-  const removeSection = (index: number) => {
-    const newData = (formData.course_data || []).filter((_, i) => i !== index);
-    setFormData({ ...formData, course_data: newData });
-  };
-
-  const [uploadProgress, setUploadProgress] = useState<{ [key: number]: number }>({});
-  const [uploadingSection, setUploadingSection] = useState<{ [key: number]: boolean }>({});
+  const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
+  const [uploadingLesson, setUploadingLesson] = useState<{ [key: string]: boolean }>({});
   const [uploadingDemo, setUploadingDemo] = useState(false);
   const [demoProgress, setDemoProgress] = useState(0);
+
+  // Helper to convert flat course_data to grouped sections
+  const groupCourseData = (courseData?: ICourseData[]): SectionGroup[] => {
+    if (!courseData || courseData.length === 0) return [];
+
+    const map = new Map<string, ICourseData[]>();
+    for (const item of courseData) {
+      const secTitle = (item.video_section || "Section 1").trim();
+      if (!map.has(secTitle)) {
+        map.set(secTitle, []);
+      }
+      map.get(secTitle)!.push(item);
+    }
+
+    return Array.from(map.entries()).map(([section_title, lessons]) => ({
+      section_title,
+      lessons,
+    }));
+  };
+
+  // Helper to flatten grouped sections into course_data
+  const flattenSectionGroups = (groups: SectionGroup[]): ICourseData[] => {
+    const flat: ICourseData[] = [];
+    groups.forEach((group) => {
+      const secTitle = group.section_title.trim() || "Untitled Section";
+      group.lessons.forEach((lesson) => {
+        flat.push({
+          ...lesson,
+          video_section: secTitle,
+        });
+      });
+    });
+    return flat;
+  };
+
+  // Initialize or update section groups when course changes
+  useEffect(() => {
+    if (course) {
+      setFormData(course);
+      setImagePreview(course.thumbnail?.url || null);
+      setSectionGroups(groupCourseData(course.course_data));
+    }
+  }, [course]);
+
+  // Section Group Handlers
+  const addSectionGroup = () => {
+    const newGroupIndex = sectionGroups.length + 1;
+    const newGroup: SectionGroup = {
+      section_title: `Section ${newGroupIndex}`,
+      lessons: [
+        {
+          title: "",
+          description: "",
+          video_url: "",
+          video_section: `Section ${newGroupIndex}`,
+          video_length: 0,
+          video_thumbnail: {},
+          video_player: "",
+          links: [],
+          suggestion: "",
+        },
+      ],
+    };
+    setSectionGroups((prev) => [...prev, newGroup]);
+  };
+
+  const updateSectionTitle = (secIdx: number, newTitle: string) => {
+    setSectionGroups((prev) => {
+      const updated = [...prev];
+      updated[secIdx] = {
+        ...updated[secIdx],
+        section_title: newTitle,
+        lessons: updated[secIdx].lessons.map((l) => ({ ...l, video_section: newTitle })),
+      };
+      return updated;
+    });
+  };
+
+  const removeSectionGroup = (secIdx: number) => {
+    setSectionGroups((prev) => prev.filter((_, i) => i !== secIdx));
+  };
+
+  const toggleCollapseSection = (secIdx: number) => {
+    setCollapsedSections((prev) => ({
+      ...prev,
+      [secIdx]: !prev[secIdx],
+    }));
+  };
+
+  // Lesson Handlers inside a Section Group
+  const addLessonToSection = (secIdx: number) => {
+    setSectionGroups((prev) => {
+      const updated = [...prev];
+      const targetSec = updated[secIdx];
+      const newLesson: ICourseData = {
+        title: "",
+        description: "",
+        video_url: "",
+        video_section: targetSec.section_title,
+        video_length: 0,
+        video_thumbnail: {},
+        video_player: "",
+        links: [],
+        suggestion: "",
+      };
+      updated[secIdx] = {
+        ...targetSec,
+        lessons: [...targetSec.lessons, newLesson],
+      };
+      return updated;
+    });
+  };
+
+  const updateLesson = (secIdx: number, lessonIdx: number, data: Partial<ICourseData>) => {
+    setSectionGroups((prev) => {
+      const updated = [...prev];
+      const targetSec = updated[secIdx];
+      const updatedLessons = [...targetSec.lessons];
+      updatedLessons[lessonIdx] = { ...updatedLessons[lessonIdx], ...data };
+      updated[secIdx] = {
+        ...targetSec,
+        lessons: updatedLessons,
+      };
+      return updated;
+    });
+  };
+
+  const removeLesson = (secIdx: number, lessonIdx: number) => {
+    setSectionGroups((prev) => {
+      const updated = [...prev];
+      const targetSec = updated[secIdx];
+      const updatedLessons = targetSec.lessons.filter((_, i) => i !== lessonIdx);
+      updated[secIdx] = {
+        ...targetSec,
+        lessons: updatedLessons,
+      };
+      return updated;
+    });
+  };
 
   const handleUploadDemoToMux = async (file: File) => {
     if (!token) {
@@ -226,15 +347,17 @@ export function CourseForm({ course, onSubmit, onCancel, isLoading }: CourseForm
     }
   };
 
-  const handleUploadVideoToMux = async (file: File, sectionIdx: number) => {
+  const handleUploadLessonToMux = async (file: File, secIdx: number, lessonIdx: number) => {
     if (!token) {
       toast.error("You must be logged in to upload video");
       return;
     }
 
+    const lessonKey = `${secIdx}-${lessonIdx}`;
+
     try {
-      setUploadingSection((prev) => ({ ...prev, [sectionIdx]: true }));
-      setUploadProgress((prev) => ({ ...prev, [sectionIdx]: 0 }));
+      setUploadingLesson((prev) => ({ ...prev, [lessonKey]: true }));
+      setUploadProgress((prev) => ({ ...prev, [lessonKey]: 0 }));
 
       // 1. Request Direct Upload URL from Backend
       const res = await fetch(`${API_ENDPOINTS.courses}/mux/upload-url`, {
@@ -261,18 +384,18 @@ export function CourseForm({ course, onSubmit, onCancel, isLoading }: CourseForm
 
       upload.on("progress", (progressDetail: any) => {
         const percent = Math.round(progressDetail.detail);
-        setUploadProgress((prev) => ({ ...prev, [sectionIdx]: percent }));
+        setUploadProgress((prev) => ({ ...prev, [lessonKey]: percent }));
       });
 
       upload.on("error", (err: any) => {
         console.error("Mux UpChunk error:", err);
         toast.error("Video upload failed. Please try again.");
-        setUploadingSection((prev) => ({ ...prev, [sectionIdx]: false }));
+        setUploadingLesson((prev) => ({ ...prev, [lessonKey]: false }));
       });
 
       upload.on("success", async () => {
         toast.success("Upload finished! Processing video on Mux...");
-        setUploadProgress((prev) => ({ ...prev, [sectionIdx]: 100 }));
+        setUploadProgress((prev) => ({ ...prev, [lessonKey]: 100 }));
 
         // 3. Poll for Mux asset readiness & playback ID
         let attempts = 0;
@@ -290,16 +413,16 @@ export function CourseForm({ course, onSubmit, onCancel, isLoading }: CourseForm
 
             if (playbackId) {
               clearInterval(checkInterval);
-              updateSection(sectionIdx, {
+              updateLesson(secIdx, lessonIdx, {
                 video_url: playbackId,
                 video_length: duration ? Math.round(duration) : undefined,
                 video_player: "mux",
               });
-              setUploadingSection((prev) => ({ ...prev, [sectionIdx]: false }));
+              setUploadingLesson((prev) => ({ ...prev, [lessonKey]: false }));
               toast.success("Video ready to stream with Mux!");
             } else if (assetStatus === "errored" || attempts >= maxAttempts) {
               clearInterval(checkInterval);
-              setUploadingSection((prev) => ({ ...prev, [sectionIdx]: false }));
+              setUploadingLesson((prev) => ({ ...prev, [lessonKey]: false }));
               if (assetStatus === "errored") {
                 toast.error("Mux encountered an error processing this video.");
               } else {
@@ -314,13 +437,17 @@ export function CourseForm({ course, onSubmit, onCancel, isLoading }: CourseForm
     } catch (err: any) {
       console.error("Mux upload handler error:", err);
       toast.error(err.message || "Failed to start upload");
-      setUploadingSection((prev) => ({ ...prev, [sectionIdx]: false }));
+      setUploadingLesson((prev) => ({ ...prev, [lessonKey]: false }));
     }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    const flattenedCourseData = flattenSectionGroups(sectionGroups);
+    onSubmit({
+      ...formData,
+      course_data: flattenedCourseData,
+    });
   };
 
   return (
@@ -476,117 +603,240 @@ export function CourseForm({ course, onSubmit, onCancel, isLoading }: CourseForm
         {activeTab === "syllabus" && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
             <div className="flex items-center justify-between">
-               <h3 className="text-xl font-extrabold text-[#2c1a4d]">Curriculum Structure</h3>
-               <Button type="button" onClick={addSection} className="bg-[#8b3d6f] hover:bg-[#7c3663] text-white font-bold gap-2">
-                 <Plus className="w-4 h-4" /> Add New Section
-               </Button>
+              <div>
+                <h3 className="text-xl font-extrabold text-[#2c1a4d]">Curriculum & Section Management</h3>
+                <p className="text-xs text-gray-500 font-medium">Create sections / chapters and organize multiple lessons & videos under each section.</p>
+              </div>
+              <Button type="button" onClick={addSectionGroup} className="bg-[#8b3d6f] hover:bg-[#7c3663] text-white font-bold gap-2">
+                <Plus className="w-4 h-4" /> Add New Section
+              </Button>
             </div>
 
-            {formData.course_data?.map((section, idx) => (
-               <div key={idx} className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm group">
-                  <div className="bg-gray-50/50 p-4 border-b border-gray-100 flex items-center justify-between">
-                     <div className="flex items-center gap-3">
-                        <span className="w-8 h-8 rounded-full bg-[#8b3d6f] text-white flex items-center justify-center font-bold text-sm">{idx + 1}</span>
-                        <Input 
-                          value={section.video_section} 
-                          onChange={(e) => updateSection(idx, { video_section: e.target.value })} 
-                          className="font-extrabold bg-transparent border-none focus-visible:ring-0 text-[#2c1a4d] p-0 h-auto text-lg w-[300px]"
-                          placeholder="Section Name"
+            {sectionGroups.map((group, secIdx) => {
+              const isCollapsed = collapsedSections[secIdx];
+              return (
+                <div key={secIdx} className="bg-white rounded-2xl border-2 border-purple-100/80 overflow-hidden shadow-sm transition-all hover:border-[#8b3d6f]/40">
+                  {/* Section Header */}
+                  <div className="bg-gradient-to-r from-purple-50/70 to-pink-50/30 p-4 border-b border-purple-100/70 flex items-center justify-between">
+                    <div className="flex items-center gap-3 flex-1 mr-4">
+                      <span className="w-8 h-8 rounded-xl bg-[#8b3d6f] text-white flex items-center justify-center font-black text-sm shrink-0 shadow-sm shadow-purple-200">
+                        {secIdx + 1}
+                      </span>
+                      <div className="flex-1">
+                        <Input
+                          value={group.section_title}
+                          onChange={(e) => updateSectionTitle(secIdx, e.target.value)}
+                          className="font-extrabold bg-transparent border-none focus-visible:ring-1 focus-visible:ring-[#8b3d6f] text-[#2c1a4d] p-1.5 h-auto text-base sm:text-lg max-w-md rounded-lg"
+                          placeholder={`Section ${secIdx + 1} Title (e.g., Chapter 1: Foundations)`}
                         />
-                     </div>
-                     <Button type="button" variant="ghost" size="icon" onClick={() => removeSection(idx)} className="text-gray-400 hover:text-red-600">
+                        <p className="text-[11px] text-gray-400 font-semibold px-1.5">
+                          {group.lessons.length} {group.lessons.length === 1 ? "Lesson" : "Lessons"} in this section
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => addLessonToSection(secIdx)}
+                        className="bg-white border-purple-200 text-[#8b3d6f] hover:bg-purple-50 font-bold text-xs gap-1.5 h-9"
+                      >
+                        <Plus className="w-3.5 h-3.5" /> Add Lesson
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => toggleCollapseSection(secIdx)}
+                        className="text-gray-500 hover:text-[#8b3d6f] h-9 w-9"
+                        title={isCollapsed ? "Expand Section" : "Collapse Section"}
+                      >
+                        <ChevronDown className={cn("w-4 h-4 transition-transform duration-200", isCollapsed ? "" : "rotate-180")} />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeSectionGroup(secIdx)}
+                        className="text-gray-400 hover:text-red-600 h-9 w-9"
+                        title="Delete entire section"
+                      >
                         <Trash2 className="w-4 h-4" />
-                     </Button>
+                      </Button>
+                    </div>
                   </div>
-                  <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-4">
-                         <div className="space-y-2">
-                            <Label className="text-[#2c1a4d] font-bold text-xs uppercase tracking-wider">Video Title</Label>
-                            <Input value={section.title} onChange={(e) => updateSection(idx, { title: e.target.value })} placeholder="e.g. Introduction to React" />
-                         </div>
-                         <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <Label className="text-[#2c1a4d] font-bold text-xs uppercase tracking-wider">Lesson Video (Mux Stream)</Label>
-                              {section.video_url && (
-                                <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full flex items-center gap-1 border border-emerald-200">
-                                  <Check className="w-3 h-3" /> Ready
+
+                  {/* Section Content: Nested Lessons */}
+                  {!isCollapsed && (
+                    <div className="p-4 sm:p-6 space-y-4 bg-gray-50/30">
+                      {group.lessons.map((lesson, lessonIdx) => {
+                        const lessonKey = `${secIdx}-${lessonIdx}`;
+                        const isUploading = uploadingLesson[lessonKey];
+                        const progress = uploadProgress[lessonKey] || 0;
+
+                        return (
+                          <div
+                            key={lessonIdx}
+                            className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 shadow-sm space-y-4 hover:border-purple-200 transition-colors"
+                          >
+                            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                              <div className="flex items-center gap-2.5">
+                                <span className="w-6 h-6 rounded-md bg-purple-100 text-[#8b3d6f] font-bold text-xs flex items-center justify-center">
+                                  {secIdx + 1}.{lessonIdx + 1}
                                 </span>
-                              )}
+                                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Lesson Details</span>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeLesson(secIdx, lessonIdx)}
+                                className="text-gray-400 hover:text-red-600 h-7 px-2 text-xs font-bold gap-1"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" /> Remove Lesson
+                              </Button>
                             </div>
 
-                            {/* Direct Upload to Mux Button & Drag Zone */}
-                            <div className="relative border-2 border-dashed border-gray-200 hover:border-[#8b3d6f] transition-all rounded-xl p-3 bg-gray-50/60 flex flex-col items-center justify-center text-center gap-2 group cursor-pointer">
-                              <input
-                                type="file"
-                                accept="video/*"
-                                disabled={uploadingSection[idx]}
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) handleUploadVideoToMux(file, idx);
-                                }}
-                                className="absolute inset-0 opacity-0 cursor-pointer disabled:cursor-not-allowed z-10"
-                              />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                              <div className="space-y-3">
+                                <div className="space-y-1.5">
+                                  <Label className="text-[#2c1a4d] font-bold text-xs uppercase tracking-wider">
+                                    Lesson Title
+                                  </Label>
+                                  <Input
+                                    value={lesson.title}
+                                    onChange={(e) => updateLesson(secIdx, lessonIdx, { title: e.target.value })}
+                                    placeholder="e.g. 01 - Installing Next.js & TypeScript"
+                                  />
+                                </div>
 
-                              {uploadingSection[idx] ? (
-                                <div className="w-full space-y-2 py-1">
-                                  <div className="flex items-center justify-between text-xs font-bold text-[#8b3d6f]">
-                                    <span className="flex items-center gap-1.5">
-                                      <Loader2 className="w-3.5 h-3.5 animate-spin" /> Uploading to Mux...
-                                    </span>
-                                    <span>{uploadProgress[idx] || 0}%</span>
+                                <div className="space-y-1.5">
+                                  <div className="flex items-center justify-between">
+                                    <Label className="text-[#2c1a4d] font-bold text-xs uppercase tracking-wider">
+                                      Lesson Video (Mux Stream)
+                                    </Label>
+                                    {lesson.video_url && (
+                                      <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full flex items-center gap-1 border border-emerald-200">
+                                        <Check className="w-3 h-3" /> Ready
+                                      </span>
+                                    )}
                                   </div>
-                                  <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
-                                    <div
-                                      className="bg-[#8b3d6f] h-full transition-all duration-300 rounded-full"
-                                      style={{ width: `${uploadProgress[idx] || 0}%` }}
+
+                                  {/* Direct Upload to Mux Button & Drag Zone */}
+                                  <div className="relative border-2 border-dashed border-gray-200 hover:border-[#8b3d6f] transition-all rounded-xl p-3 bg-gray-50/60 flex flex-col items-center justify-center text-center gap-2 group cursor-pointer">
+                                    <input
+                                      type="file"
+                                      accept="video/*"
+                                      disabled={isUploading}
+                                      onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) handleUploadLessonToMux(file, secIdx, lessonIdx);
+                                      }}
+                                      className="absolute inset-0 opacity-0 cursor-pointer disabled:cursor-not-allowed z-10"
+                                    />
+
+                                    {isUploading ? (
+                                      <div className="w-full space-y-2 py-1">
+                                        <div className="flex items-center justify-between text-xs font-bold text-[#8b3d6f]">
+                                          <span className="flex items-center gap-1.5">
+                                            <Loader2 className="w-3.5 h-3.5 animate-spin" /> Uploading to Mux...
+                                          </span>
+                                          <span>{progress}%</span>
+                                        </div>
+                                        <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+                                          <div
+                                            className="bg-[#8b3d6f] h-full transition-all duration-300 rounded-full"
+                                            style={{ width: `${progress}%` }}
+                                          />
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <div className="flex items-center gap-2 py-1">
+                                        <div className="w-8 h-8 rounded-lg bg-purple-50 text-[#8b3d6f] flex items-center justify-center group-hover:scale-110 transition-transform">
+                                          <Upload className="w-4 h-4" />
+                                        </div>
+                                        <div className="text-left">
+                                          <p className="text-xs font-bold text-[#2c1a4d]">
+                                            {lesson.video_url ? "Replace Video (Upload to Mux)" : "Upload Video to Mux"}
+                                          </p>
+                                          <p className="text-[10px] text-gray-400">Click or drop MP4, MOV, WEBM</p>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  {/* Or paste direct Mux Playback ID / Video URL */}
+                                  <div className="flex items-center gap-2 pt-1">
+                                    <div className="bg-gray-100 p-2 rounded-lg flex items-center justify-center shrink-0">
+                                      <Video className="w-4 h-4 text-[#8b3d6f]" />
+                                    </div>
+                                    <Input
+                                      value={lesson.video_url}
+                                      onChange={(e) => updateLesson(secIdx, lessonIdx, { video_url: e.target.value })}
+                                      placeholder="Or paste Mux Playback ID / video URL"
+                                      className="text-xs h-9"
                                     />
                                   </div>
                                 </div>
-                              ) : (
-                                <div className="flex items-center gap-2 py-1">
-                                  <div className="w-8 h-8 rounded-lg bg-purple-50 text-[#8b3d6f] flex items-center justify-center group-hover:scale-110 transition-transform">
-                                    <Upload className="w-4 h-4" />
-                                  </div>
-                                  <div className="text-left">
-                                    <p className="text-xs font-bold text-[#2c1a4d]">
-                                      {section.video_url ? "Replace Video (Upload to Mux)" : "Upload Video to Mux"}
-                                    </p>
-                                    <p className="text-[10px] text-gray-400">Click or drop MP4, MOV, WEBM</p>
+                              </div>
+
+                              <div className="space-y-3">
+                                <div className="space-y-1.5">
+                                  <Label className="text-[#2c1a4d] font-bold text-xs uppercase tracking-wider">
+                                    Lesson Description / Notes
+                                  </Label>
+                                  <Textarea
+                                    value={lesson.description}
+                                    onChange={(e) => updateLesson(secIdx, lessonIdx, { description: e.target.value })}
+                                    className="min-h-[120px] text-xs"
+                                    placeholder="Briefly explain what this lesson covers..."
+                                  />
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <div className="flex-1 space-y-1">
+                                    <Label className="text-[#2c1a4d] font-bold text-[11px] uppercase tracking-wider">
+                                      Duration in seconds (Optional)
+                                    </Label>
+                                    <Input
+                                      type="number"
+                                      value={lesson.video_length || ""}
+                                      onChange={(e) => updateLesson(secIdx, lessonIdx, { video_length: Number(e.target.value) || 0 })}
+                                      placeholder="e.g. 600"
+                                      className="h-8 text-xs"
+                                    />
                                   </div>
                                 </div>
-                              )}
+                              </div>
                             </div>
+                          </div>
+                        );
+                      })}
 
-                            {/* Or paste direct Mux Playback ID / Video URL */}
-                            <div className="flex items-center gap-2 pt-1">
-                               <div className="bg-gray-100 p-2 rounded-lg flex items-center justify-center shrink-0">
-                                  <Video className="w-4 h-4 text-[#8b3d6f]" />
-                               </div>
-                               <Input 
-                                 value={section.video_url} 
-                                 onChange={(e) => updateSection(idx, { video_url: e.target.value })} 
-                                 placeholder="Or paste Mux Playback ID / video URL" 
-                                 className="text-xs h-9"
-                               />
-                            </div>
-                         </div>
-                      </div>
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                            <Label className="text-[#2c1a4d] font-bold text-xs uppercase tracking-wider">Short Description / Subtitle</Label>
-                            <Textarea value={section.description} onChange={(e) => updateSection(idx, { description: e.target.value })} className="min-h-[100px]" placeholder="Briefly explain what this lesson covers..." />
-                        </div>
-                      </div>
-                  </div>
-               </div>
-            ))}
-            
-            {(!formData.course_data || formData.course_data.length === 0) && (
-               <div className="py-20 text-center border-2 border-dashed border-gray-200 rounded-2xl bg-white">
-                  <Video className="w-12 h-12 text-gray-200 mx-auto mb-4" />
-                  <p className="font-bold text-gray-400">No content sections yet</p>
-                  <p className="text-sm text-gray-300">Click the button above to start building your course.</p>
-               </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => addLessonToSection(secIdx)}
+                        className="w-full py-3 border-dashed border-2 border-purple-200 hover:border-[#8b3d6f] hover:bg-purple-50/50 text-[#8b3d6f] font-bold text-xs gap-2 rounded-xl"
+                      >
+                        <Plus className="w-4 h-4" /> Add Another Lesson to &ldquo;{group.section_title || `Section ${secIdx + 1}`}&rdquo;
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+            {sectionGroups.length === 0 && (
+              <div className="py-20 text-center border-2 border-dashed border-gray-200 rounded-2xl bg-white space-y-3">
+                <Video className="w-12 h-12 text-gray-200 mx-auto" />
+                <p className="font-bold text-gray-500">No sections added yet</p>
+                <p className="text-sm text-gray-400">Click &quot;Add New Section&quot; above to create chapters and lessons.</p>
+                <Button type="button" onClick={addSectionGroup} className="bg-[#8b3d6f] hover:bg-[#7c3663] text-white font-bold gap-2">
+                  <Plus className="w-4 h-4" /> Add First Section
+                </Button>
+              </div>
             )}
           </div>
         )}

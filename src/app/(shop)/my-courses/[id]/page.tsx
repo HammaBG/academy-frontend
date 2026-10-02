@@ -686,79 +686,135 @@ export default function MyCourseDetailsPage() {
               </div>
             </div>
 
-            {/* Lessons List container */}
+            {/* Lessons List container grouped by Section */}
             <div className="space-y-4">
-              <h2 className="text-lg font-black text-text-primary">قائمة الدروس والمقاطع</h2>
-              <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
-                {sections.map((section: any, idx: number) => {
-                  const isActive = activeIdx === idx;
-                  const sectionTitle = section.video_section || `القسم ${idx + 1}`;
-                  const isCompleted = completedVideos.includes(sectionTitle);
-                  return (
-                    <button
-                      key={idx}
-                      onClick={() => {
-                        setActiveIdx(idx);
-                        // Reset forms
-                        setQuestionText("");
-                        setReplyTexts({});
-                        setShowReplyForm({});
-                      }}
-                      className={cn(
-                        "w-full p-4 rounded-2xl flex items-center justify-between border transition-all text-right shadow-sm",
-                        isActive
-                          ? "bg-brand-primary/10 border-brand-primary/45 text-brand-primary"
-                          : "bg-surface border-border/40 text-text-primary hover:border-brand-primary/40"
-                      )}
-                    >
-                      <div className="flex items-center gap-3">
-                        {/* Clickable check-circle status */}
-                        <div
-                          onClick={async (e) => {
-                            e.stopPropagation();
-                            if (token) {
-                              try {
-                                await toggleVideoProgress(currentCourse.id, sectionTitle, token);
-                              } catch (err) {
-                                console.error(err);
-                              }
-                            }
-                          }}
-                          className={cn(
-                            "w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-colors cursor-pointer",
-                            isCompleted
-                              ? "bg-emerald-500 border-emerald-500 text-white"
-                              : "border-border hover:border-brand-primary bg-background"
-                          )}
-                        >
-                          {isCompleted && (
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
-                              <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
-                            </svg>
-                          )}
-                        </div>
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-black text-text-primary">فهرس الدروس والفصول</h2>
+                <span className="text-xs font-bold text-text-secondary bg-surface px-2.5 py-1 rounded-full border border-border/40">
+                  {sections.length} درساً
+                </span>
+              </div>
 
-                        <div className={cn(
-                          "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border",
-                          isActive
-                            ? "bg-brand-primary text-white border-brand-primary/20"
-                            : "bg-background border-border/40 text-text-secondary"
-                        )}>
-                          <PlayCircle className="w-5 h-5" />
-                        </div>
-                        <div className="truncate text-right">
-                          <h3 className="font-extrabold text-sm truncate">{sectionTitle}</h3>
-                          <p className="text-[11px] text-text-secondary truncate">{section.title}</p>
-                        </div>
-                      </div>
-                      {section.video_length && (
-                        <span className="text-[10px] font-bold text-text-secondary bg-background px-2.5 py-1 rounded-full border border-border/40 shrink-0">
-                          {Math.floor(section.video_length / 60)}:{(section.video_length % 60).toString().padStart(2, '0')}
+              <div className="space-y-4 max-h-[550px] overflow-y-auto pr-1">
+                {(() => {
+                  // Group indexed lessons by section title
+                  interface SectionWithLessons {
+                    sectionTitle: string;
+                    lessons: { lesson: any; originalIdx: number }[];
+                  }
+
+                  const grouped: SectionWithLessons[] = [];
+                  const seen = new Map<string, { lesson: any; originalIdx: number }[]>();
+
+                  sections.forEach((sec: any, idx: number) => {
+                    const groupTitle = (sec.video_section || `القسم ${idx + 1}`).trim();
+                    if (!seen.has(groupTitle)) {
+                      seen.set(groupTitle, []);
+                    }
+                    seen.get(groupTitle)!.push({ lesson: sec, originalIdx: idx });
+                  });
+
+                  seen.forEach((lessons, sectionTitle) => {
+                    grouped.push({ sectionTitle, lessons });
+                  });
+
+                  return grouped.map((group, gIdx) => (
+                    <div key={gIdx} className="space-y-2">
+                      <div className="flex items-center gap-2 px-1 pt-1">
+                        <span className="w-5 h-5 rounded-md bg-brand-primary/10 text-brand-primary flex items-center justify-center font-black text-[11px]">
+                          {gIdx + 1}
                         </span>
-                      )}
-                    </button>
-                  );
-                })}
+                        <h4 className="text-xs font-black text-text-primary/90 tracking-wide">
+                          {group.sectionTitle}
+                        </h4>
+                        <span className="text-[10px] text-text-secondary font-bold mr-auto">
+                          ({group.lessons.length} {group.lessons.length === 1 ? "درس" : "دروس"})
+                        </span>
+                      </div>
+
+                      <div className="space-y-2">
+                        {group.lessons.map(({ lesson, originalIdx }) => {
+                          const isActive = activeIdx === originalIdx;
+                          const lessonKey = lesson.title || lesson.video_section || `lesson-${originalIdx}`;
+                          const isCompleted = completedVideos.includes(lessonKey) || completedVideos.includes(lesson.video_section);
+
+                          return (
+                            <button
+                              key={originalIdx}
+                              onClick={() => {
+                                setActiveIdx(originalIdx);
+                                setQuestionText("");
+                                setReplyTexts({});
+                                setShowReplyForm({});
+                              }}
+                              className={cn(
+                                "w-full p-3.5 rounded-2xl flex items-center justify-between border transition-all text-right shadow-sm group",
+                                isActive
+                                  ? "bg-brand-primary/10 border-brand-primary/45 text-brand-primary"
+                                  : "bg-surface border-border/40 text-text-primary hover:border-brand-primary/40"
+                              )}
+                            >
+                              <div className="flex items-center gap-3 min-w-0 flex-1 ml-2">
+                                {/* Clickable check-circle status */}
+                                <div
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    if (token) {
+                                      try {
+                                        await toggleVideoProgress(currentCourse.id, lessonKey, token);
+                                      } catch (err) {
+                                        console.error(err);
+                                      }
+                                    }
+                                  }}
+                                  className={cn(
+                                    "w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-colors cursor-pointer",
+                                    isCompleted
+                                      ? "bg-emerald-500 border-emerald-500 text-white"
+                                      : "border-border hover:border-brand-primary bg-background"
+                                  )}
+                                  title={isCompleted ? "تم الإكمال" : "تحديد كمكتمل"}
+                                >
+                                  {isCompleted && (
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
+                                      <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                                    </svg>
+                                  )}
+                                </div>
+
+                                <div className={cn(
+                                  "w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border",
+                                  isActive
+                                    ? "bg-brand-primary text-white border-brand-primary/20"
+                                    : "bg-background border-border/40 text-text-secondary"
+                                )}>
+                                  <PlayCircle className="w-4 h-4" />
+                                </div>
+
+                                <div className="truncate text-right flex-1">
+                                  <h3 className="font-extrabold text-xs sm:text-sm truncate">
+                                    {lesson.title || `درس ${originalIdx + 1}`}
+                                  </h3>
+                                  {lesson.description && (
+                                    <p className="text-[10px] text-text-secondary truncate mt-0.5 font-medium">
+                                      {lesson.description}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+
+                              {lesson.video_length ? (
+                                <span className="text-[10px] font-bold text-text-secondary bg-background px-2 py-0.5 rounded-full border border-border/40 shrink-0">
+                                  {Math.floor(lesson.video_length / 60)}:{(lesson.video_length % 60).toString().padStart(2, "0")}
+                                </span>
+                              ) : null}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ));
+                })()}
               </div>
             </div>
           </div>

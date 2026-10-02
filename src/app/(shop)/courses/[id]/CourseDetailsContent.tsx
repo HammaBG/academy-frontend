@@ -214,98 +214,175 @@ export function CourseDetailsContent({ course }: CourseDetailsContentProps) {
         </section>
       )}
 
-      {/* 5. Course Curriculum / Syllabus (محتوى الدورة) */}
-      <section aria-label="محتوى الدورة" className="space-y-6">
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-brand-primary/10 border border-brand-primary/20 flex items-center justify-center text-brand-primary">
-              <Layers className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-xl sm:text-2xl font-black text-text-primary">محتوى ومنهاج الدورة</h2>
-              <p className="text-xs text-text-secondary font-bold">
-                {course.course_data?.length || 0} أقسام تدريبية شاملة
-              </p>
-            </div>
-          </div>
+      {/* 5. Course Curriculum / Syllabus (محتوى ومنهاج الدورة) */}
+      {(() => {
+        // Group lessons by video_section
+        interface GroupedSection {
+          title: string;
+          lessons: typeof course.course_data;
+        }
 
-          {course.course_data && course.course_data.length > 0 && (
-            <button
-              onClick={toggleAllSections}
-              className="text-xs font-bold text-brand-primary hover:underline flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-brand-primary/5 transition-colors"
-            >
-              {allSectionsOpen ? (
-                <>
-                  <ChevronUp className="w-4 h-4" /> طي جميع الأقسام
-                </>
-              ) : (
-                <>
-                  <ChevronDown className="w-4 h-4" /> توسيع جميع الأقسام
-                </>
-              )}
-            </button>
-          )}
-        </div>
+        const groupedSections: GroupedSection[] = [];
+        const seenMap = new Map<string, typeof course.course_data>();
 
-        <div className="space-y-3.5">
-          {course.course_data?.map((section, idx) => {
-            const isOpen = openSections.includes(idx);
-            return (
-              <div
-                key={idx}
-                className={cn(
-                  "border rounded-2xl overflow-hidden bg-surface transition-all duration-300",
-                  isOpen ? "border-brand-primary/40 shadow-sm" : "border-border/40 hover:border-border/70"
-                )}
-              >
-                <button
-                  onClick={() => toggleSection(idx)}
-                  className="w-full p-5 sm:p-6 flex items-center justify-between hover:bg-surface/90 transition-colors"
-                  aria-expanded={isOpen}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-brand-primary/10 border border-brand-primary/20 flex items-center justify-center text-brand-primary shrink-0">
-                      <PlayCircle className="w-5 h-5" />
-                    </div>
-                    <div className="text-right">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-black text-brand-primary bg-brand-primary/10 px-2 py-0.5 rounded-md">
-                          القسم {idx + 1}
-                        </span>
-                        <h3 className="font-black text-sm sm:text-base text-text-primary">
-                          {section.video_section}
-                        </h3>
-                      </div>
-                      <p className="text-xs text-text-secondary font-medium mt-1">{section.title}</p>
-                    </div>
-                  </div>
-                  <ChevronDown
-                    className={cn(
-                      "w-5 h-5 text-text-secondary transition-transform duration-300 shrink-0",
-                      isOpen && "rotate-180 text-brand-primary"
-                    )}
-                  />
-                </button>
+        (course.course_data || []).forEach((lesson) => {
+          const secTitle = (lesson.video_section || "القسم العام").trim();
+          if (!seenMap.has(secTitle)) {
+            seenMap.set(secTitle, []);
+          }
+          seenMap.get(secTitle)!.push(lesson);
+        });
 
-                {isOpen && (
-                  <div className="p-5 sm:p-6 pt-0 border-t border-border/40 space-y-4 animate-in slide-in-from-top-2 duration-300">
-                    <p className="text-text-secondary text-sm leading-relaxed text-right font-medium">
-                      {section.description}
-                    </p>
-                    <div className="p-3.5 bg-background rounded-xl border border-border/40 flex items-center justify-between">
-                      <span className="text-xs font-black text-brand-primary flex items-center gap-1.5">
-                        <Sparkles className="w-3.5 h-3.5" />
-                        دروس بجودة عالية مع دعم للملاحظات الذكية
-                      </span>
-                      <span className="text-xs font-bold text-text-secondary">فيديو مسجل</span>
-                    </div>
-                  </div>
-                )}
+        seenMap.forEach((lessons, title) => {
+          groupedSections.push({ title, lessons });
+        });
+
+        const totalLessons = course.course_data?.length || 0;
+        const totalSections = groupedSections.length;
+        const allSectionsOpen = openSections.length === totalSections && totalSections > 0;
+
+        const toggleChapter = (idx: number) => {
+          setOpenSections((prev) =>
+            prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx]
+          );
+        };
+
+        const toggleAllChapters = () => {
+          if (openSections.length === totalSections) {
+            setOpenSections([]);
+          } else {
+            setOpenSections(Array.from({ length: totalSections }, (_, i) => i));
+          }
+        };
+
+        return (
+          <section aria-label="محتوى الدورة" className="space-y-6">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-brand-primary/10 border border-brand-primary/20 flex items-center justify-center text-brand-primary">
+                  <Layers className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-black text-text-primary">محتوى ومنهاج الدورة</h2>
+                  <p className="text-xs text-text-secondary font-bold">
+                    {totalSections} فصول رئيسية • {totalLessons} درساً تدريبياً
+                  </p>
+                </div>
               </div>
-            );
-          })}
-        </div>
-      </section>
+
+              {totalSections > 0 && (
+                <button
+                  onClick={toggleAllChapters}
+                  className="text-xs font-bold text-brand-primary hover:underline flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-brand-primary/5 transition-colors"
+                >
+                  {allSectionsOpen ? (
+                    <>
+                      <ChevronUp className="w-4 h-4" /> طي جميع الفصول
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="w-4 h-4" /> توسيع جميع الفصول
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+
+            <div className="space-y-3.5">
+              {groupedSections.map((group, secIdx) => {
+                const isOpen = openSections.includes(secIdx);
+                const sectionDurationSec = group.lessons.reduce((acc, l) => acc + (l.video_length || 0), 0);
+                const minutes = Math.floor(sectionDurationSec / 60);
+
+                return (
+                  <div
+                    key={secIdx}
+                    className={cn(
+                      "border rounded-2xl overflow-hidden bg-surface transition-all duration-300",
+                      isOpen ? "border-brand-primary/40 shadow-sm" : "border-border/40 hover:border-border/70"
+                    )}
+                  >
+                    <button
+                      onClick={() => toggleChapter(secIdx)}
+                      className="w-full p-4 sm:p-5 flex items-center justify-between hover:bg-surface/90 transition-colors"
+                      aria-expanded={isOpen}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-brand-primary/10 border border-brand-primary/20 flex items-center justify-center text-brand-primary shrink-0 font-black text-sm">
+                          {secIdx + 1}
+                        </div>
+                        <div className="text-right">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[11px] font-black text-brand-primary bg-brand-primary/10 px-2 py-0.5 rounded-md">
+                              الفصل {secIdx + 1}
+                            </span>
+                            <h3 className="font-black text-sm sm:text-base text-text-primary">
+                              {group.title}
+                            </h3>
+                          </div>
+                          <p className="text-xs text-text-secondary font-medium mt-1">
+                            {group.lessons.length} دروس {minutes > 0 ? `• ${minutes} دقيقة إجمالية` : ""}
+                          </p>
+                        </div>
+                      </div>
+                      <ChevronDown
+                        className={cn(
+                          "w-5 h-5 text-text-secondary transition-transform duration-300 shrink-0",
+                          isOpen && "rotate-180 text-brand-primary"
+                        )}
+                      />
+                    </button>
+
+                    {isOpen && (
+                      <div className="p-4 sm:p-5 pt-0 border-t border-border/40 space-y-2.5 animate-in slide-in-from-top-2 duration-300">
+                        {group.lessons.map((lesson, lessonIdx) => {
+                          const duration = lesson.video_length
+                            ? `${Math.floor(lesson.video_length / 60)}:${(lesson.video_length % 60).toString().padStart(2, "0")}`
+                            : null;
+
+                          return (
+                            <div
+                              key={lessonIdx}
+                              className="p-3 sm:p-3.5 bg-background/50 hover:bg-background rounded-xl border border-border/40 flex items-center justify-between transition-colors gap-3"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-lg bg-surface border border-border/40 flex items-center justify-center text-brand-primary shrink-0">
+                                  <PlayCircle className="w-4 h-4" />
+                                </div>
+                                <div className="text-right">
+                                  <h4 className="text-xs sm:text-sm font-extrabold text-text-primary">
+                                    {lesson.title || `الدرس ${lessonIdx + 1}`}
+                                  </h4>
+                                  {lesson.description && (
+                                    <p className="text-[11px] text-text-secondary line-clamp-1 mt-0.5 font-medium">
+                                      {lesson.description}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2 shrink-0">
+                                {duration && (
+                                  <span className="text-[10px] font-bold text-text-secondary bg-surface px-2 py-0.5 rounded-full border border-border/40">
+                                    {duration}
+                                  </span>
+                                )}
+                                <span className="text-[10px] font-black text-brand-primary bg-brand-primary/10 px-2 py-0.5 rounded-full">
+                                  فيديو
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        );
+      })()}
 
       {/* 6. Course Full Description (نبذة وتفاصيل الدورة) */}
       <section aria-label="نبذة عن الدورة" className="space-y-5">
