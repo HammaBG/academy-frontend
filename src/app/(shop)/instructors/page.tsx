@@ -11,66 +11,21 @@ interface Teacher {
 }
 
 const teachers: Teacher[] = [
-    {
-        id: 1,
-        name: "نايلة بن صالح",
-        title: "طبيبة نفسية",
-        image: "/teachers/1AI.png",
-    },
-    {
-        id: 2,
-        name: "مريم رڤية",
-        title: "طبيبة نفسية",
-        image: "/teachers/2AI.png",
-    },
-    {
-        id: 3,
-        name: "ريماح حناشي",
-        title: "طبيبة نفسية",
-        image: "/teachers/3AI.png",
-    },
-    {
-        id: 4,
-        name: "إنصاف شرف",
-        title: "مختصة في الصحة النفسية",
-        image: "/teachers/4AI.png",
-    },
-    {
-        id: 5,
-        name: "مريم عون",
-        title: "مختصة في الصحة النفسية",
-        image: "/teachers/5AI.png",
-    },
-    {
-        id: 6,
-        name: "ليليا كمون",
-        title: "أخصائية في التثقيف النفسي",
-        image: "/teachers/6AI.png",
-    },
-    {
-        id: 7,
-        name: " أسماء الأمين",
-        title: "مهنسة و باحثة في علم الشريعة و الدين",
-        image: "/teachers/7AI.png",
-    },
-    {
-        id: 8,
-        name: "إنصاف عبد سلام",
-        title: "طبيبة نساء و توليد",
-        image: "/teachers/8AI.png",
-    },
-    {
-        id: 9,
-        name: "إبراهيم بن عبد الله",
-        title: "كوتش و مدرّب على القيادة الذّاتيّة و مستشار في التفكير و التّخطيط الإستراتيجي",
-        image: "/teachers/9AI.png",
-    },
-    {
-        id: 10,
-        name: "أمينة الرڨيڨ",
-        title: "استشارية أسرية و خبيرة في العلاقات",
-        image: "/teachers/10AI.png",
-    },
+    { id: 1, name: "نايلة بن صالح", title: "طبيبة نفسية", image: "/teachers/1AI.png", },
+    { id: 2, name: "مريم رڤية", title: "طبيبة نفسية", image: "/teachers/2AI.png", },
+    { id: 3, name: "ريماح حناشي", title: "طبيبة نفسية", image: "/teachers/3AI.png", },
+    { id: 4, name: "إنصاف شرف", title: "مختصة في الصحة النفسية", image: "/teachers/4AI.png", },
+    { id: 5, name: "مريم عون", title: "مختصة في الصحة النفسية", image: "/teachers/5AI.png", },
+    { id: 6, name: "ليليا كمون", title: "أخصائية في التثقيف النفسي", image: "/teachers/6AI.png", },
+    { id: 7, name: " أسماء الأمين", title: "مهنسة و باحثة في علم الشريعة و الدين", image: "/teachers/7AI.png", },
+    { id: 8, name: "إنصاف عبد سلام", title: "طبيبة نساء و توليد", image: "/teachers/8AI.png", },
+    { id: 9, name: "إبراهيم بن عبد الله", title: "كوتش و مدرّب على القيادة الذّاتيّة و مستشار في التفكير و التّخطيط الإستراتيجي", image: "/teachers/9AI.png", },
+    { id: 10, name: "أمينة الرڨيڨ", title: "استشارية أسرية و خبيرة في العلاقات", image: "/teachers/10AI.png", },
+    { id: 11, name: "يسرى الجّملي", title: "طبيبة نفسية و مختصة في علم الجنس و علاج الإدمان", image: "/teachers/13AI.png", },
+    { id: 12, name: "سنية مصمودي", title: "أستاذة فيزياء و أم و مربية", image: "/teachers/11AI.png", },
+    { id: 13, name: "لطيفة الغزال", title: "مهندسة معمارية و أستاذة جامعية و دكتورة", image: "/teachers/14AI.png", },
+    { id: 14, name: "أميمة الشايب (Budgeteuse)", title: "مستشارة في إدارة الأموال و تحقيق الأهداف المالية", image: "/teachers/12AI.png", },
+
 ];
 
 export default function InstructorsPage() {
