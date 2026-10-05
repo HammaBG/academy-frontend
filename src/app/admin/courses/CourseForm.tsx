@@ -48,6 +48,7 @@ export function CourseForm({ course, onSubmit, onCancel, isLoading }: CourseForm
     short_description: "",
     price: 0,
     estimated_price: 0,
+    preregistration_discount: 0,
     categories: "",
     tags: "",
     level: "Beginner",
@@ -501,14 +502,27 @@ export function CourseForm({ course, onSubmit, onCancel, isLoading }: CourseForm
                    <Label className="text-[#2c1a4d] font-bold">Short Description</Label>
                    <Textarea name="short_description" value={formData.short_description} onChange={handleChange} placeholder="A catchy summary for calculations..." className="min-h-[100px]" required />
                  </div>
-                 <div className="grid grid-cols-2 gap-4">
+                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-[#2c1a4d] font-bold">Price ($)</Label>
+                      <Label className="text-[#2c1a4d] font-bold">Price (TND)</Label>
                       <Input type="number" name="price" value={formData.price} onChange={handleChange} />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[#2c1a4d] font-bold">Estimated Price ($)</Label>
+                      <Label className="text-[#2c1a4d] font-bold">Estimated Price (TND)</Label>
                       <Input type="number" name="estimated_price" value={formData.estimated_price} onChange={handleChange} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[#2c1a4d] font-bold text-amber-700">Pre-Reg Discount (%)</Label>
+                      <Input
+                        type="number"
+                        name="preregistration_discount"
+                        value={formData.preregistration_discount ?? 0}
+                        onChange={handleChange}
+                        min={0}
+                        max={100}
+                        placeholder="e.g. 20"
+                        className="border-amber-200 focus:border-amber-500"
+                      />
                     </div>
                  </div>
                </div>
@@ -874,60 +888,23 @@ export function CourseForm({ course, onSubmit, onCancel, isLoading }: CourseForm
                         )}
                       </div>
 
-                      {/* Mux Upload Zone for Demo Video */}
-                      <div className="relative border-2 border-dashed border-gray-200 hover:border-[#8b3d6f] transition-all rounded-xl p-3 bg-gray-50/60 flex flex-col items-center justify-center text-center gap-2 group cursor-pointer">
-                        <input
-                          type="file"
-                          accept="video/*"
-                          disabled={uploadingDemo}
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) handleUploadDemoToMux(file);
-                          }}
-                          className="absolute inset-0 opacity-0 cursor-pointer disabled:cursor-not-allowed z-10"
-                        />
-
-                        {uploadingDemo ? (
-                          <div className="w-full space-y-2 py-1">
-                            <div className="flex items-center justify-between text-xs font-bold text-[#8b3d6f]">
-                              <span className="flex items-center gap-1.5">
-                                <Loader2 className="w-3.5 h-3.5 animate-spin" /> Uploading to Mux...
-                              </span>
-                              <span>{demoProgress}%</span>
-                            </div>
-                            <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
-                              <div
-                                className="bg-[#8b3d6f] h-full transition-all duration-300 rounded-full"
-                                style={{ width: `${demoProgress}%` }}
-                              />
-                            </div>
+                      {/* YouTube Demo Video Input */}
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <div className="bg-red-50 text-red-600 p-2 rounded-lg flex items-center justify-center shrink-0 border border-red-200">
+                            <Video className="w-4 h-4" />
                           </div>
-                        ) : (
-                          <div className="flex items-center gap-2 py-1">
-                            <div className="w-8 h-8 rounded-lg bg-purple-50 text-[#8b3d6f] flex items-center justify-center group-hover:scale-110 transition-transform">
-                              <Upload className="w-4 h-4" />
-                            </div>
-                            <div className="text-left">
-                              <p className="text-xs font-bold text-[#2c1a4d]">
-                                {formData.demo_url ? "Replace Demo Video (Upload to Mux)" : "Upload Demo Video to Mux"}
-                              </p>
-                              <p className="text-[10px] text-gray-400">Click or drop MP4, MOV, WEBM</p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-2 pt-1">
-                        <div className="bg-gray-100 p-2 rounded-lg flex items-center justify-center shrink-0">
-                          <Video className="w-4 h-4 text-[#8b3d6f]" />
+                          <Input 
+                            name="demo_url" 
+                            value={formData.demo_url || ""} 
+                            onChange={handleChange} 
+                            placeholder="Paste YouTube Video URL (e.g. https://www.youtube.com/watch?v=... or youtu.be/...)" 
+                            className="text-xs h-10 border-gray-200 focus:border-red-500"
+                          />
                         </div>
-                        <Input 
-                          name="demo_url" 
-                          value={formData.demo_url || ""} 
-                          onChange={handleChange} 
-                          placeholder="Or paste Mux Playback ID / video URL" 
-                          className="text-xs h-9"
-                        />
+                        <p className="text-[11px] text-gray-500 font-medium">
+                          The demo preview video will be embedded directly from YouTube (supports standard watch URLs, youtu.be links, Shorts, and video IDs).
+                        </p>
                       </div>
                     </div>
                     <div className="flex gap-8 pt-6">

@@ -109,6 +109,12 @@ export function CourseDetailsContent({ course }: CourseDetailsContentProps) {
       <section aria-label="معلومات الدورة" className="space-y-6">
         {/* Categories & Badges */}
         <div className="flex flex-wrap items-center gap-2.5">
+          {!course.ready && (
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-black rounded-full shadow-sm animate-pulse">
+              <Sparkles className="w-3.5 h-3.5" />
+              قريباً - حجز مسبق مع تخفيض
+            </span>
+          )}
           {course.categories.split(",").map((cat, i) => (
             <span
               key={i}

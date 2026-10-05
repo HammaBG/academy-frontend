@@ -21,9 +21,24 @@ export function CoursePlayer({ videoUrl, seekTime }: CoursePlayerProps) {
   });
   const [resolvedMuxId, setResolvedMuxId] = useState<string | null>(null);
 
+  // Extract YouTube Video ID if present (supports watch?v=, youtu.be/, shorts/, embed/)
+  const getYouTubeId = (url: string): string | null => {
+    if (!url) return null;
+    const trimmed = url.trim();
+    const ytMatch = trimmed.match(
+      /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/
+    );
+    if (ytMatch) return ytMatch[1];
+    // If user entered exactly an 11-char YouTube ID
+    if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) return trimmed;
+    return null;
+  };
+
+  const detectedYouTubeId = getYouTubeId(videoUrl);
+
   // Extract Mux playback ID if present (e.g. stream.mux.com/ID.m3u8, mux:ID, or raw Mux ID)
   const getMuxPlaybackId = (url: string): string | null => {
-    if (!url) return null;
+    if (!url || detectedYouTubeId) return null;
     const trimmed = url.trim();
     if (trimmed.startsWith("mux:")) {
       return trimmed.replace(/^mux:/, "").trim();
@@ -61,7 +76,8 @@ export function CoursePlayer({ videoUrl, seekTime }: CoursePlayerProps) {
 
   // Check if the videoUrl is a direct file/stream link (Cloudinary, mp4, webm, etc.)
   const isDirectUrl = Boolean(
-    !activeMuxPlaybackId &&
+    !detectedYouTubeId &&
+      !activeMuxPlaybackId &&
       videoUrl &&
       (videoUrl.startsWith("http://") ||
         videoUrl.startsWith("https://") ||
@@ -73,9 +89,9 @@ export function CoursePlayer({ videoUrl, seekTime }: CoursePlayerProps) {
         videoUrl.includes("/video/upload/"))
   );
 
-  // If not Mux and not a direct URL, it is a VdoCipher videoId, so fetch OTP
+  // If not YouTube, not Mux and not a direct URL, it is a VdoCipher videoId, so fetch OTP
   useEffect(() => {
-    if (!videoUrl || isDirectUrl || activeMuxPlaybackId) return;
+    if (!videoUrl || detectedYouTubeId || isDirectUrl || activeMuxPlaybackId) return;
 
     // Dynamically load official VdoCipher API script only when needed
     if (!document.getElementById("vdocipher-api-script")) {
@@ -162,6 +178,21 @@ export function CoursePlayer({ videoUrl, seekTime }: CoursePlayerProps) {
       console.error("Error seeking video:", err);
     }
   }, [seekTime, isDirectUrl, activeMuxPlaybackId]);
+
+  // YouTube Video Player (specifically for demo / teaser or public previews)
+  if (detectedYouTubeId) {
+    return (
+      <div className="absolute inset-0 w-full h-full bg-black flex items-center justify-center overflow-hidden">
+        <iframe
+          src={`https://www.youtube.com/embed/${detectedYouTubeId}?autoplay=1&rel=0&modestbranding=1`}
+          title="Course Demo Video"
+          className="w-full h-full border-0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowFullScreen
+        />
+      </div>
+    );
+  }
 
   // Mux Video Player
   if (activeMuxPlaybackId) {

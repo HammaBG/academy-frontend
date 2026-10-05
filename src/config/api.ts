@@ -20,4 +20,5 @@ export const API_ENDPOINTS = {
   notes: `${API_BASE_URL}/notes`,
   chat: `${API_BASE_URL}/chat`,
   tickets: `${API_BASE_URL}/tickets`,
+  preRegistrations: `${API_BASE_URL}/pre-registrations`,
 };

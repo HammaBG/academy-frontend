@@ -61,6 +61,7 @@ export interface Course {
     categories: string;
     price: number;
     estimated_price?: number;
+    preregistration_discount?: number;
     thumbnail: {
         public_id: string;
         url: string;

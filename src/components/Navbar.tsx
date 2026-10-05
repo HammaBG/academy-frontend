@@ -10,7 +10,7 @@ import { useCourseStore, type Course } from "@/store/course";
 import { useTheme } from "@/components/providers/ThemeProvider";
 import logo from "../../public/ossosacademy.jpg";
 import { API_ENDPOINTS } from "@/config/api";
-import { Search, X, BookOpen, User as UserIcon, Sun, Moon, Ticket } from "lucide-react";
+import { Search, X, BookOpen, User as UserIcon, Sun, Moon, Ticket, ClockCheck } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
 
 interface SearchCourseResultProps {
@@ -526,6 +526,15 @@ export function Navbar() {
                         >
                           <BookOpen className="h-5 w-5 text-text-secondary" />
                           كورساتي
+                        </Link>
+
+                        <Link
+                          href="/pre-registered-courses"
+                          className="flex items-center gap-3 px-5 py-2.5 text-text-primary hover:bg-background/60 hover:text-brand-primary transition-colors"
+                          onClick={handleCloseProfile}
+                        >
+                          <ClockCheck className="h-5 w-5 text-brand-primary" />
+                          دوراتي المحجوزة مسبقاً
                         </Link>
 
                         <Link
