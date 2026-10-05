@@ -187,7 +187,7 @@ export function PreRegistrationModal({
               </div>
 
               <p className="text-[11px] text-center text-text-secondary/70">
-                🔒 لا يلزم أي دفع الآن. الدفع سيكون عند الاستلام بالسعر المخفض فور إطلاق الدورة.
+                لا يلزم أي دفع الآن. الدفع سيكون عند الاستلام بالسعر المخفض فور إطلاق الدورة.
               </p>
             </form>
           </div>
