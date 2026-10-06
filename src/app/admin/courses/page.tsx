@@ -70,10 +70,8 @@ export default function CoursesPage() {
   useEffect(() => {
     if (token) {
       getAllCourses(token);
-      getInstructors();
-      getAllUsers();
     }
-  }, [token, getAllCourses, getInstructors, getAllUsers]);
+  }, [token, getAllCourses]);
 
   const filteredCourses = (courses ?? []).filter(course =>
     course.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -111,8 +109,11 @@ export default function CoursesPage() {
       : course.creator?.id ?? null;
     setSelectedInstructorId(currentCreatorId);
     setInstructorSearch("");
+    if (!instructors || instructors.length === 0) {
+      getInstructors();
+    }
     setAssignDialogOpen(true);
-  }, []);
+  }, [instructors, getInstructors]);
 
   const handleAssign = async () => {
     const courseId = assignTarget?.id || (assignTarget as any)?._id;
@@ -134,8 +135,11 @@ export default function CoursesPage() {
     setAssignUserTarget(course);
     setSelectedUserId(null);
     setUserSearch("");
+    if (!users || users.length === 0) {
+      getAllUsers();
+    }
     setAssignUserDialogOpen(true);
-  }, []);
+  }, [users, getAllUsers]);
 
   const handleAssignUser = async () => {
     const courseId = assignUserTarget?.id || (assignUserTarget as any)?._id;
@@ -220,7 +224,7 @@ export default function CoursesPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {!isLoading && filteredCourses.map((course) => {
+            {filteredCourses.map((course) => {
               const courseId = course.id || (course as any)._id;
               return (
                 <TableRow key={courseId} className="hover:bg-gray-50/50 transition-colors border-b border-gray-50">
