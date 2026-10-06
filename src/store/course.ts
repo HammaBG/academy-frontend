@@ -160,9 +160,9 @@ export const useCourseStore = create<CourseStore>()(
                     }
 
                     await get().getAllCourses(token);
-                    set({ isLoading: false });
                 } catch (err: any) {
                     set({ error: err.message, isLoading: false });
+                    throw err;
                 }
             },
 

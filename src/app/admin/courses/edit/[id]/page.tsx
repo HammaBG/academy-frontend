@@ -7,6 +7,7 @@ import { CourseForm } from "../../CourseForm";
 import { useRouter, useParams } from "next/navigation";
 import { ChevronLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export default function EditCoursePage() {
   const router = useRouter();
@@ -28,9 +29,11 @@ export default function EditCoursePage() {
 
     try {
       await updateCourse(id as string, updateData, token);
+      toast.success("Course updated successfully!");
       router.push("/admin/courses");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Update course error:", err);
+      toast.error(err.message || "Failed to update course. Please check all required fields.");
     }
   };
 

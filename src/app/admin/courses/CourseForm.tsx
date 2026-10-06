@@ -8,14 +8,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { useCategoryStore } from "@/store/category";
 import { useAuthStore } from "@/store/auth";
 import { Course, ICourseData, ILink } from "@/store/course";
-import { 
-  Plus, 
-  Trash2, 
-  Video, 
-  Link as LinkIcon, 
-  Settings, 
-  BookOpen, 
-  CheckCircle, 
+import {
+  Plus,
+  Trash2,
+  Video,
+  Link as LinkIcon,
+  Settings,
+  BookOpen,
+  CheckCircle,
   ArrowRight,
   Save,
   Loader2,
@@ -80,13 +80,13 @@ export function CourseForm({ course, onSubmit, onCancel, isLoading }: CourseForm
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     let finalValue: any = value;
-    
+
     if (type === "checkbox") {
       finalValue = (e.target as HTMLInputElement).checked;
     } else if (type === "number") {
       finalValue = value === "" ? 0 : Number(value);
     }
-    
+
     setFormData((prev) => ({ ...prev, [name]: finalValue }));
   };
 
@@ -444,9 +444,60 @@ export function CourseForm({ course, onSubmit, onCancel, isLoading }: CourseForm
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // 1. Validate General Info tab fields
+    if (!formData.name?.trim()) {
+      setActiveTab("general");
+      toast.error("Course Title is required (General Info tab)");
+      return;
+    }
+    if (!formData.short_description?.trim()) {
+      setActiveTab("general");
+      toast.error("Short Description is required (General Info tab)");
+      return;
+    }
+    if (!formData.categories?.trim()) {
+      setActiveTab("general");
+      toast.error("Course Category is required (General Info tab)");
+      return;
+    }
+    if (!formData.description?.trim()) {
+      setActiveTab("general");
+      toast.error("Full Course Description is required (General Info tab)");
+      return;
+    }
+
+    // 2. Validate Extra Details tab (Benefits & Prerequisites)
+    const validBenefits = (formData.benefits || []).filter((b) => b.title?.trim());
+    if (validBenefits.length === 0) {
+      setActiveTab("details");
+      toast.error("Please add at least one benefit under 'What students will learn' (Extra Details tab)");
+      return;
+    }
+    const validPrerequisites = (formData.prerequisites || []).filter((p) => p.title?.trim());
+    if (validPrerequisites.length === 0) {
+      setActiveTab("details");
+      toast.error("Please add at least one prerequisite (Extra Details tab)");
+      return;
+    }
+
+    // 3. Validate Live Settings tab
+    if (!formData.tags?.trim()) {
+      setActiveTab("test");
+      toast.error("Tags are required (Live Settings tab)");
+      return;
+    }
+    if (!formData.level?.trim()) {
+      setActiveTab("test");
+      toast.error("Course Level is required (Live Settings tab)");
+      return;
+    }
+
     const flattenedCourseData = flattenSectionGroups(sectionGroups);
     onSubmit({
       ...formData,
+      benefits: validBenefits,
+      prerequisites: validPrerequisites,
       course_data: flattenedCourseData,
     });
   };
@@ -466,8 +517,8 @@ export function CourseForm({ course, onSubmit, onCancel, isLoading }: CourseForm
             onClick={() => setActiveTab(tab.id as any)}
             className={cn(
               "flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all shrink-0",
-              activeTab === tab.id 
-                ? "bg-[#8b3d6f] text-white shadow-lg shadow-purple-200 scale-105" 
+              activeTab === tab.id
+                ? "bg-[#8b3d6f] text-white shadow-lg shadow-purple-200 scale-105"
                 : "bg-white text-gray-500 hover:bg-gray-100 border border-gray-100"
             )}
           >
@@ -480,138 +531,138 @@ export function CourseForm({ course, onSubmit, onCancel, isLoading }: CourseForm
       <form onSubmit={handleSubmit} className="flex-1 p-8 overflow-y-auto">
         {activeTab === "general" && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-               <div className="space-y-6">
-                 <div className="space-y-2">
-                   <Label className="text-[#2c1a4d] font-bold">Course Title</Label>
-                   <Input name="name" value={formData.name} onChange={handleChange} placeholder="e.g. Master React in 30 Days" required />
-                 </div>
-                 <div className="space-y-2">
-                   <Label className="text-[#2c1a4d] font-bold">Custom URL Slug (Optional)</Label>
-                   <Input
-                     name="url"
-                     value={formData.url || ""}
-                     onChange={handleChange}
-                     placeholder="e.g. master-react-in-30-days"
-                   />
-                   <p className="text-[11px] text-gray-400 font-mono">
-                     Link: /courses/{formData.url || "auto-generated-slug"}
-                   </p>
-                 </div>
-                 <div className="space-y-2">
-                   <Label className="text-[#2c1a4d] font-bold">Short Description</Label>
-                   <Textarea name="short_description" value={formData.short_description} onChange={handleChange} placeholder="A catchy summary for calculations..." className="min-h-[100px]" required />
-                 </div>
-                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-[#2c1a4d] font-bold">Price (TND)</Label>
-                      <Input type="number" name="price" value={formData.price} onChange={handleChange} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[#2c1a4d] font-bold">Estimated Price (TND)</Label>
-                      <Input type="number" name="estimated_price" value={formData.estimated_price} onChange={handleChange} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[#2c1a4d] font-bold text-amber-700">Pre-Reg Discount (%)</Label>
-                      <Input
-                        type="number"
-                        name="preregistration_discount"
-                        value={formData.preregistration_discount ?? 0}
-                        onChange={handleChange}
-                        min={0}
-                        max={100}
-                        placeholder="e.g. 20"
-                        className="border-amber-200 focus:border-amber-500"
-                      />
-                    </div>
-                 </div>
-               </div>
-               
-               <div className="space-y-6">
-                   <div className="space-y-2">
-                      <Label className="text-[#2c1a4d] font-bold">Course Thumbnail</Label>
-                      <div className="relative group aspect-video rounded-2xl border-2 border-dashed border-gray-200 bg-white flex flex-col items-center justify-center overflow-hidden transition-all hover:border-[#8b3d6f] hover:bg-purple-50/30">
-                        {imagePreview ? (
-                          <>
-                            <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                               <Button type="button" variant="destructive" size="icon" onClick={() => setImagePreview(null)}>
-                                  <X className="w-4 h-4" />
-                               </Button>
-                            </div>
-                          </>
-                        ) : (
-                          <div className="flex flex-col items-center gap-2">
-                             <ImageIcon className="w-12 h-12 text-gray-300" />
-                             <span className="text-sm font-bold text-gray-400">Upload Banner Image</span>
-                          </div>
-                        )}
-                        <input type="file" accept="image/*" onChange={handleImageChange} className="absolute inset-0 opacity-0 cursor-pointer" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <Label className="text-[#2c1a4d] font-bold">Course Title <span className="text-red-500 font-bold">*</span></Label>
+                  <Input name="name" value={formData.name} onChange={handleChange} placeholder="Course Name" required />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[#2c1a4d] font-bold">Custom URL Slug (Optional)</Label>
+                  <Input
+                    name="url"
+                    value={formData.url || ""}
+                    onChange={handleChange}
+                    placeholder="e.g. course-name"
+                  />
+                  <p className="text-[11px] text-gray-400 font-mono">
+                    Link: /courses/{formData.url || "auto-generated-slug"}
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[#2c1a4d] font-bold">Short Description <span className="text-red-500 font-bold">*</span></Label>
+                  <Textarea name="short_description" value={formData.short_description} onChange={handleChange} placeholder="A catchy summary for calculations..." className="min-h-[100px]" required />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-[#2c1a4d] font-bold">Price (TND)</Label>
+                    <Input type="number" name="price" value={formData.price} onChange={handleChange} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[#2c1a4d] font-bold">Estimated Price (TND)</Label>
+                    <Input type="number" name="estimated_price" value={formData.estimated_price} onChange={handleChange} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[#2c1a4d] font-bold text-amber-700">Pre-Reg Discount (%)</Label>
+                    <Input
+                      type="number"
+                      name="preregistration_discount"
+                      value={formData.preregistration_discount ?? 0}
+                      onChange={handleChange}
+                      min={0}
+                      max={100}
+                      placeholder="e.g. 20"
+                      className="border-amber-200 focus:border-amber-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <Label className="text-[#2c1a4d] font-bold">Course Thumbnail</Label>
+                  <div className="relative group aspect-video rounded-2xl border-2 border-dashed border-gray-200 bg-white flex flex-col items-center justify-center overflow-hidden transition-all hover:border-[#8b3d6f] hover:bg-purple-50/30">
+                    {imagePreview ? (
+                      <>
+                        <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <Button type="button" variant="destructive" size="icon" onClick={() => setImagePreview(null)}>
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex flex-col items-center gap-2">
+                        <ImageIcon className="w-12 h-12 text-gray-300" />
+                        <span className="text-sm font-bold text-gray-400">Upload Banner Image</span>
                       </div>
-                   </div>
-                   <div className="space-y-2">
-                     <Label className="text-[#2c1a4d] font-bold">Category</Label>
-                     <select 
-                       name="categories" 
-                       value={formData.categories} 
-                       onChange={handleChange}
-                       className="w-full h-10 px-3 rounded-md border border-gray-200 bg-white text-sm focus:outline-none focus:ring-1 focus:ring-[#8b3d6f]"
-                       required
-                     >
-                       <option value="">Select a category</option>
-                       {categories.map((cat) => (
-                         <option key={cat.id} value={cat.name}>
-                           {cat.name}
-                         </option>
-                       ))}
-                     </select>
-                   </div>
-               </div>
-             </div>
-             
-             <div className="space-y-2">
-                <Label className="text-[#2c1a4d] font-bold">Full Course Description</Label>
-                <Textarea name="description" value={formData.description} onChange={handleChange} className="min-h-[200px]" placeholder="Explain what your course is about in detail..." required />
-             </div>
+                    )}
+                    <input type="file" accept="image/*" onChange={handleImageChange} className="absolute inset-0 opacity-0 cursor-pointer" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[#2c1a4d] font-bold">Category <span className="text-red-500 font-bold">*</span></Label>
+                  <select
+                    name="categories"
+                    value={formData.categories}
+                    onChange={handleChange}
+                    className="w-full h-10 px-3 rounded-md border border-gray-200 bg-white text-sm focus:outline-none focus:ring-1 focus:ring-[#8b3d6f]"
+                    required
+                  >
+                    <option value="">Select a category</option>
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.name}>
+                        {cat.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-[#2c1a4d] font-bold">Full Course Description <span className="text-red-500 font-bold">*</span></Label>
+              <Textarea name="description" value={formData.description} onChange={handleChange} className="min-h-[200px]" placeholder="Explain what your course is about in detail..." required />
+            </div>
           </div>
         )}
 
         {activeTab === "details" && (
-           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
-                <div className="flex items-center justify-between mb-2">
-                   <h3 className="text-lg font-extrabold text-[#2c1a4d]">What students will learn</h3>
-                  <Button type="button" variant="outline" size="sm" onClick={() => addListItem("benefits")} className="font-bold gap-2">
-                    <Plus className="w-4 h-4" /> Add Benefit
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-lg font-extrabold text-[#2c1a4d]">What students will learn <span className="text-red-500 font-bold">*</span></h3>
+                <Button type="button" variant="outline" size="sm" onClick={() => addListItem("benefits")} className="font-bold gap-2">
+                  <Plus className="w-4 h-4" /> Add Benefit
+                </Button>
+              </div>
+              {formData.benefits?.map((benefit, idx) => (
+                <div key={idx} className="flex gap-2">
+                  <Input value={benefit.title} onChange={(e) => handleListChange(idx, e.target.value, "benefits")} placeholder="Define a benefit..." />
+                  <Button type="button" variant="ghost" size="icon" onClick={() => removeListItem(idx, "benefits")} className="text-red-400 hover:text-red-600">
+                    <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
-                {formData.benefits?.map((benefit, idx) => (
-                  <div key={idx} className="flex gap-2">
-                    <Input value={benefit.title} onChange={(e) => handleListChange(idx, e.target.value, "benefits")} placeholder="Define a benefit..." />
-                    <Button type="button" variant="ghost" size="icon" onClick={() => removeListItem(idx, "benefits")} className="text-red-400 hover:text-red-600">
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
+              ))}
+            </div>
 
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
-                <div className="flex items-center justify-between mb-2">
-                   <h3 className="text-lg font-extrabold text-[#2c1a4d]">Prerequisites</h3>
-                  <Button type="button" variant="outline" size="sm" onClick={() => addListItem("prerequisites")} className="font-bold gap-2">
-                    <Plus className="w-4 h-4" /> Add Prerequisite
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-lg font-extrabold text-[#2c1a4d]">Prerequisites <span className="text-red-500 font-bold">*</span></h3>
+                <Button type="button" variant="outline" size="sm" onClick={() => addListItem("prerequisites")} className="font-bold gap-2">
+                  <Plus className="w-4 h-4" /> Add Prerequisite
+                </Button>
+              </div>
+              {formData.prerequisites?.map((pre, idx) => (
+                <div key={idx} className="flex gap-2">
+                  <Input value={pre.title} onChange={(e) => handleListChange(idx, e.target.value, "prerequisites")} placeholder="Define a prerequisite" />
+                  <Button type="button" variant="ghost" size="icon" onClick={() => removeListItem(idx, "prerequisites")} className="text-red-400 hover:text-red-600">
+                    <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
-                {formData.prerequisites?.map((pre, idx) => (
-                  <div key={idx} className="flex gap-2">
-                    <Input value={pre.title} onChange={(e) => handleListChange(idx, e.target.value, "prerequisites")} placeholder="e.g. Basic knowledge of JS" />
-                    <Button type="button" variant="ghost" size="icon" onClick={() => removeListItem(idx, "prerequisites")} className="text-red-400 hover:text-red-600">
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-           </div>
+              ))}
+            </div>
+          </div>
         )}
 
         {activeTab === "syllabus" && (
@@ -856,92 +907,92 @@ export function CourseForm({ course, onSubmit, onCancel, isLoading }: CourseForm
         )}
 
         {activeTab === "test" && (
-           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 max-w-2xl">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                 <div className="space-y-6">
-                    <div className="space-y-2">
-                      <Label className="text-[#2c1a4d] font-bold">Course Level</Label>
-                      <select 
-                        name="level" 
-                        value={formData.level} 
-                        onChange={handleChange}
-                        className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium focus:outline-none focus:ring-1 focus:ring-[#8b3d6f]"
-                      >
-                         <option>Beginner</option>
-                         <option>Intermediate</option>
-                         <option>Professional</option>
-                      </select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[#2c1a4d] font-bold">Tags</Label>
-                      <Input name="tags" value={formData.tags} onChange={handleChange} placeholder="react, web, development" required />
-                    </div>
-                 </div>
-                 <div className="space-y-6">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label className="text-[#2c1a4d] font-bold text-xs uppercase tracking-wider">Demo / Teaser Video</Label>
-                        {formData.demo_url && (
-                          <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full flex items-center gap-1 border border-emerald-200">
-                            <Check className="w-3 h-3" /> Ready
-                          </span>
-                        )}
-                      </div>
-
-                      {/* YouTube Demo Video Input */}
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <div className="bg-red-50 text-red-600 p-2 rounded-lg flex items-center justify-center shrink-0 border border-red-200">
-                            <Video className="w-4 h-4" />
-                          </div>
-                          <Input 
-                            name="demo_url" 
-                            value={formData.demo_url || ""} 
-                            onChange={handleChange} 
-                            placeholder="Paste YouTube Video URL (e.g. https://www.youtube.com/watch?v=... or youtu.be/...)" 
-                            className="text-xs h-10 border-gray-200 focus:border-red-500"
-                          />
-                        </div>
-                        <p className="text-[11px] text-gray-500 font-medium">
-                          The demo preview video will be embedded directly from YouTube (supports standard watch URLs, youtu.be links, Shorts, and video IDs).
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex gap-8 pt-6">
-                       <label className="flex items-center gap-3 cursor-pointer">
-                          <input type="checkbox" name="status" checked={formData.status} onChange={handleChange} className="w-5 h-5 accent-[#8b3d6f] rounded" />
-                          <span className="font-bold text-[#2c1a4d]">Publish Online</span>
-                       </label>
-                       <label className="flex items-center gap-3 cursor-pointer">
-                          <input type="checkbox" name="ready" checked={formData.ready} onChange={handleChange} className="w-5 h-5 accent-[#8b3d6f] rounded" />
-                          <span className="font-bold text-[#2c1a4d]">Mark as Ready</span>
-                       </label>
-                    </div>
-                 </div>
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 max-w-2xl">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <Label className="text-[#2c1a4d] font-bold">Course Level <span className="text-red-500 font-bold">*</span></Label>
+                  <select
+                    name="level"
+                    value={formData.level}
+                    onChange={handleChange}
+                    className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium focus:outline-none focus:ring-1 focus:ring-[#8b3d6f]"
+                  >
+                    <option>Beginner</option>
+                    <option>Intermediate</option>
+                    <option>Professional</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[#2c1a4d] font-bold">Tags <span className="text-red-500 font-bold">*</span></Label>
+                  <Input name="tags" value={formData.tags} onChange={handleChange} placeholder="family, relationship" required />
+                </div>
               </div>
-           </div>
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-[#2c1a4d] font-bold text-xs uppercase tracking-wider">Demo / Teaser Video</Label>
+                    {formData.demo_url && (
+                      <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full flex items-center gap-1 border border-emerald-200">
+                        <Check className="w-3 h-3" /> Ready
+                      </span>
+                    )}
+                  </div>
+
+                  {/* YouTube Demo Video Input */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="bg-red-50 text-red-600 p-2 rounded-lg flex items-center justify-center shrink-0 border border-red-200">
+                        <Video className="w-4 h-4" />
+                      </div>
+                      <Input
+                        name="demo_url"
+                        value={formData.demo_url || ""}
+                        onChange={handleChange}
+                        placeholder="Paste YouTube Video URL (e.g. https://www.youtube.com/watch?v=... or youtu.be/...)"
+                        className="text-xs h-10 border-gray-200 focus:border-red-500"
+                      />
+                    </div>
+                    <p className="text-[11px] text-gray-500 font-medium">
+                      The demo preview video will be embedded directly from YouTube (supports standard watch URLs, youtu.be links, Shorts, and video IDs).
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-8 pt-6">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input type="checkbox" name="status" checked={formData.status} onChange={handleChange} className="w-5 h-5 accent-[#8b3d6f] rounded" />
+                    <span className="font-bold text-[#2c1a4d]">Publish Online</span>
+                  </label>
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input type="checkbox" name="ready" checked={formData.ready} onChange={handleChange} className="w-5 h-5 accent-[#8b3d6f] rounded" />
+                    <span className="font-bold text-[#2c1a4d]">Mark as Ready</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
       </form>
 
       {/* Persistence Bar */}
       <div className="p-6 bg-white border-t border-gray-100 flex items-center justify-between">
-         <Button type="button" variant="ghost" onClick={onCancel} className="font-bold text-gray-400">
-           Discard Changes
-         </Button>
-         <div className="flex items-center gap-3">
-             <div className="text-right mr-4 hidden md:block">
-                <p className="text-[10px] uppercase font-bold text-gray-400 tracking-wider font-mono">Status</p>
-                <p className="text-xs font-bold text-[#8b3d6f]">{formData.status ? "LIVE PRODUCTION" : "LOCAL DRAFT"}</p>
-             </div>
-             <Button 
-               onClick={handleSubmit} 
-               disabled={isLoading}
-               className="bg-[#8b3d6f] hover:bg-[#7c3663] text-white font-bold h-12 px-10 rounded-xl shadow-lg shadow-purple-100 flex gap-3"
-             >
-               {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-               {course ? "Update Course" : "Deploy New Course"}
-             </Button>
-         </div>
+        <Button type="button" variant="ghost" onClick={onCancel} className="font-bold text-gray-400">
+          Discard Changes
+        </Button>
+        <div className="flex items-center gap-3">
+          <div className="text-right mr-4 hidden md:block">
+            <p className="text-[10px] uppercase font-bold text-gray-400 tracking-wider font-mono">Status</p>
+            <p className="text-xs font-bold text-[#8b3d6f]">{formData.status ? "LIVE PRODUCTION" : "LOCAL DRAFT"}</p>
+          </div>
+          <Button
+            onClick={handleSubmit}
+            disabled={isLoading}
+            className="bg-[#8b3d6f] hover:bg-[#7c3663] text-white font-bold h-12 px-10 rounded-xl shadow-lg shadow-purple-100 flex gap-3"
+          >
+            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+            {course ? "Update Course" : "Deploy New Course"}
+          </Button>
+        </div>
       </div>
     </div>
   );

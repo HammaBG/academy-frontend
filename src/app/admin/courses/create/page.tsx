@@ -6,6 +6,7 @@ import { CourseForm } from "../CourseForm";
 import { useRouter } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export default function CreateCoursePage() {
   const router = useRouter();
@@ -17,9 +18,11 @@ export default function CreateCoursePage() {
     
     try {
       await createCourse(data, token);
+      toast.success("Course created successfully!");
       router.push("/admin/courses");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Create course error:", err);
+      toast.error(err.message || "Failed to create course. Please check all required fields.");
     }
   };
 
