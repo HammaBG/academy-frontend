@@ -42,7 +42,10 @@ import {
   UserPlus,
   Check,
   Users,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import { useAuthStore } from "@/store/auth";
 import type { User } from "@/store/auth";
@@ -52,7 +55,7 @@ import type { Course } from "@/store/course";
 export default function CoursesPage() {
   const router = useRouter();
   const { token, instructors, getInstructors, users, getAllUsers } = useAuthStore();
-  const { courses, isLoading, error, getAllCourses, deleteCourse, updateCourse, assignCourseToUser } = useCourseStore();
+  const { courses, isLoading, error, getAllCourses, deleteCourse, updateCourse, assignCourseToUser, reorderCourses } = useCourseStore();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
@@ -86,6 +89,40 @@ export default function CoursesPage() {
     const fullName = `${usr.first_name ?? ""} ${usr.last_name ?? ""}`.toLowerCase();
     return fullName.includes(userSearch.toLowerCase()) || usr.email.toLowerCase().includes(userSearch.toLowerCase());
   });
+
+  const [isReordering, setIsReordering] = useState(false);
+
+  const handleMoveOrder = async (courseId: string, direction: 'up' | 'down') => {
+    if (!token || isReordering) return;
+    const sorted = [...(courses ?? [])].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
+    const currentIndex = sorted.findIndex(c => (c.id || (c as any)._id) === courseId);
+    if (currentIndex === -1) return;
+
+    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    if (targetIndex < 0 || targetIndex >= sorted.length) return;
+
+    // Swap positions
+    const newSorted = [...sorted];
+    const temp = newSorted[currentIndex];
+    newSorted[currentIndex] = newSorted[targetIndex];
+    newSorted[targetIndex] = temp;
+
+    // Generate consecutive orders (1, 2, 3...)
+    const newOrders = newSorted.map((c, idx) => ({
+      id: c.id || (c as any)._id,
+      display_order: idx + 1,
+    }));
+
+    setIsReordering(true);
+    try {
+      await reorderCourses(newOrders, token);
+      toast.success("تم تحديث ترتيب الكورسات بنجاح");
+    } catch (err: unknown) {
+      toast.error("فشل تحديث الترتيب");
+    } finally {
+      setIsReordering(false);
+    }
+  };
 
   const handleCreate = () => {
     router.push("/admin/courses/create");
@@ -215,6 +252,7 @@ export default function CoursesPage() {
         <Table>
           <TableHeader className="bg-gray-50/50">
             <TableRow className="border-b border-gray-100">
+              <TableHead className="font-bold text-[#2c1a4d] w-[110px] text-center">Order</TableHead>
               <TableHead className="font-bold text-[#2c1a4d]">Course</TableHead>
               <TableHead className="font-bold text-[#2c1a4d]">Instructor</TableHead>
               <TableHead className="font-bold text-[#2c1a4d]">Price</TableHead>
@@ -228,6 +266,35 @@ export default function CoursesPage() {
               const courseId = course.id || (course as any)._id;
               return (
                 <TableRow key={courseId} className="hover:bg-gray-50/50 transition-colors border-b border-gray-50">
+                  <TableCell className="text-center">
+                    <div className="flex items-center justify-center gap-1.5">
+                      <span className="w-7 h-7 rounded-lg bg-purple-50 text-[#8b3d6f] font-extrabold text-xs flex items-center justify-center border border-purple-100/80">
+                        {course.display_order ?? 0}
+                      </span>
+                      <div className="flex flex-col gap-0.5">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          disabled={isReordering}
+                          aria-label={`Move course ${course.name} up`}
+                          className="h-5 w-5 p-0 text-gray-400 hover:text-[#8b3d6f] hover:bg-purple-50"
+                          onClick={() => handleMoveOrder(courseId, 'up')}
+                        >
+                          <ArrowUp className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          disabled={isReordering}
+                          aria-label={`Move course ${course.name} down`}
+                          className="h-5 w-5 p-0 text-gray-400 hover:text-[#8b3d6f] hover:bg-purple-50"
+                          onClick={() => handleMoveOrder(courseId, 'down')}
+                        >
+                          <ArrowDown className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-lg border border-gray-100 bg-gray-50 overflow-hidden shrink-0 flex items-center justify-center">

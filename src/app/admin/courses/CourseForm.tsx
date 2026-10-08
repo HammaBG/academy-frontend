@@ -56,6 +56,7 @@ export function CourseForm({ course, onSubmit, onCancel, isLoading }: CourseForm
     status: false,
     ready: false,
     url: "",
+    display_order: 0,
     benefits: [{ title: "" }],
     prerequisites: [{ title: "" }],
     course_data: [],
@@ -926,6 +927,20 @@ export function CourseForm({ course, onSubmit, onCancel, isLoading }: CourseForm
                 <div className="space-y-2">
                   <Label className="text-[#2c1a4d] font-bold">Tags <span className="text-red-500 font-bold">*</span></Label>
                   <Input name="tags" value={formData.tags} onChange={handleChange} placeholder="family, relationship" required />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[#2c1a4d] font-bold">Display Order (Sorting)</Label>
+                  <Input 
+                    type="number" 
+                    name="display_order" 
+                    value={formData.display_order ?? 0} 
+                    onChange={handleChange} 
+                    min={0}
+                    placeholder="e.g. 1 (lower numbers appear first)" 
+                  />
+                  <p className="text-[11px] text-gray-400 font-medium">
+                    Courses are ordered from 1 to last (1 = first on homepage & catalog).
+                  </p>
                 </div>
               </div>
               <div className="space-y-6">

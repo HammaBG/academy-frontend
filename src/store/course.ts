@@ -113,6 +113,7 @@ interface CourseActions {
     addQuestion: (question: string, courseId: string, contentId: string, token: string) => Promise<void>;
     addAnswer: (answer: string, courseId: string, contentId: string, questionId: string, token: string) => Promise<void>;
     toggleVideoProgress: (courseId: string, videoSectionTitle: string, token: string) => Promise<void>;
+    reorderCourses: (orders: { id: string; display_order: number }[], token: string) => Promise<void>;
 }
 
 import { API_ENDPOINTS } from '@/config/api';
@@ -491,6 +492,40 @@ export const useCourseStore = create<CourseStore>()(
                     });
                 } catch (err: any) {
                     set({ error: err.message });
+                    throw err;
+                }
+            },
+
+            reorderCourses: async (orders, token) => {
+                set({ isLoading: true, error: null });
+                try {
+                    const res = await authenticatedFetch(`${API_URL}/reorder-courses`, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ orders }),
+                    });
+
+                    const data = await res.json();
+                    if (!res.ok) {
+                        throw new Error(data.error || 'Failed to reorder courses');
+                    }
+
+                    // Update local courses state with new display_order
+                    const orderMap = new Map(orders.map((o) => [o.id, o.display_order]));
+                    set((state) => ({
+                        courses: [...state.courses]
+                            .map((c) => ({
+                                ...c,
+                                display_order: orderMap.has(c.id) ? (orderMap.get(c.id) as number) : (c.display_order || 0),
+                            }))
+                            .sort((a, b) => (a.display_order || 0) - (b.display_order || 0)),
+                        isLoading: false,
+                    }));
+                } catch (err: any) {
+                    set({ error: err.message, isLoading: false });
                     throw err;
                 }
             },
