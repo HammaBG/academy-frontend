@@ -54,15 +54,19 @@ export function NotificationBell() {
     return true;
   });
 
-  // Close dropdown on click outside
+  // Close dropdown on click/tap outside
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
+    function handleClickOutside(event: MouseEvent | TouchEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
   }, []);
 
   const getNotificationIcon = (type: string) => {
@@ -81,41 +85,43 @@ export function NotificationBell() {
   };
 
   return (
-    <div className="relative inline-block " ref={dropdownRef}>
+    <div className="relative inline-block" ref={dropdownRef}>
       {/* Bell Trigger Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2.5 rounded-2xl bg-surface hover:bg-surface/80 border border-border/40 text-text-primary transition-all duration-300 shadow-xs hover:scale-105 active:scale-95 cursor-pointer"
+        className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-surface hover:bg-surface/80 border border-border/40 text-text-primary transition-all duration-300 shadow-xs hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center shrink-0"
         aria-label="الإشعارات"
       >
-        <Bell className="w-5 h-5" />
+        <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-text-secondary" />
 
         {/* Unread Badge Counter */}
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[20px] h-[20px] px-1 bg-[#F95353] text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-background shadow-sm animate-pulse">
+          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] sm:min-w-[20px] sm:h-[20px] px-1 bg-[#F95353] text-white text-[9px] sm:text-[10px] font-black rounded-full flex items-center justify-center border-2 border-background shadow-sm animate-pulse">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
       </button>
 
-      {/* Notification Dropdown Popover */}
+      {/* Notification Dropdown Popover
+          Mobile: pinned to both screen edges under the navbar (can never overflow).
+          sm and up: normal dropdown under the bell. */}
       {isOpen && (
         <div
-          className="absolute left-0 top-full mt-3 w-[90vw] sm:w-[380px] max-w-[380px] bg-surface border border-border/40 rounded-3xl shadow-2xl overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-200 text-right"
+          className="fixed left-3 right-3 top-[4.25rem] w-auto sm:absolute sm:left-0 sm:right-auto sm:top-full sm:mt-3 sm:w-[380px] bg-surface border border-border/40 rounded-3xl shadow-2xl overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-200 text-right"
           dir="rtl"
         >
           {/* Top Header */}
-          <div className="p-4 px-5 border-b border-border/40 bg-surface/50 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <h3 className="font-black text-base text-text-primary">الإشعارات</h3>
+          <div className="p-4 px-5 border-b border-border/40 bg-surface/50 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <h3 className="font-black text-base text-text-primary whitespace-nowrap">الإشعارات</h3>
               {unreadCount > 0 && (
-                <span className="px-2 py-0.5 bg-[#F95353]/15 text-[#F95353] text-[11px] font-extrabold rounded-full">
+                <span className="px-2 py-0.5 bg-[#F95353]/15 text-[#F95353] text-[11px] font-extrabold rounded-full whitespace-nowrap">
                   {unreadCount} جديد
                 </span>
               )}
             </div>
 
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2.5 shrink-0">
               {unreadCount > 0 && (
                 <button
                   onClick={markAllAsRead}
@@ -165,7 +171,7 @@ export function NotificationBell() {
           </div>
 
           {/* Notifications List */}
-          <div className="max-h-[360px] overflow-y-auto divide-y divide-border/20">
+          <div className="max-h-[60vh] sm:max-h-[360px] overflow-y-auto divide-y divide-border/20">
             {filteredNotifications.length === 0 ? (
               <div className="p-8 text-center space-y-2">
                 <Bell className="w-10 h-10 text-text-secondary/30 mx-auto" />
@@ -207,16 +213,17 @@ export function NotificationBell() {
                     </p>
                   </div>
 
-                  {/* Actions */}
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {/* Actions: always visible on touch screens, hover-only on desktop */}
+                  <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                     {!notif.isRead && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           markAsRead(notif.id);
                         }}
-                        className="p-1 text-text-secondary hover:text-emerald-500 rounded-md"
+                        className="p-1.5 text-text-secondary hover:text-emerald-500 rounded-md"
                         title="تعليم كمقروء"
+                        aria-label="تعليم كمقروء"
                       >
                         <Check className="w-3.5 h-3.5" />
                       </button>
@@ -226,8 +233,9 @@ export function NotificationBell() {
                         e.stopPropagation();
                         deleteNotification(notif.id);
                       }}
-                      className="p-1 text-text-secondary hover:text-red-500 rounded-md"
+                      className="p-1.5 text-text-secondary hover:text-red-500 rounded-md"
                       title="حذف"
+                      aria-label="حذف"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>

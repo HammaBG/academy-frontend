@@ -10,7 +10,7 @@ import { useCourseStore, type Course } from "@/store/course";
 import { useTheme } from "@/components/providers/ThemeProvider";
 import logo from "../../public/ossosacademy.jpg";
 import { API_ENDPOINTS } from "@/config/api";
-import { Search, X, BookOpen, User as UserIcon, Sun, Moon, Ticket, ClockCheck } from "lucide-react";
+import { Search, X, BookOpen, User as UserIcon, Sun, Moon, Ticket, ClockCheck, ShoppingCart } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
 
 interface SearchCourseResultProps {
@@ -131,8 +131,6 @@ export function Navbar() {
   const [searchResults, setSearchResults] = useState<SearchResults>({ courses: [], instructors: [] });
   const [isSearching, setIsSearching] = useState(false);
   const [mounted, setMounted] = useState(false);
-
-
 
   const searchRef = useRef<HTMLDivElement>(null);
   const cartDropdownRef = useRef<HTMLDivElement>(null);
@@ -281,26 +279,24 @@ export function Navbar() {
     setTheme(theme === "dark" ? "light" : "dark");
   };
 
-
-
-
   return (
     <>
       <nav className="w-full bg-background/80 backdrop-blur-md border-b border-border/40 sticky top-0 z-50 transition-all duration-300">
-        <div className="max-w-[1400px] mx-auto px-4 md:px-8">
-          <div className="flex justify-between items-stretch h-16">
+        <div className="max-w-[1400px] mx-auto px-3 sm:px-6 md:px-8">
+          <div className="flex justify-between items-center h-16">
             {/* Right side: Logo and Links */}
-            <div className="flex items-stretch gap-8">
+            <div className="flex items-center gap-2 sm:gap-6 lg:gap-8 min-w-0">
               {/* Logo */}
               <div className="flex-shrink-0 flex items-center">
                 <Link
                   href="/"
-                  className="flex items-center gap-3 group transition-transform duration-300 hover:scale-[1.02]"
+                  className="flex items-center gap-2 sm:gap-3 group transition-transform duration-300 hover:scale-[1.02]"
                 >
-                  <div className="w-10 h-10 rounded-xl overflow-hidden border border-border bg-surface shadow-sm flex items-center justify-center">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl overflow-hidden border border-border bg-surface shadow-sm flex items-center justify-center shrink-0">
                     <img src={logo.src} alt="Logo" className="w-full h-full object-cover" />
                   </div>
-                  <span className="font-extrabold text-base text-text-primary tracking-wide transition-colors group-hover:text-brand-primary">
+                  {/* Brand text always visible, smaller on phones to keep room for cart/bell/profile */}
+                  <span className="font-black text-[11px] min-[380px]:text-xs min-[420px]:text-sm sm:text-base text-text-primary tracking-normal sm:tracking-wide transition-colors group-hover:text-brand-primary whitespace-nowrap">
                     أكاديمية أسس
                   </span>
                 </Link>
@@ -342,7 +338,7 @@ export function Navbar() {
             </div>
 
             {/* Left side: Auth, Search, Theme Switcher */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1.5 sm:gap-3 lg:gap-4 shrink-0">
               {/* Search Toggle */}
               <div ref={searchRef} className="relative hidden sm:block">
                 <button
@@ -372,53 +368,42 @@ export function Navbar() {
                 )}
               </button>
 
-              {/* Cart Toggle (Always visible: authenticated or guest) */}
+              {/* Cart: always visible. Mobile = direct link to /cart, md+ = dropdown */}
               <div ref={cartDropdownRef} className="relative flex items-center">
+                {/* Mobile: tap goes straight to /cart */}
+                <Link
+                  href="/cart"
+                  aria-label="سلة التسوق"
+                  className="md:hidden relative w-9 h-9 flex items-center justify-center rounded-xl bg-surface border border-border/40 text-text-primary active:scale-95 transition-all shrink-0"
+                >
+                  <ShoppingCart className="h-[18px] w-[18px]" />
+                  {mounted && itemCount() > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-brand-primary text-white text-[10px] font-bold rounded-full shadow-sm ring-2 ring-background">
+                      {itemCount()}
+                    </span>
+                  )}
+                </Link>
+
+                {/* Tablet/Desktop: dropdown toggle */}
                 <button
                   onClick={handleToggleCart}
-                  className="relative text-text-secondary hover:text-text-primary hover:bg-surface/80 p-2 rounded-full transition-all duration-300 flex items-center justify-center cursor-pointer"
+                  className="hidden md:flex relative text-text-secondary hover:text-text-primary hover:bg-surface/80 p-2 rounded-full transition-all duration-300 items-center justify-center cursor-pointer"
                   aria-label="سلة التسوق"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-                    />
-                  </svg>
-                  {itemCount() > 0 && (
+                  <ShoppingCart className="h-5 w-5" />
+                  {mounted && itemCount() > 0 && (
                     <span className="absolute -top-1 -right-1 w-4 h-4 flex items-center justify-center bg-brand-primary text-white text-[9px] font-bold rounded-full shadow-sm animate-pulse">
                       {itemCount()}
                     </span>
                   )}
                 </button>
 
-                {/* Cart Dropdown Menu */}
+                {/* Cart Dropdown Menu (md+ only) */}
                 {isCartDropdownOpen && (
-                  <div className="absolute top-[3rem] left-0 w-80 bg-surface border border-border shadow-2xl rounded-xl z-50 overflow-hidden font-bold transform origin-top transition-all duration-300">
+                  <div className="hidden md:block absolute top-[3rem] left-0 w-80 bg-surface border border-border shadow-2xl rounded-xl z-50 overflow-hidden font-bold transform origin-top transition-all duration-300">
                     {items.length === 0 ? (
                       <div className="px-6 py-8 text-center">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-10 w-10 text-text-secondary/40 mx-auto mb-3"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={1.5}
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-                          />
-                        </svg>
+                        <ShoppingCart className="h-10 w-10 text-text-secondary/40 mx-auto mb-3" strokeWidth={1.5} />
                         <p className="text-text-secondary text-sm">سلة التسوق فارغة</p>
                       </div>
                     ) : (
@@ -462,7 +447,7 @@ export function Navbar() {
               <div className="hidden sm:block h-6 w-px bg-border"></div>
 
               {isAuthenticated ? (
-                <div className="flex items-center gap-4 relative">
+                <div className="flex items-center gap-1.5 sm:gap-3 relative">
                   {/* Courses Button */}
                   <Link
                     href="/my-courses"
@@ -474,15 +459,19 @@ export function Navbar() {
                   {/* Separator */}
                   <div className="hidden md:block h-6 w-px bg-border"></div>
 
+                  {/* Notification Bell */}
+                  {isAuthenticated && <NotificationBell />}
+
                   {/* Profile Trigger */}
                   <button
                     onClick={handleToggleProfile}
-                    className="flex items-center gap-2 cursor-pointer bg-surface hover:bg-surface/80 text-text-primary border border-border px-3 py-1.5 rounded-lg transition-all duration-300"
+                    className="flex items-center gap-1.5 sm:gap-2 cursor-pointer bg-surface hover:bg-surface/80 text-text-primary border border-border px-2.5 sm:px-3 py-1.5 rounded-xl sm:rounded-lg transition-all duration-300"
+                    aria-label="قائمة الحساب"
                   >
-                    <UserIcon className="h-5 w-5 text-text-secondary" />
+                    <UserIcon className="h-4 w-4 sm:h-5 sm:w-5 text-text-secondary" />
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      className={`h-4 w-4 text-text-secondary transition-transform duration-300 ${isProfileDropdownOpen ? "rotate-180" : ""
+                      className={`h-3.5 w-3.5 sm:h-4 sm:w-4 text-text-secondary transition-transform duration-300 ${isProfileDropdownOpen ? "rotate-180" : ""
                         }`}
                       fill="none"
                       viewBox="0 0 24 24"
@@ -492,12 +481,6 @@ export function Navbar() {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
-
-                  {/* Separator */}
-                  <div className="hidden md:block h-6 w-px bg-border"></div>
-
-                  {/* Notification Bell */}
-                  {isAuthenticated && <NotificationBell />}
 
                   {/* Profile Dropdown Menu */}
                   {isProfileDropdownOpen && (
@@ -590,27 +573,7 @@ export function Navbar() {
                           طلب استشارة وتوجيه
                         </Link>
 
-                        <Link
-                          href="/cart"
-                          className="flex items-center gap-3 px-5 py-2.5 text-text-primary hover:bg-background/60 hover:text-brand-primary transition-colors md:hidden"
-                          onClick={handleCloseProfile}
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-5 w-5 text-text-secondary"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth={2}
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-                            />
-                          </svg>
-                          عربة التسوق
-                        </Link>
+                        {/* Cart link removed from here: the cart icon is now always visible in the navbar */}
 
                         <Link
                           href="/favorites"
@@ -725,16 +688,17 @@ export function Navbar() {
               )}
 
               {/* Mobile menu button */}
-              <div className="flex items-center lg:hidden ml-2">
+              <div className="flex items-center lg:hidden">
                 <button
                   onClick={handleToggleMobileMenu}
-                  className="inline-flex items-center justify-center p-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface/80 focus:outline-none transition-all"
+                  aria-label="القائمة الرئيسية"
+                  className="w-9 h-9 flex items-center justify-center rounded-xl bg-surface hover:bg-surface/80 border border-border/40 text-text-primary transition-all duration-300 shadow-xs active:scale-95 cursor-pointer shrink-0"
                 >
-                  <svg className={`h-6 w-6 ${isMobileMenuOpen ? "hidden" : "block"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
+                  <svg className={`h-5 w-5 ${isMobileMenuOpen ? "hidden" : "block"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M4 6h16M4 12h16M4 18h16" />
                   </svg>
-                  <svg className={`h-6 w-6 ${isMobileMenuOpen ? "block" : "hidden"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                  <svg className={`h-5 w-5 ${isMobileMenuOpen ? "block" : "hidden"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
@@ -777,6 +741,7 @@ export function Navbar() {
                 </Link>
               );
             })}
+
             {/* Theme Toggle in Mobile Dropmenu */}
             <div className="pt-3 border-t border-border/40">
               <button
@@ -799,38 +764,20 @@ export function Navbar() {
               </button>
             </div>
 
-            {/* Cart Link in Mobile Dropmenu */}
-            <div className="pt-2">
-              <Link
-                href="/cart"
-                onClick={handleCloseMobileMenu}
+            {/* Search in Mobile Dropmenu (search icon is hidden on mobile in the bar) */}
+            <div className="pt-2 sm:hidden">
+              <button
+                onClick={() => {
+                  handleCloseMobileMenu();
+                  handleOpenSearch();
+                }}
                 className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl bg-background/60 hover:bg-surface text-text-primary border border-border/40 transition-colors font-bold text-sm cursor-pointer"
               >
                 <div className="flex items-center gap-2.5">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="w-5 h-5 text-text-secondary"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-                    />
-                  </svg>
-                  <span>سلة التسوق</span>
+                  <Search className="w-5 h-5 text-text-secondary" />
+                  <span>بحث عن كورسات أو معلمين</span>
                 </div>
-                {itemCount() > 0 ? (
-                  <span className="text-xs bg-brand-primary text-white font-bold px-2 py-0.5 rounded-full shadow-sm">
-                    {itemCount()} {itemCount() === 1 ? "دورة" : "دورات"}
-                  </span>
-                ) : (
-                  <span className="text-xs text-text-secondary">فارغة</span>
-                )}
-              </Link>
+              </button>
             </div>
 
             {/* Guest Login/Signup (Only visible when NOT authenticated) */}
@@ -935,7 +882,6 @@ export function Navbar() {
           </div>
         </div>
       )}
-
     </>
   );
 }
