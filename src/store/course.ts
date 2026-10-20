@@ -212,7 +212,10 @@ export const useCourseStore = create<CourseStore>()(
             },
 
             getPublicCourses: async () => {
-                set({ isLoading: true, error: null });
+                // If we already have cached courses, keep showing them while fetching updates in background (stale-while-revalidate)
+                if (get().courses.length === 0) {
+                    set({ isLoading: true, error: null });
+                }
                 try {
                     const res = await authenticatedFetch(`${API_URL}/get-courses`, {
                         method: 'GET',
@@ -534,6 +537,7 @@ export const useCourseStore = create<CourseStore>()(
             name: 'benaa-course-storage',
             storage: createJSONStorage(() => createSafeStorage()),
             partialize: (state) => ({
+                courses: state.courses,
                 enrolledCourses: state.enrolledCourses,
             }),
         }

@@ -79,6 +79,8 @@ export function CourseCard({ course }: CourseCardProps) {
           <img
             src={course.thumbnail.url}
             alt={course.name}
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
           />
         ) : (
