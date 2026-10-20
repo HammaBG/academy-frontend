@@ -12,7 +12,7 @@ import {
   SidebarHeader,
   SidebarFooter,
 } from "@/components/ui/sidebar"
-import { Home, LayoutDashboard, Users, BookOpen, Settings, LogOut, Newspaper, Layers, ClipboardList, Ticket, Headphones } from "lucide-react"
+import { Home, LayoutDashboard, Users, BookOpen, Settings, LogOut, Newspaper, Layers, ClipboardList, Ticket, Headphones, Tag } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useAuthStore } from "@/store/auth"
@@ -41,6 +41,7 @@ export function AdminSidebar() {
     { title: "Articles", url: "/admin/articles", icon: Newspaper },
     { title: "Forms", url: "/admin/forms", icon: ClipboardList },
     { title: "Enrollment Codes", url: "/admin/enrollment-codes", icon: Ticket },
+    { title: "Coupons", url: "/admin/coupons", icon: Tag },
   ]
 
   return (

@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useCartStore } from "@/store/cart";
-import { useAuthStore } from "@/store/auth";
 import { useFormStore } from "@/store/form";
-import { useEnrollmentCodeStore } from "@/store/enrollmentCode";
+import { useCouponStore } from "@/store/coupon";
 import {
   ShoppingCart,
   Trash2,
@@ -14,45 +13,47 @@ import {
   Phone,
   User,
   Mail,
-  Ticket,
   Loader2,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Tag,
+  Check,
+  X,
+  Truck,
+  ShieldCheck,
+  Clock,
+  Sparkles,
+  HelpCircle,
 } from "lucide-react";
 import Link from "next/link";
 
 export default function CartPage() {
   const { items, removeFromCart, clearCart, totalPrice } = useCartStore();
-  const { token, isAuthenticated } = useAuthStore();
 
   const {
     isLoading: formLoading,
     error: formError,
     success: formSuccess,
     submitForm,
-    clearStatus: clearFormStatus
+    clearStatus: clearFormStatus,
   } = useFormStore();
 
   const {
-    isLoading: codeLoading,
-    error: codeError,
-    success: codeSuccess,
-    useCode,
-    clearStatus: clearCodeStatus
-  } = useEnrollmentCodeStore();
+    appliedCoupon,
+    isValidating: couponLoading,
+    error: couponError,
+    successMessage: couponSuccess,
+    applyCoupon,
+    removeAppliedCoupon,
+    clearMessages: clearCouponMessages,
+  } = useCouponStore();
 
-  // Clear success/error status only when leaving the page.
-  // (The effect that cleared status when items.length > 0 was removed:
-  //  it wiped the success state before the cart was reset.)
   useEffect(() => {
     return () => {
       clearFormStatus();
-      clearCodeStatus();
+      clearCouponMessages();
     };
-  }, [clearFormStatus, clearCodeStatus]);
-
-  // Tab state: 'cod' | 'code'
-  const [method, setMethod] = useState<'cod' | 'code'>('cod');
+  }, [clearFormStatus, clearCouponMessages]);
 
   // COD Form States
   const [fullName, setFullName] = useState("");
@@ -60,21 +61,30 @@ export default function CartPage() {
   const [address, setAddress] = useState("");
   const [email, setEmail] = useState("");
 
-  // Enrollment Code State
-  const [enrollmentCode, setEnrollmentCode] = useState("");
+  // Promo Coupon Input State
+  const [couponInput, setCouponInput] = useState("");
 
   // Local validation error State
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  const isLoading = formLoading || codeLoading;
-  const isSuccess = formSuccess || codeSuccess;
-  const errorMsg = validationError || formError || codeError;
+  const rawTotal = totalPrice();
+  const discountAmount = appliedCoupon ? appliedCoupon.discountAmount : 0;
+  const finalPayableTotal = Math.max(0, Math.round((rawTotal - discountAmount) * 100) / 100);
 
-  const handleTabChange = (newMethod: 'cod' | 'code') => {
-    setMethod(newMethod);
-    setValidationError(null);
-    clearFormStatus();
-    clearCodeStatus();
+  const isLoading = formLoading;
+  const isSuccess = formSuccess;
+  const errorMsg = validationError || formError;
+
+  const handleApplyCoupon = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!couponInput.trim()) return;
+    const courseIds = items.map((item) => item.course.id);
+    await applyCoupon(couponInput.trim(), rawTotal, courseIds);
+  };
+
+  const handleRemoveCoupon = () => {
+    removeAppliedCoupon();
+    setCouponInput("");
   };
 
   // Handle Cash on Delivery (COD) Checkout
@@ -96,14 +106,21 @@ export default function CartPage() {
 
     try {
       // Submit form for each course in the cart in parallel using form store
+      // If a coupon is applied, apply discount proportionally to courses
       const submitPromises = items.map((item) => {
+        let finalItemPrice = item.course.price;
+        if (appliedCoupon && rawTotal > 0) {
+          const ratio = item.course.price / rawTotal;
+          finalItemPrice = Math.max(0, Math.round((item.course.price - (appliedCoupon.discountAmount * ratio)) * 100) / 100);
+        }
+
         return submitForm({
           fullName: fullName.trim(),
           address: address.trim(),
           phoneNumber: phoneNumber.trim(),
           email: email.trim() || undefined,
-          courseName: item.course.name,
-          coursePrice: item.course.price,
+          courseName: appliedCoupon ? `${item.course.name} [كود: ${appliedCoupon.code}]` : item.course.name,
+          coursePrice: finalItemPrice,
           courseId: item.course.id,
         });
       });
@@ -111,38 +128,11 @@ export default function CartPage() {
       await Promise.all(submitPromises);
 
       // Reset the cart only if the store didn't record an error.
-      // getState() reads the latest value (not the stale one from this render).
       if (!useFormStore.getState().error) {
         clearCart();
       }
     } catch (err) {
       // Error is already captured by form store
-    }
-  };
-
-  // Handle Enrollment Code Redemption
-  const handleCodeSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setValidationError(null);
-
-    if (!isAuthenticated) {
-      setValidationError("يرجى تسجيل الدخول أولاً لتفعيل كود الاشتراك.");
-      return;
-    }
-
-    if (!enrollmentCode.trim()) {
-      setValidationError("يرجى إدخال كود التفعيل.");
-      return;
-    }
-
-    try {
-      await useCode(enrollmentCode.trim(), token || "");
-
-      if (!useEnrollmentCodeStore.getState().error) {
-        clearCart();
-      }
-    } catch (err) {
-      // Error is already captured by enrollmentCode store
     }
   };
 
@@ -158,28 +148,24 @@ export default function CartPage() {
           <div className="space-y-2">
             <h2 className="text-2xl font-black">تمت العملية بنجاح!</h2>
             <p className="text-text-secondary text-sm leading-relaxed">
-              {method === 'cod'
-                ? "شكراً لطلبك! لقد تم تسجيل معلوماتك بنجاح وسنتصل بك قريباً لتأكيد طلبك وتفعيل الكورسات."
-                : "تهانينا! لقد تم تفعيل الكورسات بنجاح وإضافتها إلى حسابك التعليمي."}
+              شكراً لطلبك! لقد تم تسجيل معلوماتك بنجاح وسنتصل بك قريباً لتأكيد طلبك وتفعيل الكورسات.
             </p>
           </div>
           <div className="pt-4 space-y-3">
             <Link
-              href={method === 'cod' ? "/" : "/my-courses"}
+              href="/"
               onClick={() => {
                 clearFormStatus();
-                clearCodeStatus();
               }}
               className="inline-block w-full py-3.5 bg-brand-primary text-white rounded-xl font-extrabold hover:bg-brand-primary/90 transition-all text-center shadow-lg shadow-brand-primary/15"
             >
-              {method === 'cod' ? "العودة للرئيسية" : "اذهب إلى دوراتي"}
+              العودة للرئيسية
             </Link>
 
             <Link
               href="/courses"
               onClick={() => {
                 clearFormStatus();
-                clearCodeStatus();
               }}
               className="inline-block w-full py-3 bg-surface hover:bg-surface/80 text-text-primary border border-border/60 rounded-xl font-bold transition-all text-center text-sm"
             >
@@ -311,49 +297,167 @@ export default function CartPage() {
 
             {/* Checkout & Delivery Method Sidebar */}
             <div className="lg:col-span-5">
-              <div className="bg-surface border border-border/40 p-6 rounded-[2rem] shadow-xl space-y-6 sticky top-28">
+              <div className="bg-surface border border-border/40 p-6 md:p-7 rounded-[2.25rem] shadow-xl space-y-6 sticky top-28">
+                {/* Header */}
                 <div>
-                  <h2 className="text-lg font-black text-text-primary mb-1">
-                    ملخص الطلب والدفع
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-primary/10 text-brand-primary text-[11px] font-black mb-2">
+                    <Truck className="w-3.5 h-3.5" />
+                    <span>التوصيل والدفع عند الاستلام</span>
+                  </div>
+                  <h2 className="text-xl font-black text-text-primary tracking-tight">
+                    إتمام الطلب وتفعيل الكورسات
                   </h2>
-                  <p className="text-text-secondary text-xs">
-                    اختر طريقة الدفع المناسبة لإتمام تسجيلك
+                  <p className="text-text-secondary text-xs mt-1 leading-relaxed">
+                    ادفع نقداً عند استلام بطاقة تفعيل الدورة من المندوب في عنوانك.
                   </p>
                 </div>
 
-                {/* Subtotal */}
-                <div className="bg-background/40 p-4 rounded-2xl border border-border/20 flex justify-between items-center">
-                  <span className="text-text-secondary text-sm font-semibold">المجموع الإجمالي</span>
-                  <div className="flex items-baseline gap-0.5">
-                    <span className="text-text-secondary text-[10px] font-bold">DT</span>
-                    <span className="text-2xl font-black text-brand-primary">
-                      {totalPrice()}
-                    </span>
+                {/* 3 Simple Visual Steps of the Process */}
+                <div className="bg-background/70 border border-border/30 rounded-2xl p-3.5 space-y-2.5">
+                  <div className="text-[11px] font-black text-text-primary flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-brand-primary" />
+                    <span>كيف تتم عملية الشراء والتفعيل؟</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-center pt-1">
+                    <div className="bg-surface p-2 rounded-xl border border-border/20 flex flex-col items-center">
+                      <span className="w-5 h-5 rounded-full bg-brand-primary/15 text-brand-primary text-[10px] font-black flex items-center justify-center mb-1">
+                        1
+                      </span>
+                      <span className="text-[10px] font-bold text-text-primary leading-tight">سجل بياناتك</span>
+                      <span className="text-[9px] text-text-secondary/80 mt-0.5">الاسم والعنوان</span>
+                    </div>
+                    <div className="bg-surface p-2 rounded-xl border border-border/20 flex flex-col items-center">
+                      <span className="w-5 h-5 rounded-full bg-brand-primary/15 text-brand-primary text-[10px] font-black flex items-center justify-center mb-1">
+                        2
+                      </span>
+                      <span className="text-[10px] font-bold text-text-primary leading-tight">توصيل سريع</span>
+                      <span className="text-[9px] text-text-secondary/80 mt-0.5">خلال 24-48 ساعة</span>
+                    </div>
+                    <div className="bg-surface p-2 rounded-xl border border-border/20 flex flex-col items-center">
+                      <span className="w-5 h-5 rounded-full bg-emerald-500/15 text-emerald-600 text-[10px] font-black flex items-center justify-center mb-1">
+                        3
+                      </span>
+                      <span className="text-[10px] font-bold text-emerald-600 leading-tight">الدفع والتفعيل</span>
+                      <span className="text-[9px] text-text-secondary/80 mt-0.5">ادفع واستلم كودك</span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Payment Tabs Selection */}
-                <div className="grid grid-cols-2 gap-1.5 p-1 bg-background border border-border/20 rounded-xl">
-                  <button
-                    type="button"
-                    onClick={() => handleTabChange('cod')}
-                    className={`py-2 text-xs font-bold rounded-lg transition-all ${method === 'cod'
-                      ? 'bg-brand-primary text-white shadow'
-                      : 'text-text-secondary hover:text-text-primary'
-                      }`}
-                  >
-                    الدفع عند الاستلام (COD)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleTabChange('code')}
-                    className={`py-2 text-xs font-bold rounded-lg transition-all ${method === 'code'
-                      ? 'bg-brand-primary text-white shadow'
-                      : 'text-text-secondary hover:text-text-primary'
-                      }`}
-                  >
-                    كود التفعيل
-                  </button>
+                {/* Promo Coupon Code Section */}
+                <div className="bg-background/60 p-4 rounded-2xl border border-border/30 space-y-3">
+                  <div className="flex items-center justify-between text-xs font-bold text-text-primary">
+                    <span className="flex items-center gap-1.5">
+                      <Tag className="w-3.5 h-3.5 text-brand-primary" />
+                      <span>هل لديك كود خصم؟</span>
+                    </span>
+                    {appliedCoupon && (
+                      <span className="text-[10px] text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full font-black border border-emerald-200">
+                        مفعل
+                      </span>
+                    )}
+                  </div>
+
+                  {appliedCoupon ? (
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-lg bg-emerald-500/20 flex items-center justify-center font-mono font-black text-xs">
+                          %
+                        </div>
+                        <div>
+                          <div className="font-mono font-black text-sm">{appliedCoupon.code}</div>
+                          <div className="text-[10px] text-emerald-600 font-semibold">
+                            وفرت {appliedCoupon.discountAmount} د.ت
+                            {appliedCoupon.discountType === "percentage" && ` (${appliedCoupon.discountValue}%)`}
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleRemoveCoupon}
+                        className="p-1.5 hover:bg-emerald-500/20 rounded-md text-emerald-700 transition-colors"
+                        title="إزالة الكوبون"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleApplyCoupon} className="space-y-2">
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          placeholder="أدخل كود الخصم (مثال: WELCOME20)"
+                          value={couponInput}
+                          onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                          className="flex-1 px-3 py-2 text-xs font-mono font-bold uppercase rounded-xl border border-border/40 bg-surface focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all text-text-primary"
+                        />
+                        <button
+                          type="submit"
+                          disabled={couponLoading || !couponInput.trim()}
+                          className="px-4 py-2 bg-brand-primary hover:bg-brand-primary/90 text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-1 shadow-sm shrink-0"
+                        >
+                          {couponLoading ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <>
+                              <Check className="w-3.5 h-3.5" />
+                              <span>تطبيق</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+
+                      {couponError && (
+                        <p className="text-[11px] text-red-500 font-semibold flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3 shrink-0" />
+                          <span>{couponError}</span>
+                        </p>
+                      )}
+                      {couponSuccess && (
+                        <p className="text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3 shrink-0" />
+                          <span>{couponSuccess}</span>
+                        </p>
+                      )}
+                    </form>
+                  )}
+                </div>
+
+                {/* Subtotal & Final Breakdown */}
+                <div className="bg-background/40 p-4 rounded-2xl border border-border/20 space-y-2.5">
+                  <div className="flex justify-between items-center text-xs text-text-secondary">
+                    <span>المجموع الفرعي للكورسات</span>
+                    <span className="font-bold">{rawTotal} د.ت</span>
+                  </div>
+
+                  {appliedCoupon && (
+                    <div className="flex justify-between items-center text-xs text-emerald-600 font-bold">
+                      <span className="flex items-center gap-1">
+                        <span>خصم الكوبون ({appliedCoupon.code})</span>
+                      </span>
+                      <span>- {discountAmount} د.ت</span>
+                    </div>
+                  )}
+
+                  <div className="flex justify-between items-center text-xs text-text-secondary">
+                    <span className="flex items-center gap-1">
+                      <Truck className="w-3 h-3 text-emerald-600" />
+                      <span>مصاريف التوصيل لباب المنزل</span>
+                    </span>
+                    <span className="font-bold text-emerald-600">مجاناً (0 د.ت)</span>
+                  </div>
+
+                  <div className="pt-3 border-t border-border/30 flex justify-between items-center">
+                    <div>
+                      <span className="text-text-primary text-sm font-black block">المجموع المطلوب عند الاستلام</span>
+                      <span className="text-[10px] text-text-secondary">شامل الضريبة وكافة الرسوم</span>
+                    </div>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-2xl font-black text-brand-primary">
+                        {finalPayableTotal}
+                      </span>
+                      <span className="text-text-secondary text-xs font-bold">د.ت</span>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Error Banner */}
@@ -364,156 +468,117 @@ export default function CartPage() {
                   </div>
                 )}
 
-                {/* COD Form */}
-                {method === 'cod' && (
-                  <form onSubmit={handleCodSubmit} className="space-y-4">
-                    <div className="space-y-1.5">
-                      <label htmlFor="fullName" className="text-xs font-bold text-text-secondary block">
-                        الاسم الكامل <span className="text-[#F95353]">*</span>
-                      </label>
-                      <div className="relative">
-                        <User className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary/60" />
-                        <input
-                          id="fullName"
-                          type="text"
-                          required
-                          value={fullName}
-                          onChange={(e) => setFullName(e.target.value)}
-                          placeholder="مثال: أحمد بن علي"
-                          className="w-full pr-10 pl-4 py-2.5 bg-background border border-border/30 rounded-xl text-sm focus:border-brand-primary/50 focus:ring-1 focus:ring-brand-primary/30 outline-none transition-all"
-                        />
+                {/* Cash on Delivery Form */}
+                <form onSubmit={handleCodSubmit} className="space-y-4">
+                  <div className="border-t border-border/20 pt-4">
+                    <span className="text-xs font-black text-text-primary block mb-3">
+                      بيانات مستلم الطلب:
+                    </span>
+
+                    <div className="space-y-3.5">
+                      <div className="space-y-1">
+                        <label htmlFor="fullName" className="text-xs font-bold text-text-secondary block">
+                          الاسم واللقب <span className="text-[#F95353]">*</span>
+                        </label>
+                        <div className="relative">
+                          <User className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary/60" />
+                          <input
+                            id="fullName"
+                            type="text"
+                            required
+                            value={fullName}
+                            onChange={(e) => setFullName(e.target.value)}
+                            placeholder="مثال: محمد بن علي"
+                            className="w-full pr-10 pl-4 py-2.5 bg-background border border-border/30 rounded-xl text-sm focus:border-brand-primary/50 focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label htmlFor="phoneNumber" className="text-xs font-bold text-text-secondary block">
+                          رقم الهاتف (للاتصال والتوصيل) <span className="text-[#F95353]">*</span>
+                        </label>
+                        <div className="relative">
+                          <Phone className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary/60" />
+                          <input
+                            id="phoneNumber"
+                            type="tel"
+                            required
+                            value={phoneNumber}
+                            onChange={(e) => setPhoneNumber(e.target.value)}
+                            placeholder="مثال: 98123456"
+                            className="w-full pr-10 pl-4 py-2.5 bg-background border border-border/30 rounded-xl text-sm focus:border-brand-primary/50 focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label htmlFor="address" className="text-xs font-bold text-text-secondary block">
+                          عنوان التوصيل بالتفصيل (المدينة، الحي، الشارع) <span className="text-[#F95353]">*</span>
+                        </label>
+                        <div className="relative">
+                          <MapPin className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary/60" />
+                          <input
+                            id="address"
+                            type="text"
+                            required
+                            value={address}
+                            onChange={(e) => setAddress(e.target.value)}
+                            placeholder="مثال: تونس، حي النصر 2، شارع الهادي نويرة"
+                            className="w-full pr-10 pl-4 py-2.5 bg-background border border-border/30 rounded-xl text-sm focus:border-brand-primary/50 focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label htmlFor="email" className="text-xs font-bold text-text-secondary block">
+                          البريد الإلكتروني <span className="text-text-secondary/50 font-normal">(اختياري لإرسال إشعار التفعيل)</span>
+                        </label>
+                        <div className="relative">
+                          <Mail className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary/60" />
+                          <input
+                            id="email"
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="example@mail.com"
+                            className="w-full pr-10 pl-4 py-2.5 bg-background border border-border/30 rounded-xl text-sm focus:border-brand-primary/50 focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all text-left"
+                          />
+                        </div>
                       </div>
                     </div>
+                  </div>
 
-                    <div className="space-y-1.5">
-                      <label htmlFor="phoneNumber" className="text-xs font-bold text-text-secondary block">
-                        رقم الهاتف <span className="text-[#F95353]">*</span>
-                      </label>
-                      <div className="relative">
-                        <Phone className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary/60" />
-                        <input
-                          id="phoneNumber"
-                          type="tel"
-                          required
-                          value={phoneNumber}
-                          onChange={(e) => setPhoneNumber(e.target.value)}
-                          placeholder="مثال: 98765432"
-                          className="w-full pr-10 pl-4 py-2.5 bg-background border border-border/30 rounded-xl text-sm focus:border-brand-primary/50 focus:ring-1 focus:ring-brand-primary/30 outline-none transition-all"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label htmlFor="address" className="text-xs font-bold text-text-secondary block">
-                        العنوان الكامل <span className="text-[#F95353]">*</span>
-                      </label>
-                      <div className="relative">
-                        <MapPin className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary/60" />
-                        <input
-                          id="address"
-                          type="text"
-                          required
-                          value={address}
-                          onChange={(e) => setAddress(e.target.value)}
-                          placeholder="مثال: شارع البيئة، تونس"
-                          className="w-full pr-10 pl-4 py-2.5 bg-background border border-border/30 rounded-xl text-sm focus:border-brand-primary/50 focus:ring-1 focus:ring-brand-primary/30 outline-none transition-all"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label htmlFor="email" className="text-xs font-bold text-text-secondary block">
-                        البريد الإلكتروني <span className="text-text-secondary/50">(اختياري)</span>
-                      </label>
-                      <div className="relative">
-                        <Mail className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary/60" />
-                        <input
-                          id="email"
-                          type="email"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          placeholder="example@mail.com"
-                          className="w-full pr-10 pl-4 py-2.5 bg-background border border-border/30 rounded-xl text-sm focus:border-brand-primary/50 focus:ring-1 focus:ring-brand-primary/30 outline-none transition-all text-left"
-                        />
-                      </div>
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={isLoading}
-                      className="w-full flex items-center justify-center gap-2 py-3.5 bg-brand-primary text-white rounded-xl font-extrabold text-sm hover:bg-brand-primary/95 transition-colors shadow-lg shadow-brand-primary/10 mt-6"
-                    >
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          <span>جاري إرسال الطلب...</span>
-                        </>
-                      ) : (
-                        <>
-                          <CreditCard className="w-4 h-4" />
-                          <span>تأكيد الطلب والدفع عند الاستلام</span>
-                        </>
-                      )}
-                    </button>
-                  </form>
-                )}
-
-                {/* Enrollment Code Form */}
-                {method === 'code' && (
-                  <form onSubmit={handleCodeSubmit} className="space-y-4">
-                    {!isAuthenticated ? (
-                      <div className="bg-surface-secondary/40 border border-border/20 p-5 rounded-2xl text-center space-y-4">
-                        <p className="text-text-secondary text-xs leading-relaxed">
-                          يجب تسجيل الدخول إلى حسابك لتتمكن من تفعيل كود الاشتراك والوصول إلى الكورسات.
-                        </p>
-                        <Link
-                          href="/login"
-                          className="inline-block px-6 py-2 bg-brand-primary text-white text-xs font-black rounded-lg hover:bg-brand-primary/90 transition-colors"
-                        >
-                          تسجيل الدخول
-                        </Link>
-                      </div>
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full flex items-center justify-center gap-2 py-4 bg-brand-primary text-white rounded-2xl font-black text-sm hover:bg-brand-primary/95 transition-all shadow-xl shadow-brand-primary/20 hover:shadow-2xl hover:scale-[1.01] active:scale-[0.99] mt-6"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <span>جاري تأكيد وتسجيل الطلب...</span>
+                      </>
                     ) : (
                       <>
-                        <div className="space-y-1.5">
-                          <label htmlFor="code" className="text-xs font-bold text-text-secondary block">
-                            كود الاشتراك التفعيلي <span className="text-[#F95353]">*</span>
-                          </label>
-                          <div className="relative">
-                            <Ticket className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary/60" />
-                            <input
-                              id="code"
-                              type="text"
-                              required
-                              value={enrollmentCode}
-                              onChange={(e) => setEnrollmentCode(e.target.value)}
-                              placeholder="أدخل كود التفعيل هنا"
-                              className="w-full pr-10 pl-4 py-2.5 bg-background border border-border/30 rounded-xl text-sm focus:border-brand-primary/50 focus:ring-1 focus:ring-brand-primary/30 outline-none transition-all uppercase placeholder:normal-case font-mono tracking-wider"
-                            />
-                          </div>
-                        </div>
-
-                        <button
-                          type="submit"
-                          disabled={isLoading}
-                          className="w-full flex items-center justify-center gap-2 py-3.5 bg-brand-primary text-white rounded-xl font-extrabold text-sm hover:bg-brand-primary/95 transition-colors shadow-lg shadow-brand-primary/10 mt-6"
-                        >
-                          {isLoading ? (
-                            <>
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                              <span>جاري تفعيل الكود...</span>
-                            </>
-                          ) : (
-                            <>
-                              <CheckCircle2 className="w-4 h-4" />
-                              <span>تفعيل كود الاشتراك</span>
-                            </>
-                          )}
-                        </button>
+                        <CreditCard className="w-5 h-5" />
+                        <span>تأكيد الطلب والدفع عند الاستلام</span>
                       </>
                     )}
-                  </form>
-                )}
+                  </button>
+
+                  {/* Trust & Guarantee Badges */}
+                  <div className="pt-2 flex items-center justify-center gap-4 text-[10px] text-text-secondary font-bold border-t border-border/20">
+                    <span className="flex items-center gap-1">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>دفع آمن 100% عند الاستلام</span>
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Sparkles className="w-3.5 h-3.5 text-brand-primary" />
+                      <span>تفعيل فوري للكورس</span>
+                    </span>
+                  </div>
+                </form>
               </div>
             </div>
           </div>
