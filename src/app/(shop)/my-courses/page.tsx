@@ -13,7 +13,8 @@ import {
     Clock,
     Trash2,
     Sparkles,
-    ArrowUpRight
+    ArrowUpRight,
+    Flame
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -188,8 +189,15 @@ export default function MyCoursesPage() {
                                 : "استمر في رحلة التعلم الخاصة بك. الوصول سريع ومباشر إلى جميع دوراتك ومقاطعك المحفوظة."
                         }
                     </p>
-                    {isInstructor && (
-                        <div className="pt-2 flex justify-center">
+                    <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
+                        <Link
+                            href="/dashboard"
+                            className="inline-flex items-center gap-2 px-5 py-2.5 bg-orange-500/10 hover:bg-orange-500/20 text-orange-600 dark:text-orange-400 border border-orange-500/30 rounded-xl text-xs font-bold transition-all shadow-sm"
+                        >
+                            <Flame className="w-4 h-4 text-orange-500" />
+                            <span>لوحة التعلم ومتابعة التقدم</span>
+                        </Link>
+                        {isInstructor && (
                             <Link
                                 href="/instructor/dashboard"
                                 className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-primary/10 hover:bg-brand-primary/20 text-brand-primary border border-brand-primary/30 rounded-xl text-xs font-bold transition-all shadow-sm"
@@ -197,8 +205,8 @@ export default function MyCoursesPage() {
                                 <span>الذهاب إلى لوحة تحكم المدرب والتحليلات</span>
                                 <ArrowUpRight className="w-3.5 h-3.5 rotate-180" />
                             </Link>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
 
                 {/* Error Banner */}

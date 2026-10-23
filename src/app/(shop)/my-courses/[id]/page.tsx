@@ -6,6 +6,7 @@ import { useCourseStore } from "@/store/course";
 import { useAuthStore } from "@/store/auth";
 import { useNotificationStore } from "@/store/notification";
 import { useNoteStore, formatVideoTime } from "@/store/note";
+import { useLearningStore } from "@/store/learning";
 import { Loader2, AlertCircle, PlayCircle, BookOpen, Clock, ArrowRight, ArrowLeft, MessageSquare, Send, CornerDownLeft, User as UserIcon, Award, StickyNote, Trash2, Plus, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -20,6 +21,8 @@ export default function MyCourseDetailsPage() {
   const { currentCourse, isLoading, error, getCourseContent, clearCurrentCourse, addQuestion, addAnswer, toggleVideoProgress } = useCourseStore();
   const { addNotification } = useNotificationStore();
   const { addNote, deleteNote, getLessonNotes, fetchUserNotes } = useNoteStore();
+  const recordVisit = useLearningStore((s) => s.recordVisit);
+  const recordLessonCompleted = useLearningStore((s) => s.recordLessonCompleted);
 
   const completedVideos = currentCourse?.completedVideos || [];
   const progress = currentCourse?.progress || 0;
@@ -57,6 +60,23 @@ export default function MyCourseDetailsPage() {
     }
     return () => clearCurrentCourse();
   }, [id, token, getCourseContent, clearCurrentCourse, fetchUserNotes]);
+
+  // Track study activity for the learning dashboard (streak + resume)
+  useEffect(() => {
+    const lessons = currentCourse?.course_data;
+    if (!currentCourse || !lessons || lessons.length === 0) {
+      return;
+    }
+    const lesson = lessons[activeIdx];
+    recordVisit({
+      courseId: currentCourse.id,
+      courseUrl: currentCourse.url || currentCourse.id,
+      courseName: currentCourse.name,
+      lessonIndex: activeIdx,
+      lessonTitle: lesson?.title ?? `الدرس ${activeIdx + 1}`,
+      thumbnailUrl: currentCourse.thumbnail?.url,
+    });
+  }, [currentCourse, activeIdx, recordVisit]);
 
   // Handle URL query parameters for section and timestamp seek
   useEffect(() => {
@@ -275,7 +295,11 @@ export default function MyCourseDetailsPage() {
                 onClick={async () => {
                   if (token && currentSection) {
                     const sectionTitle = currentSection.video_section || `القسم ${activeIdx + 1}`;
+                    const wasCompleted = completedVideos.includes(sectionTitle);
                     await toggleVideoProgress(currentCourse.id, sectionTitle, token);
+                    if (!wasCompleted) {
+                      recordLessonCompleted();
+                    }
                   }
                 }}
                 className={cn(
@@ -762,6 +786,9 @@ export default function MyCourseDetailsPage() {
                                     if (token) {
                                       try {
                                         await toggleVideoProgress(currentCourse.id, lessonKey, token);
+                                        if (!isCompleted) {
+                                          recordLessonCompleted();
+                                        }
                                       } catch (err) {
                                         console.error(err);
                                       }

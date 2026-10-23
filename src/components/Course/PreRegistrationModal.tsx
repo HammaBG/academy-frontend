@@ -90,7 +90,7 @@ export function PreRegistrationModal({
 
             <div className="space-y-2">
               <h3 className="text-xl sm:text-2xl font-black text-text-primary">
-                تم تسجيل حجزك المسبق بنجاح! 🎉
+                تم تسجيل حجزك المسبق بنجاح!
               </h3>
               <p className="text-sm text-text-secondary leading-relaxed">
                 لقد أرسلنا لك رسالة تأكيد إلى بريدك الإلكتروني (<strong>{email}</strong>). بصفتك مسجلاً مبكراً، ستحصل على خصم استثنائي فور إطلاق دورة <strong>{course.name}</strong> وسنتواصل معك أولاً!

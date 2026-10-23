@@ -10,7 +10,7 @@ import { useCourseStore, type Course } from "@/store/course";
 import { useTheme } from "@/components/providers/ThemeProvider";
 import logo from "../../public/ossosacademy.jpg";
 import { API_ENDPOINTS } from "@/config/api";
-import { Search, X, BookOpen, User as UserIcon, Sun, Moon, Ticket, ClockCheck, ShoppingCart } from "lucide-react";
+import { Search, X, BookOpen, User as UserIcon, Sun, Moon, Ticket, ClockCheck, ShoppingCart, Flame } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
 
 interface SearchCourseResultProps {
@@ -502,6 +502,15 @@ export function Navbar() {
                       </div>
 
                       <div className="py-2 flex flex-col items-stretch text-sm text-text-secondary">
+                        <Link
+                          href="/dashboard"
+                          className="flex items-center gap-3 px-5 py-2.5 text-text-primary hover:bg-background/60 hover:text-brand-primary transition-colors"
+                          onClick={handleCloseProfile}
+                        >
+                          <Flame className="h-5 w-5 text-orange-500" />
+                          لوحة التعلم
+                        </Link>
+
                         <Link
                           href="/my-courses"
                           className="flex items-center gap-3 px-5 py-2.5 text-text-primary hover:bg-background/60 hover:text-brand-primary transition-colors"
