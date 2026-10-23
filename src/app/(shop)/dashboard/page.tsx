@@ -264,7 +264,7 @@ export default function LearningDashboardPage() {
             <p className="text-text-secondary text-sm mt-1">
               {streak > 0
                 ? `رائع! أنت تدرس منذ ${streak} ${streak === 1 ? "يوم" : "أيام"} متتالية، حافظ على السلسلة.`
-                : "ابدأ درساً اليوم لتشعل سلسلة أيام الدراسة 🔥"}
+                : "ابدأ درساً اليوم لتشعل سلسلة أيام الدراسة"}
             </p>
           </div>
           <Link
