@@ -13,7 +13,6 @@ const teachers = [
   { id: "t7", name: "أسماء الأمين", title: "مهندسة و باحثة في علم الشريعة و الدين", image: "/teachers/7AI.png" },
   { id: "t10", name: "أمينة الرڨيڨ", title: "استشارية أسرية و خبيرة في العلاقات", image: "/teachers/10AI.png" },
   { id: "t8", name: "إنصاف عبد سلام", title: "طبيبة نساء و توليد", image: "/teachers/8AI.png" },
-  { id: "t9", name: "إبراهيم بن عبد الله", title: "كوتش و مستشار في التفكير و التخطيط الإستراتيجي", image: "/teachers/9AI.png" },
   { id: "t11", name: "يسرى الجملي", title: "طبيبة نفسية و مختصة في علم الجنس و علاج الإدمان", image: "/teachers/13AI.png" },
   { id: "t12", name: "سنية مصمودي", title: "أستاذة فيزياء ورئيسة المنتدى التونسي لاضطرابات التعلم", image: "/teachers/11AI.png" },
   { id: "t13", name: "لطيفة الغزال", title: "مهندسة مدنية و أستاذة جامعية", image: "/teachers/14AI.png" },
