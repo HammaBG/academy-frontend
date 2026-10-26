@@ -40,8 +40,15 @@ const getCourseProgress = (course: Course): number => {
   return Math.min(100, Math.round((done / total) * 100));
 };
 
-/** Estimated watched seconds = completed ratio × total course length */
+/** Real watched seconds from tracking, falling back to estimation */
 const getWatchedSeconds = (course: Course): number => {
+  if (typeof course.totalWatchedSeconds === "number" && course.totalWatchedSeconds > 0) {
+    return course.totalWatchedSeconds;
+  }
+  if (course.lessonsProgress && course.lessonsProgress.length > 0) {
+    const sum = course.lessonsProgress.reduce((acc, l) => acc + (l.watchedSeconds || 0), 0);
+    if (sum > 0) return sum;
+  }
   const totalSeconds = (course.course_data ?? []).reduce(
     (acc, lesson) => acc + (lesson.video_length || 0),
     0
@@ -190,7 +197,7 @@ function CourseProgressRow({ course }: { course: Course }) {
 export default function LearningDashboardPage() {
   const { token, user, isAuthenticated } = useAuthStore();
   const { enrolledCourses, isLoading, getEnrolledCourses } = useCourseStore();
-  const { activeDays, lessonsByDay, weeklyGoal, lastLesson, setWeeklyGoal } = useLearningStore();
+  const { activeDays, lessonsByDay, secondsByDay, weeklyGoal, lastLesson, setWeeklyGoal } = useLearningStore();
 
   // Avoid hydration mismatch: persisted local data only exists on the client
   const [isMounted, setIsMounted] = useState(false);
@@ -205,7 +212,7 @@ export default function LearningDashboardPage() {
   }, [token, getEnrolledCourses]);
 
   const streak = useMemo(() => computeStreak(activeDays), [activeDays]);
-  const week = useMemo(() => getLastSevenDays(activeDays, lessonsByDay), [activeDays, lessonsByDay]);
+  const week = useMemo(() => getLastSevenDays(activeDays, lessonsByDay, secondsByDay), [activeDays, lessonsByDay, secondsByDay]);
   const lessonsThisWeek = week.reduce((acc, d) => acc + d.lessons, 0);
 
   const stats = useMemo(() => {
@@ -325,7 +332,7 @@ export default function LearningDashboardPage() {
                 icon={<Clock className="w-6 h-6" />}
                 label="وقت التعلم"
                 value={formatDuration(stats.watchedSeconds)}
-                hint="تقدير من الدروس المكتملة"
+                hint="الوقت الفعلي لمشاهدة الدروس"
                 accent="bg-sky-500/15 text-sky-500"
               />
               <StatCard
@@ -391,18 +398,27 @@ export default function LearningDashboardPage() {
                 <div>
                   <p className="text-xs font-bold text-text-secondary mb-2">نشاط آخر 7 أيام</p>
                   <ol className="grid grid-cols-7 gap-1.5">
-                    {week.map((day) => (
-                      <li key={day.key} className="flex flex-col items-center gap-1">
-                        <div
-                          className={`w-full aspect-square rounded-xl flex items-center justify-center text-xs font-black ${day.active ? "bg-brand-primary text-white" : "bg-background border border-border/40 text-text-secondary/50"
-                            }`}
-                          title={`${day.lessons} دروس`}
-                        >
-                          {day.active ? <Flame className="w-4 h-4" /> : "·"}
-                        </div>
-                        <span className="text-[10px] text-text-secondary">{day.label}</span>
-                      </li>
-                    ))}
+                    {week.map((day) => {
+                      const mins = Math.round(day.seconds / 60);
+                      const tooltip = mins > 0 ? `${day.lessons} دروس · ${mins} دقيقة` : `${day.lessons} دروس`;
+                      return (
+                        <li key={day.key} className="flex flex-col items-center gap-1">
+                          <div
+                            className={`w-full aspect-square rounded-xl flex items-center justify-center text-xs font-black ${day.active ? "bg-brand-primary text-white" : "bg-background border border-border/40 text-text-secondary/50"
+                              }`}
+                            title={tooltip}
+                          >
+                            {day.active ? <Flame className="w-4 h-4" /> : "·"}
+                          </div>
+                          <span className="text-[10px] text-text-secondary">{day.label}</span>
+                          {mins > 0 && (
+                            <span className="text-[9px] font-bold text-brand-primary/80">
+                              {mins}د
+                            </span>
+                          )}
+                        </li>
+                      );
+                    })}
                   </ol>
                 </div>
               </section>

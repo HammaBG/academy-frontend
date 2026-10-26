@@ -1,28 +1,40 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { useCourseStore } from "@/store/course";
+import type { LessonProgress } from "@/store/course";
 import { useAuthStore } from "@/store/auth";
 import { useNotificationStore } from "@/store/notification";
 import { useNoteStore, formatVideoTime } from "@/store/note";
 import { useLearningStore } from "@/store/learning";
-import { Loader2, AlertCircle, PlayCircle, BookOpen, Clock, ArrowRight, ArrowLeft, MessageSquare, Send, CornerDownLeft, User as UserIcon, Award, StickyNote, Trash2, Plus, Sparkles } from "lucide-react";
+import { Loader2, AlertCircle, PlayCircle, BookOpen, Clock, ArrowRight, ArrowLeft, MessageSquare, Send, CornerDownLeft, User as UserIcon, Award, StickyNote, Trash2, Plus, Sparkles, CheckCircle2, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { CoursePlayer } from "@/components/CoursePlayer";
+import { CoursePlayer, type PlaybackSample } from "@/components/CoursePlayer";
 import { CertificateModal } from "@/components/CertificateModal";
 import { CourseChatRoom } from "@/components/Chat/CourseChatRoom";
+
+const formatMinutesSeconds = (totalSec: number): string => {
+  const m = Math.floor(totalSec / 60);
+  const s = Math.floor(totalSec % 60);
+  return `${m}:${s.toString().padStart(2, "0")}`;
+};
+
+const getLessonKey = (lesson: { title?: string; video_section?: string }, idx: number): string => {
+  return lesson.title || lesson.video_section || `lesson-${idx}`;
+};
 
 export default function MyCourseDetailsPage() {
   const { id } = useParams();
   const searchParams = useSearchParams();
   const { token, user } = useAuthStore();
-  const { currentCourse, isLoading, error, getCourseContent, clearCurrentCourse, addQuestion, addAnswer, toggleVideoProgress } = useCourseStore();
+  const { currentCourse, isLoading, error, getCourseContent, clearCurrentCourse, addQuestion, addAnswer, toggleVideoProgress, sendVideoHeartbeat } = useCourseStore();
   const { addNotification } = useNotificationStore();
   const { addNote, deleteNote, getLessonNotes, fetchUserNotes } = useNoteStore();
   const recordVisit = useLearningStore((s) => s.recordVisit);
   const recordLessonCompleted = useLearningStore((s) => s.recordLessonCompleted);
+  const recordWatchedSeconds = useLearningStore((s) => s.recordWatchedSeconds);
 
   const completedVideos = currentCourse?.completedVideos || [];
   const progress = currentCourse?.progress || 0;
@@ -40,6 +52,19 @@ export default function MyCourseDetailsPage() {
   const [noteMinutes, setNoteMinutes] = useState<number>(0);
   const [noteSeconds, setNoteSeconds] = useState<number>(0);
   const [seekTime, setSeekTime] = useState<{ time: number; trigger: number } | null>(null);
+
+  // Resume prompt banner state: shows if previous watch position > 10s
+  const [resumePrompt, setResumePrompt] = useState<{ position: number; lessonTitle: string } | null>(null);
+
+  // Tracking refs to avoid stale closures in interval / beforeunload
+  const trackingRef = useRef({
+    lastSampleTime: 0,
+    currentPos: 0,
+    duration: 0,
+    accumulatedWatchedDelta: 0,
+    activeLessonKey: "",
+    courseId: "",
+  });
 
   // View Mode: 'lesson' | 'chat'
   const [viewMode, setViewMode] = useState<"lesson" | "chat">("lesson");
@@ -60,6 +85,146 @@ export default function MyCourseDetailsPage() {
     }
     return () => clearCurrentCourse();
   }, [id, token, getCourseContent, clearCurrentCourse, fetchUserNotes]);
+
+  // Flush accumulated watched time and last position to the backend + learning store
+  const flushHeartbeat = useCallback(async () => {
+    const cur = trackingRef.current;
+    if (!cur.courseId || !cur.activeLessonKey || !token) return;
+    const delta = Math.round(cur.accumulatedWatchedDelta);
+    const pos = Math.round(cur.currentPos);
+    const dur = Math.round(cur.duration);
+    // Reset delta immediately before async call to avoid double-counting
+    cur.accumulatedWatchedDelta = 0;
+
+    if (delta > 0) {
+      recordWatchedSeconds(delta);
+    }
+
+    try {
+      const res = await sendVideoHeartbeat(
+        {
+          courseId: cur.courseId,
+          lessonKey: cur.activeLessonKey,
+          position: pos,
+          duration: dur,
+          watchedDelta: delta,
+        },
+        token
+      );
+      if (res?.justCompleted) {
+        recordLessonCompleted();
+        addNotification({
+          userId: user?.id || "all",
+          title: "تم إكمال الدرس بنجاح!",
+          message: `أكملت أكثر من 85% من محتوى الدرس وأصبح تقدمك في الدورة ${res.progress}%.`,
+          type: "system",
+          link: `/my-courses/${currentCourse?.url || id}`,
+        });
+      }
+    } catch {
+      // Non-blocking; store and local progress are already safe
+    }
+  }, [token, sendVideoHeartbeat, recordWatchedSeconds, recordLessonCompleted, addNotification, user?.id, currentCourse?.url, id]);
+
+  // Periodic heartbeat timer (every 20s)
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      flushHeartbeat();
+    }, 20000);
+    return () => {
+      window.clearInterval(interval);
+      flushHeartbeat();
+    };
+  }, [flushHeartbeat]);
+
+  // Flush on page unload or visibility change
+  useEffect(() => {
+    const handleUnload = () => {
+      flushHeartbeat();
+    };
+    window.addEventListener("beforeunload", handleUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleUnload);
+    };
+  }, [flushHeartbeat]);
+
+  // Player tick handler passed to CoursePlayer
+  const handlePlayerTick = useCallback((sample: PlaybackSample) => {
+    const cur = trackingRef.current;
+    if (!cur.activeLessonKey) return;
+
+    const now = Date.now();
+    cur.duration = sample.duration;
+
+    if (!sample.paused && cur.lastSampleTime > 0) {
+      const dt = (now - cur.lastSampleTime) / 1000;
+      // If tick interval is reasonable (0.5s - 2.5s) and position advanced reasonably, count as real watched time
+      if (dt > 0.4 && dt < 2.5 && sample.position >= cur.currentPos && sample.position - cur.currentPos < 3) {
+        cur.accumulatedWatchedDelta += dt;
+      }
+    }
+
+    cur.currentPos = sample.position;
+    cur.lastSampleTime = now;
+
+    // Cache to localStorage for instantaneous resume even before backend sync
+    if (cur.courseId && cur.activeLessonKey && sample.position > 2) {
+      try {
+        localStorage.setItem(
+          `lesson_pos_${cur.courseId}_${cur.activeLessonKey}`,
+          JSON.stringify({ pos: sample.position, dur: sample.duration, time: Date.now() })
+        );
+      } catch {
+        // Safe fallback
+      }
+    }
+  }, []);
+
+  // Update active lesson tracking ref & detect resume position on lesson change
+  useEffect(() => {
+    const lessons = currentCourse?.course_data;
+    if (!currentCourse || !lessons || lessons.length === 0) return;
+    const lesson = lessons[activeIdx];
+    if (!lesson) return;
+
+    // Flush progress of previous lesson before switching
+    flushHeartbeat();
+
+    const lessonKey = getLessonKey(lesson, activeIdx);
+    trackingRef.current.activeLessonKey = lessonKey;
+    trackingRef.current.courseId = currentCourse.id;
+    trackingRef.current.lastSampleTime = 0;
+    trackingRef.current.currentPos = 0;
+    trackingRef.current.duration = lesson.video_length || 0;
+    trackingRef.current.accumulatedWatchedDelta = 0;
+
+    // Check if we have a saved resume position in backend lessonsProgress or localStorage
+    const savedLesson = (currentCourse.lessonsProgress || []).find((l: LessonProgress) => l.lessonKey === lessonKey);
+    let savedPos = savedLesson?.lastPosition || 0;
+
+    try {
+      const local = localStorage.getItem(`lesson_pos_${currentCourse.id}_${lessonKey}`);
+      if (local) {
+        const parsed = JSON.parse(local);
+        if (parsed.pos && parsed.pos > savedPos) {
+          savedPos = parsed.pos;
+        }
+      }
+    } catch {
+      // Safe fallback
+    }
+
+    // Only prompt to resume if position > 10s and not at the very end
+    const totalLen = lesson.video_length || savedLesson?.duration || 0;
+    if (savedPos > 10 && (totalLen === 0 || savedPos < totalLen - 15)) {
+      setResumePrompt({
+        position: savedPos,
+        lessonTitle: lesson.title || `الدرس ${activeIdx + 1}`,
+      });
+    } else {
+      setResumePrompt(null);
+    }
+  }, [currentCourse?.id, activeIdx, flushHeartbeat]);
 
   // Track study activity for the learning dashboard (streak + resume)
   useEffect(() => {
@@ -271,378 +436,421 @@ export default function MyCourseDetailsPage() {
                 {/* Video Box Container */}
                 <div className="relative aspect-video rounded-[32px] overflow-hidden border border-border/40 bg-surface shadow-2xl">
                   {currentSection?.video_url ? (
-                    <CoursePlayer videoUrl={currentSection.video_url} seekTime={seekTime} />
+                    <CoursePlayer videoUrl={currentSection.video_url} seekTime={seekTime} onTick={handlePlayerTick} />
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center text-text-secondary/30 p-8">
                       <PlayCircle className="w-16 h-16 mb-4" />
                       <p className="text-sm font-bold">لا يوجد فيديو متاح لهذا الدرس</p>
                     </div>
                   )}
-                </div>
 
-            {/* Navigation Buttons under the Video Player */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-              <button
-                onClick={handlePrev}
-                disabled={activeIdx === 0}
-                className="flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-surface border border-border/40 hover:border-brand-primary/50 disabled:opacity-40 disabled:pointer-events-none text-text-primary text-sm font-extrabold transition-all"
-              >
-                <ArrowRight className="w-4 h-4" />
-                <span>الدرس السابق</span>
-              </button>
-
-              <button
-                onClick={async () => {
-                  if (token && currentSection) {
-                    const sectionTitle = currentSection.video_section || `القسم ${activeIdx + 1}`;
-                    const wasCompleted = completedVideos.includes(sectionTitle);
-                    await toggleVideoProgress(currentCourse.id, sectionTitle, token);
-                    if (!wasCompleted) {
-                      recordLessonCompleted();
-                    }
-                  }
-                }}
-                className={cn(
-                  "flex items-center justify-center gap-2 px-6 py-3 rounded-2xl border text-sm font-extrabold transition-all",
-                  completedVideos.includes(currentSection?.video_section || `القسم ${activeIdx + 1}`)
-                    ? "bg-emerald-500/10 border-emerald-500/35 text-emerald-500 hover:bg-emerald-500/20"
-                    : "bg-surface border-border/40 hover:border-brand-primary text-text-primary"
-                )}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-                  <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
-                </svg>
-                <span>{completedVideos.includes(currentSection?.video_section || `القسم ${activeIdx + 1}`) ? "تم إكمال الدرس" : "تحديد كمكتمل"}</span>
-              </button>
-
-              <button
-                onClick={handleNext}
-                disabled={activeIdx === sections.length - 1}
-                className="flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-brand-primary text-white hover:bg-brand-primary/95 disabled:opacity-40 disabled:pointer-events-none text-sm font-extrabold transition-all shadow-md shadow-brand-primary/10"
-              >
-                <span>الدرس التالي</span>
-                <ArrowLeft className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Selected Lesson Description & Links */}
-            {currentSection && (
-              <div className="bg-surface border border-border/40 rounded-[32px] p-6 space-y-4 shadow-sm">
-                <h2 className="text-xl font-black text-text-primary">وصف الدرس: {currentSection.video_section || currentSection.title}</h2>
-                <p className="text-text-secondary text-sm leading-relaxed font-medium">{currentSection.description || "لا يوجد وصف إضافي متوفر للدرس الحالي."}</p>
-
-                {currentSection.links && currentSection.links.length > 0 && (
-                  <div className="space-y-2 pt-2">
-                    <h4 className="text-sm font-bold text-text-primary">روابط ومرفقات الدرس:</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {currentSection.links.map((link: any, linkIdx: number) => (
-                        <a
-                          key={linkIdx}
-                          href={link.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-4 py-2 bg-background hover:bg-surface border border-border/40 hover:border-brand-primary/50 rounded-xl text-xs font-bold text-text-secondary hover:text-brand-primary transition-all"
-                        >
-                          {link.title}
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* SMART LESSON NOTES SECTION WITH TIMESTAMPS */}
-            {currentSection && (() => {
-              const currentSectionId = currentSection?.id || currentSection?._id || currentSection?.title || activeIdx.toString();
-              const lessonNotes = getLessonNotes(user?.id || "guest", id as string, currentSectionId);
-
-              return (
-                <div className="bg-surface border border-border/40 rounded-[32px] p-6 space-y-6 shadow-sm">
-                  {/* Section Header */}
-                  <div className="flex items-center justify-between border-b border-border/40 pb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-2xl bg-brand-primary/10 border border-brand-primary/20 flex items-center justify-center text-brand-primary">
-                        <StickyNote className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-black text-text-primary">ملاحظاتي الدراسية والتوقيتات</h3>
-                        <p className="text-xs font-semibold text-text-secondary">دون ملاحظاتك عند دقيقة معينة، وانقر على التوقيت للقفز فوراً بالفيديو</p>
-                      </div>
-                    </div>
-                    <span className="px-3 py-1 bg-brand-primary/10 text-brand-primary text-xs font-black rounded-full">
-                      {lessonNotes.length} ملاحظة
-                    </span>
-                  </div>
-
-                  {/* Form: Write new note */}
-                  <form
-                    onSubmit={async (e) => {
-                      e.preventDefault();
-                      if (!noteText.trim()) return;
-                      const totalSecs = noteMinutes * 60 + noteSeconds;
-                      await addNote({
-                        userId: user?.id || "guest",
-                        courseId: id as string,
-                        courseName: currentCourse.name || "دورة تعليمية",
-                        sectionId: currentSectionId,
-                        sectionTitle: currentSection.title || currentSection.video_section || "درس",
-                        videoUrl: currentSection.video_url || "",
-                        thumbnailUrl: currentCourse.thumbnail?.url || "",
-                        timestampSeconds: totalSecs,
-                        timeFormatted: formatVideoTime(totalSecs),
-                        text: noteText.trim(),
-                      }, token);
-                      setNoteText("");
-                    }}
-                    className="space-y-3 bg-background/50 border border-border/40 p-4 rounded-2xl"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs font-bold text-text-secondary shrink-0">التوقيت بالفيديو:</span>
-                      <div className="flex items-center gap-1">
-                        <input
-                          type="number"
-                          min="0"
-                          max="180"
-                          value={noteMinutes}
-                          onChange={(e) => setNoteMinutes(Math.max(0, parseInt(e.target.value) || 0))}
-                          className="w-16 p-2 bg-surface border border-border/40 rounded-xl text-center text-xs font-bold text-text-primary"
-                          placeholder="دقيقة"
-                        />
-                        <p className="text-xs font-bold text-text-secondary">دقيقة:</p>
-                        <span className="font-bold text-text-secondary">:</span>
-                        <input
-                          type="number"
-                          min="0"
-                          max="59"
-                          value={noteSeconds}
-                          onChange={(e) => setNoteSeconds(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)))}
-                          className="w-16 p-2 bg-surface border border-border/40 rounded-xl text-center text-xs font-bold text-text-primary"
-                          placeholder="ثانية"
-                        />
-                        <p className="text-xs font-bold text-text-secondary">ثانية</p>
-                      </div>
-                    </div>
-
-                    <div className="flex gap-2">
-                      <textarea
-                        value={noteText}
-                        onChange={(e) => setNoteText(e.target.value)}
-                        placeholder="اكتب ملاحظتك التوضيحية حول هذا الدرس..."
-                        rows={2}
-                        className="flex-1 p-3 bg-surface border border-border/40 focus:border-brand-primary rounded-2xl text-xs font-bold text-text-primary resize-none outline-none"
-                      />
-                      <button
-                        type="submit"
-                        disabled={!noteText.trim()}
-                        className="px-5 bg-brand-primary hover:bg-brand-primary/95 text-white font-extrabold text-xs rounded-2xl transition-all disabled:opacity-40 cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-brand-primary/10"
-                      >
-                        <Plus className="w-4 h-4" />
-                        <span>حفظ الملاحظة</span>
-                      </button>
-                    </div>
-                  </form>
-
-                  {/* Saved Notes List */}
-                  <div className="space-y-3">
-                    {lessonNotes.length === 0 ? (
-                      <p className="text-center text-xs font-bold text-text-secondary/50 py-4">
-                        لا توجد ملاحظات مدوّنة بعد لهذا الدرس.
-                      </p>
-                    ) : (
-                      lessonNotes.map((note) => (
-                        <div
-                          key={note.id}
-                          className="p-3.5 bg-background/80 border border-border/40 hover:border-brand-primary/40 rounded-2xl flex items-center justify-between gap-3 transition-all group"
-                        >
-                          <div className="flex items-center gap-3 min-w-0 flex-1">
-                            <button
-                              onClick={() => setSeekTime({ time: note.timestampSeconds, trigger: Date.now() })}
-                              className="px-3 py-1.5 bg-brand-primary/15 hover:bg-brand-primary hover:text-white text-brand-primary rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shrink-0 cursor-pointer shadow-xs"
-                              title="اضغط للقفز إلى هذه الدقيقة بالفيديو"
-                            >
-                              <Clock className="w-3.5 h-3.5" />
-                              <span>[{note.timeFormatted}]</span>
-                            </button>
-                            <p className="text-xs font-bold text-text-primary truncate">{note.text}</p>
-                          </div>
-                          <button
-                            onClick={() => deleteNote(note.id, token)}
-                            className="p-1.5 text-text-secondary hover:text-red-500 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                            title="حذف الملاحظة"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-              );
-            })()}
-
-            {/* Q&A SECTION (DISCUSSIONS) */}
-            {currentSection && (
-              <div className="bg-surface border border-border/40 rounded-[32px] p-6 md:p-8 space-y-8 shadow-sm">
-
-                {/* Header */}
-                <div className="flex items-center justify-between border-b border-border/40 pb-4">
-                  <div className="flex items-center gap-3">
-                    <MessageSquare className="w-6 h-6 text-brand-primary" />
-                    <h2 className="text-xl font-black text-text-primary">منتدى النقاش والأسئلة</h2>
-                  </div>
-                  <span className="px-3 py-1 bg-brand-primary/10 text-brand-primary text-xs font-black rounded-full">
-                    {(currentSection.questions || []).length} أسئلة مطروحة
-                  </span>
-                </div>
-
-                {/* Ask a Question Form */}
-                <form onSubmit={handleAskQuestion} className="space-y-4">
-                  <div className="relative">
-                    <textarea
-                      value={questionText}
-                      onChange={(e) => setQuestionText(e.target.value)}
-                      placeholder="اطرح سؤالاً أو استفساراً حول هذا الدرس..."
-                      className="w-full min-h-[100px] bg-background/40 border border-border/60 focus:border-brand-primary p-4 rounded-2xl text-sm font-semibold text-text-primary outline-none transition-colors resize-y pr-4 pl-12"
-                    />
-                    <button
-                      type="submit"
-                      disabled={isSubmittingQuestion || !questionText.trim()}
-                      className="absolute left-4 bottom-4 w-10 h-10 bg-brand-primary hover:bg-brand-primary/95 text-white rounded-xl flex items-center justify-center transition-all disabled:opacity-40 shadow-md shadow-brand-primary/10"
-                      aria-label="إرسال السؤال"
+                  {/* Resume prompt overlay banner */}
+                  {resumePrompt && (
+                    <aside
+                      aria-label="استئناف المشاهدة"
+                      className="absolute bottom-4 left-4 right-4 z-20 p-3 sm:p-4 rounded-2xl bg-black/85 backdrop-blur-md border border-white/20 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-300"
                     >
-                      {isSubmittingQuestion ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Send className="w-4 h-4 rotate-180" />
-                      )}
-                    </button>
-                  </div>
-                </form>
-
-                {/* Questions List */}
-                <div className="space-y-6">
-                  {(!currentSection.questions || currentSection.questions.length === 0) ? (
-                    <div className="text-center py-12 bg-background/20 rounded-[2rem] border border-dashed border-border/60">
-                      <MessageSquare className="w-12 h-12 text-text-secondary/20 mx-auto mb-3" />
-                      <p className="text-sm font-bold text-text-secondary">لا توجد أسئلة بعد لهذا الدرس</p>
-                      <p className="text-xs text-text-secondary/60 mt-1">كن أول من يطرح سؤالاً ويفعل النقاش!</p>
-                    </div>
-                  ) : (
-                    currentSection.questions.map((q: any, qIdx: number) => {
-                      const qId = q.id || q._id || qIdx.toString();
-                      const replies = q.question_replies || [];
-                      const isInstructor = user?.role === "instructor" || user?.role === "admin";
-
-                      return (
-                        <div key={qId} className="border border-border/40 p-5 rounded-[2rem] bg-background/30 space-y-4 hover:border-brand-primary/30 transition-all">
-
-                          {/* Question Author info */}
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full border border-border/40 bg-surface flex items-center justify-center overflow-hidden shrink-0">
-                                {q.user?.avatar ? (
-                                  <img src={q.user.avatar} alt={q.user.name} className="w-full h-full object-cover" />
-                                ) : (
-                                  <UserIcon className="w-5 h-5 text-text-secondary/40" />
-                                )}
-                              </div>
-                              <div>
-                                <h4 className="font-extrabold text-sm text-text-primary">{q.user?.name || "طالب"}</h4>
-                                <span className="text-[10px] text-text-secondary font-medium block">
-                                  {q.created_at ? new Date(q.created_at).toLocaleDateString("ar-EG") : "مؤخراً"}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Question Text */}
-                          <p className="text-sm font-semibold text-text-primary pr-2 leading-relaxed">
-                            {q.question}
-                          </p>
-
-                          {/* Replies list */}
-                          {replies.length > 0 && (
-                            <div className="mr-6 pr-4 border-r border-border/60 space-y-4 pt-2">
-                              {replies.map((reply: any, rIdx: number) => (
-                                <div key={rIdx} className="flex gap-3 bg-surface/50 p-4 rounded-2xl border border-border/20">
-                                  <div className="w-8 h-8 rounded-full border border-border/40 bg-surface flex items-center justify-center overflow-hidden shrink-0">
-                                    {reply.user?.avatar ? (
-                                      <img src={reply.user.avatar} alt={reply.user.name} className="w-full h-full object-cover" />
-                                    ) : (
-                                      <UserIcon className="w-4 h-4 text-text-secondary/40" />
-                                    )}
-                                  </div>
-                                  <div className="min-w-0 flex-1">
-                                    <div className="flex items-center gap-2">
-                                      <h5 className="font-extrabold text-xs text-text-primary">{reply.user?.name || "معلم"}</h5>
-                                      {/* Highlight label if replier is the instructor/admin */}
-                                      {reply.user?.role === "instructor" || reply.user?.role === "admin" ? (
-                                        <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-600 text-[9px] font-black rounded-full">معلم</span>
-                                      ) : null}
-                                    </div>
-                                    <span className="text-[9px] text-text-secondary font-medium block mt-0.5">
-                                      {reply.created_at ? new Date(reply.created_at).toLocaleDateString("ar-EG") : "مؤخراً"}
-                                    </span>
-                                    <p className="text-xs font-semibold text-text-secondary mt-1.5 leading-relaxed">
-                                      {reply.answer}
-                                    </p>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-
-                          {/* Actions / Reply Trigger */}
-                          <div className="flex items-center gap-3 pt-1">
-                            {!showReplyForm[qId] ? (
-                              <button
-                                onClick={() => setShowReplyForm(prev => ({ ...prev, [qId]: true }))}
-                                className="text-xs font-black text-brand-primary flex items-center gap-1 hover:underline"
-                              >
-                                <CornerDownLeft className="w-4 h-4" />
-                                <span>أضف رداً على السؤال</span>
-                              </button>
-                            ) : (
-                              <form onSubmit={(e) => handleReplyToQuestion(e, qId)} className="w-full flex items-center gap-2">
-                                <input
-                                  type="text"
-                                  value={replyTexts[qId] || ""}
-                                  onChange={(e) => setReplyTexts(prev => ({ ...prev, [qId]: e.target.value }))}
-                                  placeholder={isInstructor ? "اكتب رد المعلم الرسمي هنا..." : "اكتب ردك ومساعدتك لزميلك هنا..."}
-                                  className="flex-1 bg-background/50 border border-border/60 focus:border-brand-primary px-4 py-2.5 rounded-xl text-xs font-semibold text-text-primary outline-none transition-colors"
-                                />
-                                <button
-                                  type="submit"
-                                  disabled={submittingReplyId === qId || !(replyTexts[qId] || "").trim()}
-                                  className="px-4 py-2.5 bg-brand-primary hover:bg-brand-primary/95 text-white rounded-xl text-xs font-extrabold flex items-center gap-1 disabled:opacity-40"
-                                >
-                                  {submittingReplyId === qId ? (
-                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                  ) : (
-                                    <Send className="w-3.5 h-3.5 rotate-180" />
-                                  )}
-                                  <span>رد</span>
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => setShowReplyForm(prev => ({ ...prev, [qId]: false }))}
-                                  className="text-xs font-bold text-text-secondary hover:text-brand-primary px-2"
-                                >
-                                  إلغاء
-                                </button>
-                              </form>
-                            )}
-                          </div>
-
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-9 h-9 rounded-xl bg-brand-primary/40 border border-brand-primary/60 flex items-center justify-center shrink-0">
+                          <RotateCcw className="w-4 h-4 text-brand-primary" />
                         </div>
-                      );
-                    })
+                        <div className="min-w-0">
+                          <p className="text-xs font-black truncate">
+                            توقفت عند الدقيقة {formatMinutesSeconds(resumePrompt.position)}
+                          </p>
+                          <p className="text-[10px] text-white/70 truncate">
+                            هل تود المتابعة من حيث توقفت؟
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => setResumePrompt(null)}
+                          className="px-3 py-1.5 rounded-xl text-xs font-bold text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                        >
+                          تخطي
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSeekTime({ time: resumePrompt.position, trigger: Date.now() });
+                            setResumePrompt(null);
+                          }}
+                          className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-brand-primary hover:bg-brand-primary/90 text-white text-xs font-black shadow-md shadow-brand-primary/30 transition-all hover:scale-105 active:scale-95"
+                        >
+                          <PlayCircle className="w-3.5 h-3.5" />
+                          <span>استئناف المشاهدة</span>
+                        </button>
+                      </div>
+                    </aside>
                   )}
                 </div>
 
-              </div>
-            )}
+                {/* Navigation Buttons under the Video Player */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+                  <button
+                    onClick={handlePrev}
+                    disabled={activeIdx === 0}
+                    className="flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-surface border border-border/40 hover:border-brand-primary/50 disabled:opacity-40 disabled:pointer-events-none text-text-primary text-sm font-extrabold transition-all"
+                  >
+                    <ArrowRight className="w-4 h-4" />
+                    <span>الدرس السابق</span>
+                  </button>
+
+                  <button
+                    onClick={async () => {
+                      if (token && currentSection) {
+                        const sectionTitle = currentSection.video_section || `القسم ${activeIdx + 1}`;
+                        const wasCompleted = completedVideos.includes(sectionTitle);
+                        await toggleVideoProgress(currentCourse.id, sectionTitle, token);
+                        if (!wasCompleted) {
+                          recordLessonCompleted();
+                        }
+                      }
+                    }}
+                    className={cn(
+                      "flex items-center justify-center gap-2 px-6 py-3 rounded-2xl border text-sm font-extrabold transition-all",
+                      completedVideos.includes(currentSection?.video_section || `القسم ${activeIdx + 1}`)
+                        ? "bg-emerald-500/10 border-emerald-500/35 text-emerald-500 hover:bg-emerald-500/20"
+                        : "bg-surface border-border/40 hover:border-brand-primary text-text-primary"
+                    )}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                      <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                    </svg>
+                    <span>{completedVideos.includes(currentSection?.video_section || `القسم ${activeIdx + 1}`) ? "تم إكمال الدرس" : "تحديد كمكتمل"}</span>
+                  </button>
+
+                  <button
+                    onClick={handleNext}
+                    disabled={activeIdx === sections.length - 1}
+                    className="flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-brand-primary text-white hover:bg-brand-primary/95 disabled:opacity-40 disabled:pointer-events-none text-sm font-extrabold transition-all shadow-md shadow-brand-primary/10"
+                  >
+                    <span>الدرس التالي</span>
+                    <ArrowLeft className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Selected Lesson Description & Links */}
+                {currentSection && (
+                  <div className="bg-surface border border-border/40 rounded-[32px] p-6 space-y-4 shadow-sm">
+                    <h2 className="text-xl font-black text-text-primary">وصف الدرس: {currentSection.video_section || currentSection.title}</h2>
+                    <p className="text-text-secondary text-sm leading-relaxed font-medium">{currentSection.description || "لا يوجد وصف إضافي متوفر للدرس الحالي."}</p>
+
+                    {currentSection.links && currentSection.links.length > 0 && (
+                      <div className="space-y-2 pt-2">
+                        <h4 className="text-sm font-bold text-text-primary">روابط ومرفقات الدرس:</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {currentSection.links.map((link: any, linkIdx: number) => (
+                            <a
+                              key={linkIdx}
+                              href={link.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-4 py-2 bg-background hover:bg-surface border border-border/40 hover:border-brand-primary/50 rounded-xl text-xs font-bold text-text-secondary hover:text-brand-primary transition-all"
+                            >
+                              {link.title}
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* SMART LESSON NOTES SECTION WITH TIMESTAMPS */}
+                {currentSection && (() => {
+                  const currentSectionId = currentSection?.id || currentSection?._id || currentSection?.title || activeIdx.toString();
+                  const lessonNotes = getLessonNotes(user?.id || "guest", id as string, currentSectionId);
+
+                  return (
+                    <div className="bg-surface border border-border/40 rounded-[32px] p-6 space-y-6 shadow-sm">
+                      {/* Section Header */}
+                      <div className="flex items-center justify-between border-b border-border/40 pb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-2xl bg-brand-primary/10 border border-brand-primary/20 flex items-center justify-center text-brand-primary">
+                            <StickyNote className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-black text-text-primary">ملاحظاتي الدراسية والتوقيتات</h3>
+                            <p className="text-xs font-semibold text-text-secondary">دون ملاحظاتك عند دقيقة معينة، وانقر على التوقيت للقفز فوراً بالفيديو</p>
+                          </div>
+                        </div>
+                        <span className="px-3 py-1 bg-brand-primary/10 text-brand-primary text-xs font-black rounded-full">
+                          {lessonNotes.length} ملاحظة
+                        </span>
+                      </div>
+
+                      {/* Form: Write new note */}
+                      <form
+                        onSubmit={async (e) => {
+                          e.preventDefault();
+                          if (!noteText.trim()) return;
+                          const totalSecs = noteMinutes * 60 + noteSeconds;
+                          await addNote({
+                            userId: user?.id || "guest",
+                            courseId: id as string,
+                            courseName: currentCourse.name || "دورة تعليمية",
+                            sectionId: currentSectionId,
+                            sectionTitle: currentSection.title || currentSection.video_section || "درس",
+                            videoUrl: currentSection.video_url || "",
+                            thumbnailUrl: currentCourse.thumbnail?.url || "",
+                            timestampSeconds: totalSecs,
+                            timeFormatted: formatVideoTime(totalSecs),
+                            text: noteText.trim(),
+                          }, token);
+                          setNoteText("");
+                        }}
+                        className="space-y-3 bg-background/50 border border-border/40 p-4 rounded-2xl"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs font-bold text-text-secondary shrink-0">التوقيت بالفيديو:</span>
+                          <div className="flex items-center gap-1">
+                            <input
+                              type="number"
+                              min="0"
+                              max="180"
+                              value={noteMinutes}
+                              onChange={(e) => setNoteMinutes(Math.max(0, parseInt(e.target.value) || 0))}
+                              className="w-16 p-2 bg-surface border border-border/40 rounded-xl text-center text-xs font-bold text-text-primary"
+                              placeholder="دقيقة"
+                            />
+                            <p className="text-xs font-bold text-text-secondary">دقيقة:</p>
+                            <span className="font-bold text-text-secondary">:</span>
+                            <input
+                              type="number"
+                              min="0"
+                              max="59"
+                              value={noteSeconds}
+                              onChange={(e) => setNoteSeconds(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)))}
+                              className="w-16 p-2 bg-surface border border-border/40 rounded-xl text-center text-xs font-bold text-text-primary"
+                              placeholder="ثانية"
+                            />
+                            <p className="text-xs font-bold text-text-secondary">ثانية</p>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <textarea
+                            value={noteText}
+                            onChange={(e) => setNoteText(e.target.value)}
+                            placeholder="اكتب ملاحظتك التوضيحية حول هذا الدرس..."
+                            rows={2}
+                            className="flex-1 p-3 bg-surface border border-border/40 focus:border-brand-primary rounded-2xl text-xs font-bold text-text-primary resize-none outline-none"
+                          />
+                          <button
+                            type="submit"
+                            disabled={!noteText.trim()}
+                            className="px-5 bg-brand-primary hover:bg-brand-primary/95 text-white font-extrabold text-xs rounded-2xl transition-all disabled:opacity-40 cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-brand-primary/10"
+                          >
+                            <Plus className="w-4 h-4" />
+                            <span>حفظ الملاحظة</span>
+                          </button>
+                        </div>
+                      </form>
+
+                      {/* Saved Notes List */}
+                      <div className="space-y-3">
+                        {lessonNotes.length === 0 ? (
+                          <p className="text-center text-xs font-bold text-text-secondary/50 py-4">
+                            لا توجد ملاحظات مدوّنة بعد لهذا الدرس.
+                          </p>
+                        ) : (
+                          lessonNotes.map((note) => (
+                            <div
+                              key={note.id}
+                              className="p-3.5 bg-background/80 border border-border/40 hover:border-brand-primary/40 rounded-2xl flex items-center justify-between gap-3 transition-all group"
+                            >
+                              <div className="flex items-center gap-3 min-w-0 flex-1">
+                                <button
+                                  onClick={() => setSeekTime({ time: note.timestampSeconds, trigger: Date.now() })}
+                                  className="px-3 py-1.5 bg-brand-primary/15 hover:bg-brand-primary hover:text-white text-brand-primary rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shrink-0 cursor-pointer shadow-xs"
+                                  title="اضغط للقفز إلى هذه الدقيقة بالفيديو"
+                                >
+                                  <Clock className="w-3.5 h-3.5" />
+                                  <span>[{note.timeFormatted}]</span>
+                                </button>
+                                <p className="text-xs font-bold text-text-primary truncate">{note.text}</p>
+                              </div>
+                              <button
+                                onClick={() => deleteNote(note.id, token)}
+                                className="p-1.5 text-text-secondary hover:text-red-500 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                                title="حذف الملاحظة"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Q&A SECTION (DISCUSSIONS) */}
+                {currentSection && (
+                  <div className="bg-surface border border-border/40 rounded-[32px] p-6 md:p-8 space-y-8 shadow-sm">
+
+                    {/* Header */}
+                    <div className="flex items-center justify-between border-b border-border/40 pb-4">
+                      <div className="flex items-center gap-3">
+                        <MessageSquare className="w-6 h-6 text-brand-primary" />
+                        <h2 className="text-xl font-black text-text-primary">منتدى النقاش والأسئلة</h2>
+                      </div>
+                      <span className="px-3 py-1 bg-brand-primary/10 text-brand-primary text-xs font-black rounded-full">
+                        {(currentSection.questions || []).length} أسئلة مطروحة
+                      </span>
+                    </div>
+
+                    {/* Ask a Question Form */}
+                    <form onSubmit={handleAskQuestion} className="space-y-4">
+                      <div className="relative">
+                        <textarea
+                          value={questionText}
+                          onChange={(e) => setQuestionText(e.target.value)}
+                          placeholder="اطرح سؤالاً أو استفساراً حول هذا الدرس..."
+                          className="w-full min-h-[100px] bg-background/40 border border-border/60 focus:border-brand-primary p-4 rounded-2xl text-sm font-semibold text-text-primary outline-none transition-colors resize-y pr-4 pl-12"
+                        />
+                        <button
+                          type="submit"
+                          disabled={isSubmittingQuestion || !questionText.trim()}
+                          className="absolute left-4 bottom-4 w-10 h-10 bg-brand-primary hover:bg-brand-primary/95 text-white rounded-xl flex items-center justify-center transition-all disabled:opacity-40 shadow-md shadow-brand-primary/10"
+                          aria-label="إرسال السؤال"
+                        >
+                          {isSubmittingQuestion ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Send className="w-4 h-4 rotate-180" />
+                          )}
+                        </button>
+                      </div>
+                    </form>
+
+                    {/* Questions List */}
+                    <div className="space-y-6">
+                      {(!currentSection.questions || currentSection.questions.length === 0) ? (
+                        <div className="text-center py-12 bg-background/20 rounded-[2rem] border border-dashed border-border/60">
+                          <MessageSquare className="w-12 h-12 text-text-secondary/20 mx-auto mb-3" />
+                          <p className="text-sm font-bold text-text-secondary">لا توجد أسئلة بعد لهذا الدرس</p>
+                          <p className="text-xs text-text-secondary/60 mt-1">كن أول من يطرح سؤالاً ويفعل النقاش!</p>
+                        </div>
+                      ) : (
+                        currentSection.questions.map((q: any, qIdx: number) => {
+                          const qId = q.id || q._id || qIdx.toString();
+                          const replies = q.question_replies || [];
+                          const isInstructor = user?.role === "instructor" || user?.role === "admin";
+
+                          return (
+                            <div key={qId} className="border border-border/40 p-5 rounded-[2rem] bg-background/30 space-y-4 hover:border-brand-primary/30 transition-all">
+
+                              {/* Question Author info */}
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 rounded-full border border-border/40 bg-surface flex items-center justify-center overflow-hidden shrink-0">
+                                    {q.user?.avatar ? (
+                                      <img src={q.user.avatar} alt={q.user.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                      <UserIcon className="w-5 h-5 text-text-secondary/40" />
+                                    )}
+                                  </div>
+                                  <div>
+                                    <h4 className="font-extrabold text-sm text-text-primary">{q.user?.name || "طالب"}</h4>
+                                    <span className="text-[10px] text-text-secondary font-medium block">
+                                      {q.created_at ? new Date(q.created_at).toLocaleDateString("ar-EG") : "مؤخراً"}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Question Text */}
+                              <p className="text-sm font-semibold text-text-primary pr-2 leading-relaxed">
+                                {q.question}
+                              </p>
+
+                              {/* Replies list */}
+                              {replies.length > 0 && (
+                                <div className="mr-6 pr-4 border-r border-border/60 space-y-4 pt-2">
+                                  {replies.map((reply: any, rIdx: number) => (
+                                    <div key={rIdx} className="flex gap-3 bg-surface/50 p-4 rounded-2xl border border-border/20">
+                                      <div className="w-8 h-8 rounded-full border border-border/40 bg-surface flex items-center justify-center overflow-hidden shrink-0">
+                                        {reply.user?.avatar ? (
+                                          <img src={reply.user.avatar} alt={reply.user.name} className="w-full h-full object-cover" />
+                                        ) : (
+                                          <UserIcon className="w-4 h-4 text-text-secondary/40" />
+                                        )}
+                                      </div>
+                                      <div className="min-w-0 flex-1">
+                                        <div className="flex items-center gap-2">
+                                          <h5 className="font-extrabold text-xs text-text-primary">{reply.user?.name || "معلم"}</h5>
+                                          {/* Highlight label if replier is the instructor/admin */}
+                                          {reply.user?.role === "instructor" || reply.user?.role === "admin" ? (
+                                            <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-600 text-[9px] font-black rounded-full">معلم</span>
+                                          ) : null}
+                                        </div>
+                                        <span className="text-[9px] text-text-secondary font-medium block mt-0.5">
+                                          {reply.created_at ? new Date(reply.created_at).toLocaleDateString("ar-EG") : "مؤخراً"}
+                                        </span>
+                                        <p className="text-xs font-semibold text-text-secondary mt-1.5 leading-relaxed">
+                                          {reply.answer}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                              {/* Actions / Reply Trigger */}
+                              <div className="flex items-center gap-3 pt-1">
+                                {!showReplyForm[qId] ? (
+                                  <button
+                                    onClick={() => setShowReplyForm(prev => ({ ...prev, [qId]: true }))}
+                                    className="text-xs font-black text-brand-primary flex items-center gap-1 hover:underline"
+                                  >
+                                    <CornerDownLeft className="w-4 h-4" />
+                                    <span>أضف رداً على السؤال</span>
+                                  </button>
+                                ) : (
+                                  <form onSubmit={(e) => handleReplyToQuestion(e, qId)} className="w-full flex items-center gap-2">
+                                    <input
+                                      type="text"
+                                      value={replyTexts[qId] || ""}
+                                      onChange={(e) => setReplyTexts(prev => ({ ...prev, [qId]: e.target.value }))}
+                                      placeholder={isInstructor ? "اكتب رد المعلم الرسمي هنا..." : "اكتب ردك ومساعدتك لزميلك هنا..."}
+                                      className="flex-1 bg-background/50 border border-border/60 focus:border-brand-primary px-4 py-2.5 rounded-xl text-xs font-semibold text-text-primary outline-none transition-colors"
+                                    />
+                                    <button
+                                      type="submit"
+                                      disabled={submittingReplyId === qId || !(replyTexts[qId] || "").trim()}
+                                      className="px-4 py-2.5 bg-brand-primary hover:bg-brand-primary/95 text-white rounded-xl text-xs font-extrabold flex items-center gap-1 disabled:opacity-40"
+                                    >
+                                      {submittingReplyId === qId ? (
+                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                      ) : (
+                                        <Send className="w-3.5 h-3.5 rotate-180" />
+                                      )}
+                                      <span>رد</span>
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setShowReplyForm(prev => ({ ...prev, [qId]: false }))}
+                                      className="text-xs font-bold text-text-secondary hover:text-brand-primary px-2"
+                                    >
+                                      إلغاء
+                                    </button>
+                                  </form>
+                                )}
+                              </div>
+
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -704,7 +912,13 @@ export default function MyCourseDetailsPage() {
                 <div className="flex items-center gap-2 text-text-secondary">
                   <Clock className="w-4 h-4 text-brand-primary" />
                   <span className="text-xs sm:text-sm font-bold">
-                    {sections.reduce((acc: number, section: any) => acc + (section.video_length || 0), 0)} ثانية
+                    {(() => {
+                      const totalSec = sections.reduce((acc: number, section: any) => acc + (section.video_length || 0), 0);
+                      const hrs = Math.floor(totalSec / 3600);
+                      const mins = Math.floor((totalSec % 3600) / 60);
+                      if (hrs > 0) return `${hrs} س ${mins} د`;
+                      return `${mins} دقيقة`;
+                    })()}
                   </span>
                 </div>
               </div>
@@ -759,8 +973,16 @@ export default function MyCourseDetailsPage() {
                       <div className="space-y-2">
                         {group.lessons.map(({ lesson, originalIdx }) => {
                           const isActive = activeIdx === originalIdx;
-                          const lessonKey = lesson.title || lesson.video_section || `lesson-${originalIdx}`;
+                          const lessonKey = getLessonKey(lesson, originalIdx);
                           const isCompleted = completedVideos.includes(lessonKey) || completedVideos.includes(lesson.video_section);
+
+                          // Find progress record for this lesson
+                          const lessonProg = (currentCourse.lessonsProgress || []).find(
+                            (l: LessonProgress) => l.lessonKey === lessonKey
+                          );
+                          const watchedSec = lessonProg?.watchedSeconds || 0;
+                          const durationSec = lesson.video_length || lessonProg?.duration || 0;
+                          const ratio = durationSec > 0 ? Math.min(100, Math.round((watchedSec / durationSec) * 100)) : (isCompleted ? 100 : 0);
 
                           return (
                             <button
@@ -772,69 +994,92 @@ export default function MyCourseDetailsPage() {
                                 setShowReplyForm({});
                               }}
                               className={cn(
-                                "w-full p-3.5 rounded-2xl flex items-center justify-between border transition-all text-right shadow-sm group",
+                                "w-full p-3.5 rounded-2xl flex flex-col gap-2 border transition-all text-right shadow-sm group",
                                 isActive
                                   ? "bg-brand-primary/10 border-brand-primary/45 text-brand-primary"
                                   : "bg-surface border-border/40 text-text-primary hover:border-brand-primary/40"
                               )}
                             >
-                              <div className="flex items-center gap-3 min-w-0 flex-1 ml-2">
-                                {/* Clickable check-circle status */}
-                                <div
-                                  onClick={async (e) => {
-                                    e.stopPropagation();
-                                    if (token) {
-                                      try {
-                                        await toggleVideoProgress(currentCourse.id, lessonKey, token);
-                                        if (!isCompleted) {
-                                          recordLessonCompleted();
+                              <div className="flex items-center justify-between w-full">
+                                <div className="flex items-center gap-3 min-w-0 flex-1 ml-2">
+                                  {/* Clickable check-circle status */}
+                                  <div
+                                    onClick={async (e) => {
+                                      e.stopPropagation();
+                                      if (token) {
+                                        try {
+                                          await toggleVideoProgress(currentCourse.id, lessonKey, token);
+                                          if (!isCompleted) {
+                                            recordLessonCompleted();
+                                          }
+                                        } catch (err) {
+                                          console.error(err);
                                         }
-                                      } catch (err) {
-                                        console.error(err);
                                       }
-                                    }
-                                  }}
-                                  className={cn(
-                                    "w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-colors cursor-pointer",
-                                    isCompleted
-                                      ? "bg-emerald-500 border-emerald-500 text-white"
-                                      : "border-border hover:border-brand-primary bg-background"
-                                  )}
-                                  title={isCompleted ? "تم الإكمال" : "تحديد كمكتمل"}
-                                >
-                                  {isCompleted && (
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
-                                      <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
-                                    </svg>
-                                  )}
+                                    }}
+                                    className={cn(
+                                      "w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-colors cursor-pointer",
+                                      isCompleted
+                                        ? "bg-emerald-500 border-emerald-500 text-white"
+                                        : "border-border hover:border-brand-primary bg-background"
+                                    )}
+                                    title={isCompleted ? "تم الإكمال" : "تحديد كمكتمل"}
+                                  >
+                                    {isCompleted && (
+                                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
+                                        <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                                      </svg>
+                                    )}
+                                  </div>
+
+                                  <div className={cn(
+                                    "w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border",
+                                    isActive
+                                      ? "bg-brand-primary text-white border-brand-primary/20"
+                                      : "bg-background border-border/40 text-text-secondary"
+                                  )}>
+                                    <PlayCircle className="w-4 h-4" />
+                                  </div>
+
+                                  <div className="truncate text-right flex-1">
+                                    <h3 className="font-extrabold text-xs sm:text-sm truncate">
+                                      {lesson.title || `درس ${originalIdx + 1}`}
+                                    </h3>
+                                    {lesson.description && (
+                                      <p className="text-[10px] text-text-secondary truncate mt-0.5 font-medium">
+                                        {lesson.description}
+                                      </p>
+                                    )}
+                                  </div>
                                 </div>
 
-                                <div className={cn(
-                                  "w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border",
-                                  isActive
-                                    ? "bg-brand-primary text-white border-brand-primary/20"
-                                    : "bg-background border-border/40 text-text-secondary"
-                                )}>
-                                  <PlayCircle className="w-4 h-4" />
-                                </div>
-
-                                <div className="truncate text-right flex-1">
-                                  <h3 className="font-extrabold text-xs sm:text-sm truncate">
-                                    {lesson.title || `درس ${originalIdx + 1}`}
-                                  </h3>
-                                  {lesson.description && (
-                                    <p className="text-[10px] text-text-secondary truncate mt-0.5 font-medium">
-                                      {lesson.description}
-                                    </p>
-                                  )}
-                                </div>
+                                {durationSec > 0 ? (
+                                  <span className="text-[10px] font-bold text-text-secondary bg-background px-2 py-0.5 rounded-full border border-border/40 shrink-0">
+                                    {formatMinutesSeconds(durationSec)}
+                                  </span>
+                                ) : null}
                               </div>
 
-                              {lesson.video_length ? (
-                                <span className="text-[10px] font-bold text-text-secondary bg-background px-2 py-0.5 rounded-full border border-border/40 shrink-0">
-                                  {Math.floor(lesson.video_length / 60)}:{(lesson.video_length % 60).toString().padStart(2, "0")}
-                                </span>
-                              ) : null}
+                              {/* Mini progress bar under lesson if duration known */}
+                              {durationSec > 0 && (
+                                <div className="w-full space-y-1 pt-1">
+                                  <div className="w-full h-1 bg-border/40 rounded-full overflow-hidden">
+                                    <div
+                                      className={cn(
+                                        "h-full rounded-full transition-all duration-300",
+                                        isCompleted ? "bg-emerald-500" : "bg-brand-primary"
+                                      )}
+                                      style={{ width: `${isCompleted ? 100 : ratio}%` }}
+                                    />
+                                  </div>
+                                  <div className="flex items-center justify-between text-[9px] text-text-secondary/70 font-semibold px-0.5">
+                                    <span>{isCompleted ? "مكتمل" : `${ratio}%`}</span>
+                                    <span>
+                                      {formatMinutesSeconds(isCompleted ? durationSec : watchedSec)} / {formatMinutesSeconds(durationSec)}
+                                    </span>
+                                  </div>
+                                </div>
+                              )}
                             </button>
                           );
                         })}

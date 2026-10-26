@@ -86,7 +86,42 @@ export interface Course {
     created_at?: string;
     completedVideos?: string[];
     progress?: number;
+    lessonsProgress?: LessonProgress[];
+    totalWatchedSeconds?: number;
+    watchLog?: WatchLogEntry[];
 }
+
+export interface LessonProgress {
+    lessonKey: string;
+    lastPosition: number;
+    duration: number;
+    watchedSeconds: number;
+    completed: boolean;
+    updatedAt?: string;
+}
+
+export interface WatchLogEntry {
+    date: string;
+    seconds: number;
+}
+
+export interface VideoHeartbeatPayload {
+    courseId: string;
+    lessonKey: string;
+    position: number;
+    duration: number;
+    watchedDelta: number;
+}
+
+export interface VideoHeartbeatResult {
+    justCompleted: boolean;
+    progress: number;
+}
+
+const mergeLesson = (list: LessonProgress[] | undefined, lesson: LessonProgress): LessonProgress[] => {
+    const rest = (list ?? []).filter((l) => l.lessonKey !== lesson.lessonKey);
+    return [...rest, lesson];
+};
 
 interface CourseData {
     courses: Course[];
@@ -113,6 +148,7 @@ interface CourseActions {
     addQuestion: (question: string, courseId: string, contentId: string, token: string) => Promise<void>;
     addAnswer: (answer: string, courseId: string, contentId: string, questionId: string, token: string) => Promise<void>;
     toggleVideoProgress: (courseId: string, videoSectionTitle: string, token: string) => Promise<void>;
+    sendVideoHeartbeat: (payload: VideoHeartbeatPayload, token: string) => Promise<VideoHeartbeatResult | null>;
     reorderCourses: (orders: { id: string; display_order: number }[], token: string) => Promise<void>;
 }
 
@@ -496,6 +532,42 @@ export const useCourseStore = create<CourseStore>()(
                 } catch (err: any) {
                     set({ error: err.message });
                     throw err;
+                }
+            },
+
+            sendVideoHeartbeat: async (payload, token) => {
+                try {
+                    const res = await authenticatedFetch(`${API_URL}/video-heartbeat`, {
+                        method: 'POST',
+                        keepalive: true,
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(payload),
+                    });
+                    if (!res.ok) return null;
+                    const data = (await res.json()) as {
+                        lesson: LessonProgress;
+                        justCompleted: boolean;
+                        completedVideos: string[];
+                        progress: number;
+                        totalWatchedSeconds: number;
+                    };
+                    const apply = (c: Course): Course => ({
+                        ...c,
+                        completedVideos: data.completedVideos,
+                        progress: data.progress,
+                        totalWatchedSeconds: data.totalWatchedSeconds,
+                        lessonsProgress: mergeLesson(c.lessonsProgress, data.lesson),
+                    });
+                    set((state) => ({
+                        currentCourse: state.currentCourse?.id === payload.courseId ? apply(state.currentCourse) : state.currentCourse,
+                        enrolledCourses: state.enrolledCourses.map((c) => (c.id === payload.courseId ? apply(c) : c)),
+                    }));
+                    return { justCompleted: data.justCompleted, progress: data.progress };
+                } catch {
+                    return null;
                 }
             },
 

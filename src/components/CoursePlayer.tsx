@@ -4,12 +4,30 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import MuxPlayer from "@mux/mux-player-react";
 import { API_ENDPOINTS } from "@/config/api";
 
+export interface PlaybackSample {
+  position: number;
+  duration: number;
+  paused: boolean;
+}
+
+interface MediaLike {
+  currentTime?: number;
+  duration?: number;
+  paused?: boolean;
+}
+
 interface CoursePlayerProps {
   videoUrl: string;
   seekTime?: { time: number; trigger: number } | number | null;
+  /** Called ~every second with the current playback state (Mux / HTML5 / VdoCipher). */
+  onTick?: (sample: PlaybackSample) => void;
 }
 
-export function CoursePlayer({ videoUrl, seekTime }: CoursePlayerProps) {
+export function CoursePlayer({ videoUrl, seekTime, onTick }: CoursePlayerProps) {
+  const onTickRef = useRef(onTick);
+  useEffect(() => {
+    onTickRef.current = onTick;
+  }, [onTick]);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const muxPlayerRef = useRef<any>(null);
@@ -178,6 +196,26 @@ export function CoursePlayer({ videoUrl, seekTime }: CoursePlayerProps) {
       console.error("Error seeking video:", err);
     }
   }, [seekTime, isDirectUrl, activeMuxPlaybackId]);
+
+  // Sample playback state every second for progress tracking
+  useEffect(() => {
+    const getMedia = (): MediaLike | null => {
+      if (activeMuxPlaybackId) return (muxPlayerRef.current as MediaLike | null) ?? null;
+      if (isDirectUrl) return videoRef.current;
+      return (playerApiRef.current?.video as MediaLike | undefined) ?? null;
+    };
+    const id = window.setInterval(() => {
+      const media = getMedia();
+      if (!media || !onTickRef.current) return;
+      const duration = Number(media.duration);
+      onTickRef.current({
+        position: Number(media.currentTime) || 0,
+        duration: Number.isFinite(duration) ? duration : 0,
+        paused: media.paused !== false,
+      });
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [activeMuxPlaybackId, isDirectUrl, videoUrl]);
 
   // YouTube Video Player (specifically for demo / teaser or public previews)
   if (detectedYouTubeId) {

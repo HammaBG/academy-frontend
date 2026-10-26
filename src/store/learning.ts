@@ -10,6 +10,7 @@ export interface LastLesson {
   lessonTitle: string;
   thumbnailUrl?: string;
   visitedAt: string;
+  positionSeconds?: number;
 }
 
 interface LearningState {
@@ -17,10 +18,13 @@ interface LearningState {
   activeDays: string[];
   /** Number of lessons completed per ISO date */
   lessonsByDay: Record<string, number>;
+  /** Total seconds spent watching per ISO date */
+  secondsByDay?: Record<string, number>;
   weeklyGoal: number;
   lastLesson: LastLesson | null;
   recordVisit: (lesson: Omit<LastLesson, "visitedAt">) => void;
   recordLessonCompleted: () => void;
+  recordWatchedSeconds: (seconds: number) => void;
   setWeeklyGoal: (goal: number) => void;
 }
 
@@ -45,6 +49,7 @@ export const useLearningStore = create<LearningState>()(
     (set) => ({
       activeDays: [],
       lessonsByDay: {},
+      secondsByDay: {},
       weeklyGoal: 3,
       lastLesson: null,
 
@@ -65,6 +70,21 @@ export const useLearningStore = create<LearningState>()(
             [today]: (state.lessonsByDay[today] ?? 0) + 1,
           },
         }));
+      },
+
+      recordWatchedSeconds: (seconds) => {
+        if (!seconds || seconds <= 0) return;
+        const today = toDayKey(new Date());
+        set((state) => {
+          const prevMap = state.secondsByDay ?? {};
+          return {
+            activeDays: addDay(state.activeDays, today),
+            secondsByDay: {
+              ...prevMap,
+              [today]: (prevMap[today] ?? 0) + seconds,
+            },
+          };
+        });
       },
 
       setWeeklyGoal: (goal) => set({ weeklyGoal: Math.min(Math.max(goal, 1), 30) }),
@@ -91,11 +111,12 @@ export const computeStreak = (activeDays: string[]): number => {
   return streak;
 };
 
-/** Last 7 days (oldest → newest) with lesson counts. */
+/** Last 7 days (oldest → newest) with lesson counts and watched seconds. */
 export const getLastSevenDays = (
   activeDays: string[],
-  lessonsByDay: Record<string, number>
-): { key: string; label: string; active: boolean; lessons: number }[] => {
+  lessonsByDay: Record<string, number>,
+  secondsByDay?: Record<string, number>
+): { key: string; label: string; active: boolean; lessons: number; seconds: number }[] => {
   const labels = ["أحد", "إثنين", "ثلاثاء", "أربعاء", "خميس", "جمعة", "سبت"];
   const set = new Set(activeDays);
   return Array.from({ length: 7 }, (_, i) => {
@@ -107,6 +128,7 @@ export const getLastSevenDays = (
       label: labels[date.getDay()],
       active: set.has(key),
       lessons: lessonsByDay[key] ?? 0,
+      seconds: secondsByDay?.[key] ?? 0,
     };
   });
 };
