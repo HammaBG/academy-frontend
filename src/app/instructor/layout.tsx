@@ -7,6 +7,8 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { InstructorSidebar } from "@/components/instructor/InstructorSidebar"
 import { Loader } from "@/components/ui/Loader";
 
+import { NotificationBell } from "@/components/NotificationBell";
+
 export default function InstructorLayout({ children }: { children: React.ReactNode }) {
   const [isHydrated, setIsHydrated] = useState(false);
   const { user, isAuthenticated, isAuthLoading } = useAuthStore();
@@ -44,8 +46,11 @@ export default function InstructorLayout({ children }: { children: React.ReactNo
          <InstructorSidebar />
          
          <main className="flex-1 overflow-auto flex flex-col items-stretch bg-gray-50">
-            <header className="h-16 w-full flex items-center px-4 bg-white border-b border-gray-200 shrink-0 sticky top-0 z-10 shadow-sm">
+            <header className="h-16 w-full flex items-center justify-between px-6 bg-white border-b border-gray-200 shrink-0 sticky top-0 z-10 shadow-sm">
                <SidebarTrigger className="text-[#0d7377] scale-125" />
+               <div className="flex items-center gap-4">
+                 <NotificationBell />
+               </div>
             </header>
             
             <div className="p-6 md:p-8 w-full flex-1">

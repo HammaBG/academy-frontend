@@ -609,8 +609,8 @@ export const useCourseStore = create<CourseStore>()(
             name: 'benaa-course-storage',
             storage: createJSONStorage(() => createSafeStorage()),
             partialize: (state) => ({
-                courses: state.courses,
-                enrolledCourses: state.enrolledCourses,
+                courses: state.courses.map(({ course_data, ...rest }) => rest),
+                enrolledCourses: state.enrolledCourses.map(({ course_data, ...rest }) => rest),
             }),
         }
     )

@@ -8,12 +8,13 @@ import { useAuthStore } from "@/store/auth";
 import { useNotificationStore } from "@/store/notification";
 import { useNoteStore, formatVideoTime } from "@/store/note";
 import { useLearningStore } from "@/store/learning";
-import { Loader2, AlertCircle, PlayCircle, BookOpen, Clock, ArrowRight, ArrowLeft, MessageSquare, Send, CornerDownLeft, User as UserIcon, Award, StickyNote, Trash2, Plus, Sparkles, CheckCircle2, RotateCcw } from "lucide-react";
+import { Loader2, AlertCircle, PlayCircle, BookOpen, Clock, ArrowRight, ArrowLeft, MessageSquare, Send, CornerDownLeft, User as UserIcon, Award, StickyNote, Trash2, Plus, Sparkles, CheckCircle2, RotateCcw, Lock, Headphones, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { CoursePlayer, type PlaybackSample } from "@/components/CoursePlayer";
 import { CertificateModal } from "@/components/CertificateModal";
 import { CourseChatRoom } from "@/components/Chat/CourseChatRoom";
+import { PrivateConsultationPanel } from "@/components/Course/PrivateConsultationPanel";
 
 const formatMinutesSeconds = (totalSec: number): string => {
   const m = Math.floor(totalSec / 60);
@@ -66,13 +67,15 @@ export default function MyCourseDetailsPage() {
     courseId: "",
   });
 
-  // View Mode: 'lesson' | 'chat'
-  const [viewMode, setViewMode] = useState<"lesson" | "chat">("lesson");
+  // View Mode: 'lesson' | 'chat' | 'consultation'
+  const [viewMode, setViewMode] = useState<"lesson" | "chat" | "consultation">("lesson");
 
   useEffect(() => {
     const tabParam = searchParams.get("tab");
     if (tabParam === "chat") {
       setViewMode("chat");
+    } else if (tabParam === "consultation") {
+      setViewMode("consultation");
     } else if (tabParam === "lesson") {
       setViewMode("lesson");
     }
@@ -390,11 +393,11 @@ export default function MyCourseDetailsPage() {
           </Link>
 
           {/* Mode Switcher Tabs */}
-          <div className="flex items-center bg-surface border border-border/50 p-1.5 rounded-2xl shadow-sm gap-1 self-start sm:self-auto">
+          <div className="flex flex-wrap items-center bg-surface border border-border/50 p-1.5 rounded-2xl shadow-sm gap-1 self-start sm:self-auto">
             <button
               onClick={() => setViewMode("lesson")}
               className={cn(
-                "flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all",
+                "flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs font-black transition-all",
                 viewMode === "lesson"
                   ? "bg-brand-primary text-white shadow-md shadow-brand-primary/20"
                   : "text-text-secondary hover:text-text-primary hover:bg-surface-secondary/40"
@@ -407,7 +410,7 @@ export default function MyCourseDetailsPage() {
             <button
               onClick={() => setViewMode("chat")}
               className={cn(
-                "flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all relative",
+                "flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs font-black transition-all relative",
                 viewMode === "chat"
                   ? "bg-brand-primary text-white shadow-md shadow-brand-primary/20"
                   : "text-text-secondary hover:text-text-primary hover:bg-surface-secondary/40"
@@ -417,19 +420,40 @@ export default function MyCourseDetailsPage() {
               <span>محادثة الدورة المباشرة</span>
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             </button>
+
+            <button
+              onClick={() => setViewMode("consultation")}
+              className={cn(
+                "flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs font-black transition-all relative",
+                viewMode === "consultation"
+                  ? "bg-brand-primary text-white shadow-md shadow-brand-primary/20"
+                  : "text-text-secondary hover:text-text-primary hover:bg-surface-secondary/40"
+              )}
+            >
+              <Lock className="w-3.5 h-3.5 text-amber-500" />
+              <span>استشارة خاصة وسرية</span>
+              <span className="px-1.5 py-0.2 bg-emerald-500/15 text-emerald-600 text-[9px] font-black rounded-md">خاص</span>
+            </button>
           </div>
         </div>
 
         {/* Core LMS Split Screen Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mb-16">
 
-          {/* LEFT COLUMN: Player / Chat Room */}
+          {/* LEFT COLUMN: Player / Chat Room / Private Consultation */}
           <div className="lg:col-span-7 space-y-6 flex flex-col">
             {viewMode === "chat" ? (
               <CourseChatRoom
                 courseId={currentCourse.id || (id as string)}
                 courseName={currentCourse.name}
                 instructorId={typeof currentCourse.creator === "string" ? currentCourse.creator : currentCourse.creator?.id}
+              />
+            ) : viewMode === "consultation" ? (
+              <PrivateConsultationPanel
+                courseId={currentCourse.id || (id as string)}
+                courseName={currentCourse.name}
+                currentLessonTitle={currentSection?.title || currentSection?.video_section}
+                currentSectionId={currentSection?.id || currentSection?._id}
               />
             ) : (
               <>
@@ -706,11 +730,29 @@ export default function MyCourseDetailsPage() {
 
                     {/* Ask a Question Form */}
                     <form onSubmit={handleAskQuestion} className="space-y-4">
+                      {/* Confidential Q&A Prompt */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-brand-primary/5 to-transparent border border-amber-500/25">
+                        <div className="flex items-center gap-2.5">
+                          <Lock className="w-4 h-4 text-amber-500 shrink-0" />
+                          <span className="text-xs font-bold text-text-primary">
+                            سؤالك شخصي أو حساس وتريد استشارة المستشار بخصوصية؟
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setViewMode("consultation")}
+                          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-400 text-xs font-black transition-colors self-start sm:self-auto shrink-0 cursor-pointer"
+                        >
+                          <ShieldCheck className="w-3.5 h-3.5" />
+                          <span>إرسال كاستشارة سرية</span>
+                        </button>
+                      </div>
+
                       <div className="relative">
                         <textarea
                           value={questionText}
                           onChange={(e) => setQuestionText(e.target.value)}
-                          placeholder="اطرح سؤالاً أو استفساراً حول هذا الدرس..."
+                          placeholder="اطرح سؤالاً أو استفساراً عاماً حول هذا الدرس ليراه الجميع..."
                           className="w-full min-h-[100px] bg-background/40 border border-border/60 focus:border-brand-primary p-4 rounded-2xl text-sm font-semibold text-text-primary outline-none transition-colors resize-y pr-4 pl-12"
                         />
                         <button

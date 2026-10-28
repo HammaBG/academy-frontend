@@ -22,4 +22,6 @@ export const API_ENDPOINTS = {
   tickets: `${API_BASE_URL}/tickets`,
   preRegistrations: `${API_BASE_URL}/pre-registrations`,
   coupons: `${API_BASE_URL}/coupons`,
+  privateConsultations: `${API_BASE_URL}/private-consultations`,
+  notifications: `${API_BASE_URL}/notifications`,
 };

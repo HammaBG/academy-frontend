@@ -131,11 +131,13 @@ export const useChatStore = create<ChatState>((set, get) => ({
       set({ error: message });
     });
 
-    // Real-time Chat Notifications
+    // Real-time Chat & Consultation Notifications
     socketInstance.on('new_chat_notification', (data: {
       id: string;
-      courseId: string;
-      courseName: string;
+      title?: string;
+      courseId?: string;
+      courseName?: string;
+      type?: "chat_message" | "private_consultation";
       link: string;
       sender: {
         id: string;
@@ -149,26 +151,30 @@ export const useChatStore = create<ChatState>((set, get) => ({
       console.log('[Socket Frontend] Received new_chat_notification:', data);
       const state = get();
       // If user is already active in that exact course chatroom, don't nag with notifications
-      if (state.currentCourseId === data.courseId) {
+      if (data.courseId && state.currentCourseId === data.courseId && data.type !== 'private_consultation') {
         return;
       }
 
       const currentUser = useAuthStore.getState().user;
-      const targetUserId = currentUser?.id || "all";
+      const targetUserId = currentUser?.id || (currentUser as any)?._id || "all";
+
+      const notifTitle = data.title || `رسالة جديدة من ${data.sender.name} (${data.sender.roleLabel})`;
+      const notifType = data.type || "chat_message";
 
       // Add to persistent notification store
       useNotificationStore.getState().addNotification({
+        id: data.id,
         userId: targetUserId,
-        title: `رسالة جديدة من ${data.sender.name} (${data.sender.roleLabel})`,
-        message: `${data.courseName}: ${data.message}`,
-        type: "chat_message",
+        title: notifTitle,
+        message: data.courseName ? `${data.courseName}: ${data.message}` : data.message,
+        type: notifType,
         link: data.link,
         sender: data.sender,
         courseName: data.courseName,
       });
 
       // Show real-time interactive toast alert
-      toast.info(`رسالة جديدة في ${data.courseName}`, {
+      toast.info(notifTitle, {
         description: `${data.sender.name}: ${data.message}`,
         action: {
           label: "عرض",

@@ -13,7 +13,7 @@ import {
   Award,
   Ticket,
   Info,
-  ChevronLeft,
+  Lock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -31,11 +31,12 @@ function getRelativeTime(dateString: string) {
 
 export function NotificationBell() {
   const router = useRouter();
-  const { user } = useAuthStore();
-  const userId = user?.id;
+  const { user, token } = useAuthStore();
+  const userId = user?.id || (user as any)?._id;
   const {
     getUserNotifications,
     getUnreadCount,
+    fetchNotifications,
     markAsRead,
     markAllAsRead,
     deleteNotification,
@@ -45,6 +46,17 @@ export function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
   const [filter, setFilter] = useState<"all" | "unread">("all");
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Sync notifications from server on mount and every 45s
+  useEffect(() => {
+    if (token) {
+      fetchNotifications(token);
+      const interval = setInterval(() => {
+        fetchNotifications(token);
+      }, 45000);
+      return () => clearInterval(interval);
+    }
+  }, [token, fetchNotifications]);
 
   const notifications = getUserNotifications(userId);
   const unreadCount = getUnreadCount(userId);
@@ -71,6 +83,8 @@ export function NotificationBell() {
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
+      case "private_consultation":
+        return <Lock className="w-4 h-4 text-amber-500" />;
       case "chat_message":
         return <MessageSquare className="w-4 h-4 text-brand-primary" />;
       case "qa_reply":
@@ -88,7 +102,12 @@ export function NotificationBell() {
     <div className="relative inline-block" ref={dropdownRef}>
       {/* Bell Trigger Button */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          setIsOpen(!isOpen);
+          if (token && !isOpen) {
+            fetchNotifications(token);
+          }
+        }}
         className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-surface hover:bg-surface/80 border border-border/40 text-text-primary transition-all duration-300 shadow-xs hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center shrink-0"
         aria-label="الإشعارات"
       >
@@ -102,9 +121,7 @@ export function NotificationBell() {
         )}
       </button>
 
-      {/* Notification Dropdown Popover
-          Mobile: pinned to both screen edges under the navbar (can never overflow).
-          sm and up: normal dropdown under the bell. */}
+      {/* Notification Dropdown Popover */}
       {isOpen && (
         <div
           className="fixed left-3 right-3 top-[4.25rem] w-auto sm:absolute sm:left-0 sm:right-auto sm:top-full sm:mt-3 sm:w-[380px] bg-surface border border-border/40 rounded-3xl shadow-2xl overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-200 text-right"
@@ -124,7 +141,7 @@ export function NotificationBell() {
             <div className="flex items-center gap-2.5 shrink-0">
               {unreadCount > 0 && (
                 <button
-                  onClick={markAllAsRead}
+                  onClick={() => markAllAsRead(token)}
                   className="text-[11px] font-bold text-text-secondary hover:text-brand-primary flex items-center gap-1 transition-colors cursor-pointer"
                 >
                   <CheckCheck className="w-3.5 h-3.5" />
@@ -133,7 +150,7 @@ export function NotificationBell() {
               )}
               {notifications.length > 0 && (
                 <button
-                  onClick={clearAll}
+                  onClick={() => clearAll(token)}
                   className="text-[11px] font-bold text-text-secondary hover:text-red-500 flex items-center gap-1 transition-colors cursor-pointer"
                   title="مسح كافة الإشعارات"
                 >
@@ -182,7 +199,7 @@ export function NotificationBell() {
                 <div
                   key={notif.id}
                   onClick={() => {
-                    markAsRead(notif.id);
+                    markAsRead(notif.id, token);
                     if (notif.link) {
                       router.push(notif.link);
                       setIsOpen(false);
@@ -213,13 +230,13 @@ export function NotificationBell() {
                     </p>
                   </div>
 
-                  {/* Actions: always visible on touch screens, hover-only on desktop */}
+                  {/* Actions */}
                   <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                     {!notif.isRead && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          markAsRead(notif.id);
+                          markAsRead(notif.id, token);
                         }}
                         className="p-1.5 text-text-secondary hover:text-emerald-500 rounded-md"
                         title="تعليم كمقروء"
@@ -231,7 +248,7 @@ export function NotificationBell() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        deleteNotification(notif.id);
+                        deleteNotification(notif.id, token);
                       }}
                       className="p-1.5 text-text-secondary hover:text-red-500 rounded-md"
                       title="حذف"
