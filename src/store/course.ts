@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+
 import { createSafeStorage } from '@/lib/storage';
 import { authenticatedFetch } from '@/lib/api';
 
@@ -165,9 +165,7 @@ const normalizeCourse = (c: any): Course => ({
 
 const normalizeCourses = (raw: any[]): Course[] => (raw || []).map(normalizeCourse);
 
-export const useCourseStore = create<CourseStore>()(
-    persist(
-        (set, get) => ({
+export const useCourseStore = create<CourseStore>((set, get) => ({
             // State
             courses: [],
             enrolledCourses: [],
@@ -604,14 +602,5 @@ export const useCourseStore = create<CourseStore>()(
                     throw err;
                 }
             },
-        }),
-        {
-            name: 'benaa-course-storage',
-            storage: createJSONStorage(() => createSafeStorage()),
-            partialize: (state) => ({
-                courses: state.courses.map(({ course_data, ...rest }) => rest),
-                enrolledCourses: state.enrolledCourses.map(({ course_data, ...rest }) => rest),
-            }),
-        }
-    )
+    })
 );
