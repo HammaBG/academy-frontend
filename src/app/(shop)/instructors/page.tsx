@@ -24,7 +24,6 @@ const teachers: Teacher[] = [
     { id: 12, name: "سنية مصمودي", title: "أستاذة فيزياء ورئيسة المنتدى التونسي لاضطرابات التعلم", image: "/teachers/11AI.png", },
     { id: 13, name: "لطيفة الغزال", title: "مهندسة مدنية و أستاذة جامعية و دكتورة", image: "/teachers/14AI.png", },
     { id: 14, name: "أميمة الشايب (Budgeteuse)", title: "مستشارة في إدارة الأموال و تحقيق الأهداف المالية", image: "/teachers/12AI.png", },
-    { id: 9, name: "إبراهيم بن عبد الله", title: "كوتش و مدرّب على القيادة الذّاتيّة و مستشار في التفكير و التّخطيط الإستراتيجي", image: "/teachers/9AI.png", },
 ];
 
 export default function InstructorsPage() {
