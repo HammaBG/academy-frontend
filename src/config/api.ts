@@ -1,5 +1,5 @@
 const LOCAL_API_URL = "http://localhost:5000/api";
-const PROD_API_URL = "https://academy-backend-8gl3.onrender.com/api";
+const PROD_API_URL = "https://sheltered-sands-47457-9e722e901066.herokuapp.com/api";
 
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
@@ -7,7 +7,7 @@ export const API_BASE_URL =
 
 export const SOCKET_URL =
   process.env.NEXT_PUBLIC_SOCKET_URL ||
-  (process.env.NODE_ENV === "development" ? "http://localhost:5000" : "https://academy-backend-8gl3.onrender.com");
+  (process.env.NODE_ENV === "development" ? "http://localhost:5000" : "https://sheltered-sands-47457-9e722e901066.herokuapp.com");
 
 export const API_ENDPOINTS = {
   auth: `${API_BASE_URL}/auth`,
