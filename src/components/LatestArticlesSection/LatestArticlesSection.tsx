@@ -2,7 +2,13 @@
 
 import Link from "next/link";
 import { type Article } from "@/store/article";
-import { ArrowLeft, ChevronRight, Clock, Newspaper, Sparkles } from "lucide-react";
+import {
+  ArrowLeft,
+  ChevronRight,
+  Clock,
+  Newspaper,
+  BookOpen,
+} from "lucide-react";
 import { FaFacebook, FaTwitter, FaWhatsapp } from "react-icons/fa";
 
 interface LatestArticlesSectionProps {
@@ -130,47 +136,82 @@ function ArticleCard({ article }: ArticleCardProps) {
 }
 
 export function LatestArticlesSection({ articles, isLoading }: LatestArticlesSectionProps) {
+  const displayArticles = (articles || []).slice(0, 6);
+
   return (
-    <section className="max-w-7xl mx-auto px-4 py-20 border-t border-border/40 text-right">
-      <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
-        <div>
-          <h2 className="text-3xl sm:text-4xl font-black text-text-primary">
-            آخر الأخبار و <span className="text-brand-primary">المقالات</span>
-          </h2>
+    <section
+      dir="rtl"
+      className="relative w-full border-t border-border/40 bg-background py-16 sm:py-20 text-right"
+    >
+      {/* Subtle decorative glow */}
+      <div className="pointer-events-none absolute -top-28 -right-28 h-96 w-96 rounded-full bg-brand-primary/5 blur-[120px]" />
+      <div className="pointer-events-none absolute -bottom-28 -left-28 h-96 w-96 rounded-full bg-brand-primary/5 blur-[120px]" />
+
+      <div className="relative z-10 mx-auto max-w-7xl px-4">
+        {/* Header Block */}
+        <div className="mb-10 flex flex-col gap-4 sm:mb-12 md:flex-row md:items-end md:justify-between">
+          <div>
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-brand-primary/20 bg-brand-primary/10 px-3.5 py-1 text-xs font-black text-brand-primary">
+              <BookOpen className="h-3.5 w-3.5" />
+              <span>المحتوى والمدونة المعرفية</span>
+            </div>
+            <h2 className="text-3xl font-black text-text-primary sm:text-4xl">
+              آخر الأخبار و <span className="text-brand-primary">المقالات</span>
+            </h2>
+            <p className="mt-2 max-w-xl text-sm font-medium text-text-secondary sm:text-base">
+              مقالات علمية وتوعوية متخصصة في علم النفس، العلاقات الأسرية، والتربية الواعية لنرافقك في رحلة بناء أسرة متوازنة.
+            </p>
+          </div>
+
+          <Link
+            href="/articles"
+            className="group inline-flex items-center gap-2 self-start font-extrabold text-brand-primary transition-colors hover:text-brand-primary/80 md:self-auto"
+          >
+            <span>عرض جميع المقالات</span>
+            <ArrowLeft className="h-5 w-5 transition-transform group-hover:-translate-x-1" />
+          </Link>
         </div>
-        <Link
-          href="/articles"
-          className="group flex items-center gap-2 text-brand-primary font-bold hover:text-brand-primary/80 transition-colors"
-        >
-          <span>عرض جميع المقالات</span>
-          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-        </Link>
+
+        {/* Articles List / Cards */}
+        {isLoading && articles.length === 0 ? (
+          <div className="flex overflow-x-auto lg:grid lg:grid-cols-3 gap-8 pb-8 pt-2 px-1 lg:pb-2 scrollbar-none snap-x snap-mandatory scroll-smooth dir-rtl">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="bg-surface/50 rounded-3xl h-[420px] animate-pulse border border-border/40 w-[290px] shrink-0 lg:w-auto snap-center"
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="flex overflow-x-auto lg:grid lg:grid-cols-3 gap-8 pb-8 pt-2 px-1 lg:pb-2 scrollbar-none snap-x snap-mandatory scroll-smooth dir-rtl">
+            {displayArticles.map((article) => (
+              <ArticleCard key={article.id} article={article} />
+            ))}
+          </div>
+        )}
+
+        {/* Empty State */}
+        {articles.length === 0 && !isLoading && (
+          <div className="py-20 text-center bg-surface/50 rounded-3xl border border-dashed border-border/60">
+            <Newspaper className="w-16 h-16 text-text-secondary/30 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-text-primary mb-1">لا توجد مقالات حالياً</h3>
+            <p className="text-text-secondary text-sm">عد قريباً لمتابعة أحدث أخبار الأكاديمية</p>
+          </div>
+        )}
+
+        {/* Bottom CTA Button */}
+        {articles.length > 0 && (
+          <div className="mt-12 text-center">
+            <Link
+              href="/articles"
+              className="inline-flex items-center gap-2.5 rounded-2xl bg-brand-primary px-8 py-3.5 font-black text-white shadow-lg shadow-brand-primary/10 transition-all hover:scale-105 hover:bg-brand-primary/90"
+            >
+              <span>استكشف كافة المقالات</span>
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+          </div>
+        )}
       </div>
-
-      {isLoading && articles.length === 0 ? (
-        <div className="flex overflow-x-auto lg:grid lg:grid-cols-3 gap-8 pb-6 lg:pb-0 scrollbar-none snap-x snap-mandatory scroll-smooth dir-rtl">
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="bg-surface/50 rounded-3xl h-[420px] animate-pulse border border-border/40 w-[290px] shrink-0 lg:w-auto snap-center"
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="flex overflow-x-auto lg:grid lg:grid-cols-3 gap-8 pb-6 lg:pb-0 scrollbar-none snap-x snap-mandatory scroll-smooth dir-rtl">
-          {(articles || []).slice(0, 3).map((article) => (
-            <ArticleCard key={article.id} article={article} />
-          ))}
-        </div>
-      )}
-
-      {articles.length === 0 && !isLoading && (
-        <div className="py-20 text-center bg-surface/50 rounded-3xl border border-dashed border-border/60">
-          <Newspaper className="w-16 h-16 text-text-secondary/30 mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-text-primary mb-1">لا توجد مقالات حالياً</h3>
-          <p className="text-text-secondary text-sm">عد قريباً لمتابعة أحدث أخبار الأكاديمية</p>
-        </div>
-      )}
     </section>
   );
 }
