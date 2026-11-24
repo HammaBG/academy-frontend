@@ -117,17 +117,15 @@ export function CategoriesSection({ categories }: CategoriesSectionProps) {
                     <Link
                       key={category.id}
                       href={`/courses?category=${encodeURIComponent(category.name)}`}
-                      className="group relative flex flex-col items-center justify-center p-4 rounded-xl border border-border/60 bg-surface hover:border-brand-primary/50 transition-all shadow-sm active:scale-95 text-center min-h-[110px]"
+                      className="group relative flex flex-col items-center justify-center p-4 rounded-xl border border-white/20 transition-all shadow-sm active:scale-95 text-center min-h-[110px] text-white"
+                      style={{
+                        backgroundColor: category.color || "var(--brand-primary, #0284c7)",
+                      }}
                     >
-                      <div
-                        className="w-10 h-10 rounded-full flex items-center justify-center mb-2.5 shadow-sm text-white"
-                        style={{
-                          backgroundColor: category.color || "var(--brand-primary, #0284c7)",
-                        }}
-                      >
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center mb-2.5 shadow-sm bg-surface/30 backdrop-blur-md text-white">
                         <BookOpen className="w-5 h-5" />
                       </div>
-                      <span className="text-sm font-bold text-text-primary line-clamp-2 leading-snug group-hover:text-brand-primary transition-colors">
+                      <span className="text-sm font-bold text-white line-clamp-2 leading-snug drop-shadow-sm">
                         {category.name}
                       </span>
                     </Link>
@@ -157,11 +155,10 @@ export function CategoriesSection({ categories }: CategoriesSectionProps) {
                       aria-selected={idx === currentSlide}
                       aria-label={`شريحة ${idx + 1}`}
                       onClick={() => setCurrentSlide(idx)}
-                      className={`h-2 rounded-full transition-all duration-300 ${
-                        idx === currentSlide
-                          ? "w-6 bg-brand-primary"
-                          : "w-2 bg-border hover:bg-text-secondary/40"
-                      }`}
+                      className={`h-2 rounded-full transition-all duration-300 ${idx === currentSlide
+                        ? "w-6 bg-brand-primary"
+                        : "w-2 bg-border hover:bg-text-secondary/40"
+                        }`}
                     />
                   ))}
                 </div>
