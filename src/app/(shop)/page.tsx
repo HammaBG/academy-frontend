@@ -28,8 +28,8 @@ export default function HomePage() {
     <div className="min-h-screen bg-background text-text-primary transition-colors duration-300 relative overflow-hidden">
       <HeroSection />
       <FeaturesSection />
-      <CategoriesSection categories={categories} />
       <LatestCoursesSection courses={courses} isLoading={isCoursesLoading} />
+      <CategoriesSection categories={categories} />
       <InstructorsSection />
       <LatestArticlesSection articles={articles} isLoading={isArticlesLoading} />
       <ActivateSection />
