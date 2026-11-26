@@ -18,6 +18,8 @@ const teachers = [
   { id: "t13", name: "لطيفة الغزال", title: "مهندسة مدنية و أستاذة جامعية", image: "/teachers/14AI.png" },
   { id: "t14", name: "أميمة الشايب (Budgeteuse)", title: "مستشارة في إدارة الأموال و تحقيق الأهداف المالية", image: "/teachers/12AI.png" },
   { id: 15, name: "د. ليلى لطيف", title: "طبيبة نفسية", image: "/teachers/15AI.png", },
+  { id: 16, name: "سارة الجميعي", title: "مدربة مدرسية وأسرية", image: "/teachers/16AI.png", },
+
 
 ];
 
