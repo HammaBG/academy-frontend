@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 import "./globals.css";
 
 const montserratArabic = localFont({
@@ -50,6 +51,7 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col font-[family-name:var(--font-montserrat-arabic)] bg-background text-text-primary transition-colors duration-300">
+        <GoogleAnalytics />
         <ThemeProvider>
           <AuthProvider>
             {children}
