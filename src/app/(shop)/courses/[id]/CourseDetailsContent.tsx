@@ -405,28 +405,7 @@ export function CourseDetailsContent({ course }: CourseDetailsContentProps) {
           ))}
         </div>
       </section>
-
-      {/* 7. Prerequisites (المتطلبات الأساسية) */}
-      {course.prerequisites && course.prerequisites.length > 0 && (
-        <section aria-label="المتطلبات الأساسية" className="space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-500">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <h2 className="text-xl sm:text-2xl font-black text-text-primary">المتطلبات الأساسية</h2>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {course.prerequisites.map((pre, i) => (
-              <div key={i} className="flex items-center gap-3 p-4 rounded-2xl bg-surface border border-border/40">
-                <div className="w-2 h-2 rounded-full bg-purple-500 shrink-0" />
-                <span className="text-sm font-bold text-text-secondary">{pre.title}</span>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
+      
       {/* 8. Instructor Section (عن المحاضر) */}
       <section aria-label="عن المحاضر" className="pt-6 border-t border-border/40 space-y-6">
         <div className="flex items-center gap-3">
